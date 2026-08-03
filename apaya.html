@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SCP | School Class Progress</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+html{
+scroll-behavior:smooth;
+}
+
+body{
+
+background:
+linear-gradient(135deg,#081225,#102f58,#1d4f91);
+
+min-height:100vh;
+
+color:white;
+
+overflow-x:hidden;
+
+}
+
+/* ======================= */
+
+body::before{
+
+content:"";
+
+position:fixed;
+
+width:700px;
+height:700px;
+
+background:#00b7ff25;
+
+filter:blur(170px);
+
+top:-200px;
+right:-220px;
+
+border-radius:50%;
+
+animation:float1 12s infinite alternate;
+
+z-index:-1;
+
+}
+
+body::after{
+
+content:"";
+
+position:fixed;
+
+width:650px;
+height:650px;
+
+background:#7b5cff30;
+
+filter:blur(170px);
+
+left:-200px;
+bottom:-250px;
+
+border-radius:50%;
+
+animation:float2 10s infinite alternate;
+
+z-index:-1;
+
+}
+
+@keyframes float1{
+
+100%{
+
+transform:
+translateX(-120px)
+translateY(80px);
+
+}
+
+}
+
+@keyframes float2{
+
+100%{
+
+transform:
+translateX(120px)
+translateY(-100px);
+
+}
+
+}
+
+/* ======================= */
+
+.sidebar{
+
+position:fixed;
+
+left:0;
+
+top:0;
+
+width:260px;
+
+height:100vh;
+
+background:rgba(255,255,255,.08);
+
+backdrop-filter:blur(25px);
+
+border-right:1px solid rgba(255,255,255,.08);
+
+padding:25px;
+
+z-index:999;
+
+}
+
+.logo{
+
+font-size:30px;
+
+font-weight:800;
+
+margin-bottom:45px;
+
+}
+
+.logo span{
+
+color:#3bc9ff;
+
+}
+
+.menu{
+
+display:flex;
+
+flex-direction:column;
+
+gap:12px;
+
+}
+
+.menu a{
+
+text-decoration:none;
+
+color:white;
+
+padding:15px 18px;
+
+border-radius:15px;
+
+transition:.35s;
+
+display:flex;
+
+align-items:center;
+
+gap:15px;
+
+font-weight:500;
+
+}
+
+.menu a:hover{
+
+background:#3bc9ff;
+
+color:#081225;
+
+transform:translateX(8px);
+
+}
+
+.menu a.active{
+
+background:linear-gradient(90deg,#00b7ff,#57ffd8);
+
+color:#071423;
+
+font-weight:700;
+
+}
+
+/* ======================= */
+
+.main{
+
+margin-left:260px;
+
+padding:35px;
+
+}
+
+/* ======================= */
+
+.topbar{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+margin-bottom:35px;
+
+}
+
+.search{
+
+width:420px;
+
+background:rgba(255,255,255,.08);
+
+border-radius:50px;
+
+padding:14px 22px;
+
+display:flex;
+
+align-items:center;
+
+gap:15px;
+
+backdrop-filter:blur(15px);
+
+}
+
+.search input{
+
+background:none;
+
+border:none;
+
+outline:none;
+
+width:100%;
+
+font-size:15px;
+
+color:white;
+
+}
+
+.search input::placeholder{
+
+color:#ddd;
+
+}
+
+.profile{
+
+display:flex;
+
+align-items:center;
+
+gap:15px;
+
+}
+
+.avatar{
+
+width:55px;
+
+height:55px;
+
+border-radius:50%;
+
+background:linear-gradient(135deg,#00b7ff,#00ffd0);
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+font-size:22px;
+
+color:#071423;
+
+font-weight:700;
+
+}
+
+/* ======================= */
+
+.hero{
+
+background:rgba(255,255,255,.08);
+
+backdrop-filter:blur(20px);
+
+border-radius:30px;
+
+padding:40px;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+box-shadow:0 20px 60px rgba(0,0,0,.35);
+
+margin-bottom:35px;
+
+}
+
+.hero h1{
+
+font-size:42px;
+
+margin-bottom:15px;
+
+}
+
+.hero p{
+
+opacity:.85;
+
+line-height:1.8;
+
+max-width:650px;
+
+}
+
+.hero button{
+
+margin-top:25px;
+
+padding:15px 32px;
+
+border:none;
+
+border-radius:40px;
+
+font-size:16px;
+
+font-weight:700;
+
+cursor:pointer;
+
+background:linear-gradient(90deg,#00b7ff,#00ffd0);
+
+color:#071423;
+
+transition:.3s;
+
+}
+
+.hero button:hover{
+
+transform:translateY(-5px);
+
+box-shadow:0 20px 35px rgba(0,255,255,.3);
+
+}
+
+/* ======================= */
+
+.cards{
+
+display:grid;
+
+grid-template-columns:repeat(4,1fr);
+
+gap:25px;
+
+margin-bottom:35px;
+
+}
+
+.card{
+
+background:rgba(255,255,255,.08);
+
+padding:28px;
+
+border-radius:25px;
+
+backdrop-filter:blur(20px);
+
+transition:.35s;
+
+border:1px solid rgba(255,255,255,.08);
+
+}
+
+.card:hover{
+
+transform:translateY(-10px);
+
+}
+
+.card .icon{
+
+font-size:42px;
+
+color:#49d8ff;
+
+margin-bottom:18px;
+
+}
+
+.card h2{
+
+font-size:33px;
+
+margin-top:8px;
+
+}
+
+.card p{
+
+opacity:.8;
+
+margin-top:5px;
+
+}
+
+/* responsive */
+
+@media(max-width:1200px){
+
+.cards{
+
+grid-template-columns:repeat(2,1fr);
+
+}
+
+}
+
+@media(max-width:900px){
+
+.sidebar{
+
+width:85px;
+
+}
+
+.sidebar .logo{
+
+font-size:18px;
+
+}
+
+.sidebar .menu a span{
+
+display:none;
+
+}
+
+.main{
+
+margin-left:85px;
+
+}
+
+.hero{
+
+flex-direction:column;
+
+gap:30px;
+
+text-align:center;
+
+}
+
+.search{
+
+width:250px;
+
+}
+
+}
+
+@media(max-width:700px){
+
+.cards{
+
+grid-template-columns:1fr;
+
+}
+
+.topbar{
+
+flex-direction:column;
+
+gap:20px;
+
+}
+
+.search{
+
+width:100%;
+
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<div class="logo">
+S<span>C</span>P
+</div>
+
+<div class="menu">
+
+<a class="active" href="#">
+<i class="fa-solid fa-house"></i>
+<span>Dashboard</span>
+</a>
+
+<a href="#">
+<i class="fa-solid fa-calendar-days"></i>
+<span>Jadwal</span>
+</a>
+
+<a href="#">
+<i class="fa-solid fa-book"></i>
+<span>Jurnal Guru</span>
+</a>
+
+<a href="#">
+<i class="fa-solid fa-user-check"></i>
+<span>Presensi</span>
+</a>
+
+<a href="#">
+<i class="fa-solid fa-file-circle-check"></i>
+<span>Perizinan</span>
+</a>
+
+<a href="#">
+<i class="fa-solid fa-users"></i>
+<span>Data Guru</span>
+</a>
+
+<a href="#">
+<i class="fa-solid fa-graduation-cap"></i>
+<span>Data Siswa</span>
+</a>
+
+<a href="#">
+<i class="fa-solid fa-chart-line"></i>
+<span>Laporan</span>
+</a>
+
+<a href="#">
+<i class="fa-solid fa-gear"></i>
+<span>Pengaturan</span>
+</a>
+
+</div>
+
+</div>
+
+<div class="main">
+
+<div class="topbar">
+
+<div class="search">
+
+<i class="fa-solid fa-magnifying-glass"></i>
+
+<input type="text" placeholder="Cari siswa, guru, kelas...">
+
+</div>
+
+<div class="profile">
+
+<div>
+
+<b>Administrator</b><br>
+
+<small>School Class Progress</small>
+
+</div>
+
+<div class="avatar">
+A
+</div>
+
+</div>
+
+</div>
+
+<div class="hero">
+
+<div>
+
+<h1>School Class Progress</h1>
+
+<p>
+
+Dashboard modern untuk mengelola presensi siswa, jurnal guru,
+jadwal pembelajaran, dan perizinan secara digital dengan tampilan elegan.
+
+</p>
+
+<button>Masuk Dashboard</button>
+
+</div>
+
+<div>
+
+<i class="fa-solid fa-school" style="font-size:170px;color:#49d8ff;"></i>
+
+</div>
+
+</div>
+
+<div class="cards">
+
+<div class="card">
+
+<div class="icon">
+<i class="fa-solid fa-users"></i>
+</div>
+
+<p>Total Siswa</p>
+
+<h2>1.248</h2>
+
+</div>
+
+<div class="card">
+
+<div class="icon">
+<i class="fa-solid fa-user-tie"></i>
+</div>
+
+<p>Total Guru</p>
+
+<h2>82</h2>
+
+</div>
+
+<div class="card">
+
+<div class="icon">
+<i class="fa-solid fa-user-check"></i>
+</div>
+
+<p>Kehadiran Hari Ini</p>
+
+<h2>96%</h2>
+
+</div>
+
+<div class="card">
+
+<div class="icon">
+<i class="fa-solid fa-book-open"></i>
+</div>
+
+<p>Jurnal Hari Ini</p>
+
+<h2>57</h2>
+
+</div>
+
+</div>
+
+<!-- ========================= -->
+<!-- ========================= -->
+<!-- ROW DASHBOARD -->
+
+<div style="
+display:grid;
+grid-template-columns:2fr 1fr;
+gap:25px;
+margin-bottom:30px;
+">
+
+<!-- Jadwal -->
+
+<div class="card">
+
+<h2 style="margin-bottom:20px;">
+<i class="fa-solid fa-calendar-days"></i>
+Jadwal Hari Ini
+</h2>
+
+<table style="width:100%;border-collapse:collapse;">
+
+<thead>
+
+<tr style="background:rgba(255,255,255,.08);">
+
+<th style="padding:15px;">Jam</th>
+<th>Mata Pelajaran</th>
+<th>Kelas</th>
+<th>Guru</th>
+<th>Ruang</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+<td style="padding:14px;">07.00 - 08.30</td>
+<td>Pemrograman Web</td>
+<td>XI RPL 1</td>
+<td>Pak Andi</td>
+<td>Lab 1</td>
+
+</tr>
+
+<tr>
+
+<td style="padding:14px;">08.45 - 10.15</td>
+<td>Basis Data</td>
+<td>XI RPL 2</td>
+<td>Bu Sinta</td>
+<td>Lab 2</td>
+
+</tr>
+
+<tr>
+
+<td style="padding:14px;">10.30 - 12.00</td>
+<td>UI / UX</td>
+<td>XI RPL 3</td>
+<td>Pak Fajar</td>
+<td>Lab 3</td>
+
+</tr>
+
+<tr>
+
+<td style="padding:14px;">13.00 - 14.30</td>
+<td>Mobile Programming</td>
+<td>XII RPL</td>
+<td>Bu Rina</td>
+<td>Lab 1</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+<!-- Notifikasi -->
+
+<div class="card">
+
+<h2 style="margin-bottom:20px;">
+<i class="fa-solid fa-bell"></i>
+Notifikasi
+</h2>
+
+<div style="display:flex;flex-direction:column;gap:18px;">
+
+<div style="background:#00b7ff20;padding:15px;border-radius:15px;">
+
+<b>Jurnal Guru</b>
+
+<p style="opacity:.8;font-size:14px;">
+3 guru belum mengisi jurnal hari ini.
+</p>
+
+</div>
+
+<div style="background:#00ffbf20;padding:15px;border-radius:15px;">
+
+<b>Presensi</b>
+
+<p style="opacity:.8;font-size:14px;">
+96% siswa hadir hari ini.
+</p>
+
+</div>
+
+<div style="background:#ffbf0020;padding:15px;border-radius:15px;">
+
+<b>Perizinan</b>
+
+<p style="opacity:.8;font-size:14px;">
+5 pengajuan izin menunggu persetujuan.
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ========================= -->
+
+<div style="
+display:grid;
+grid-template-columns:1.3fr 1fr;
+gap:25px;
+margin-bottom:30px;
+">
+
+<!-- Presensi -->
+
+<div class="card">
+
+<h2 style="margin-bottom:20px;">
+<i class="fa-solid fa-user-check"></i>
+Presensi Terbaru
+</h2>
+
+<table style="width:100%;border-collapse:collapse;">
+
+<tr>
+
+<th style="padding:15px;">Nama</th>
+<th>Kelas</th>
+<th>Status</th>
+
+</tr>
+
+<tr>
+
+<td style="padding:14px;">Alya Putri</td>
+
+<td>XI RPL 1</td>
+
+<td style="color:#00ff9c;">
+Hadir
+</td>
+
+</tr>
+
+<tr>
+
+<td style="padding:14px;">Rizky Saputra</td>
+
+<td>XI RPL 2</td>
+
+<td style="color:#ffbf00;">
+Izin
+</td>
+
+</tr>
+
+<tr>
+
+<td style="padding:14px;">Kevin</td>
+
+<td>XII RPL</td>
+
+<td style="color:#ff6565;">
+Sakit
+</td>
+
+</tr>
+
+<tr>
+
+<td style="padding:14px;">Nabila</td>
+
+<td>XI RPL 3</td>
+
+<td style="color:#00ff9c;">
+Hadir
+</td>
+
+</tr>
+
+<tr>
+
+<td style="padding:14px;">Farel</td>
+
+<td>X RPL</td>
+
+<td style="color:#00ff9c;">
+Hadir
+</td>
+
+</tr>
+
+</table>
+
+</div>
+
+<!-- Grafik -->
+
+<div class="card">
+
+<h2 style="margin-bottom:20px;">
+<i class="fa-solid fa-chart-column"></i>
+Progress Bulanan
+</h2>
+
+<div style="display:flex;
+align-items:flex-end;
+height:250px;
+gap:15px;
+margin-top:20px;">
+
+<div style="width:45px;height:120px;background:#00b7ff;border-radius:12px;"></div>
+
+<div style="width:45px;height:180px;background:#37d5ff;border-radius:12px;"></div>
+
+<div style="width:45px;height:140px;background:#63dfff;border-radius:12px;"></div>
+
+<div style="width:45px;height:220px;background:#00ffd5;border-radius:12px;"></div>
+
+<div style="width:45px;height:170px;background:#4fffc2;border-radius:12px;"></div>
+
+<div style="width:45px;height:240px;background:#00ff95;border-radius:12px;"></div>
+
+</div>
+
+<div style="
+display:flex;
+justify-content:space-between;
+margin-top:15px;
+opacity:.7;
+">
+
+<span>Jan</span>
+
+<span>Feb</span>
+
+<span>Mar</span>
+
+<span>Apr</span>
+
+<span>Mei</span>
+
+<span>Jun</span>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ========================= -->
+
+<div class="card" style="margin-bottom:30px;">
+
+<h2 style="margin-bottom:20px;">
+<i class="fa-solid fa-chalkboard-user"></i>
+Daftar Guru
+</h2>
+
+<table style="width:100%;border-collapse:collapse;">
+
+<tr>
+
+<th style="padding:15px;">Nama</th>
+<th>Mata Pelajaran</th>
+<th>Status</th>
+<th>Aksi</th>
+
+</tr>
+
+<tr>
+
+<td style="padding:14px;">Andi Pratama</td>
+
+<td>Pemrograman Web</td>
+
+<td style="color:#00ff9c;">Aktif</td>
+
+<td>
+
+<button style="
+padding:8px 18px;
+border:none;
+border-radius:10px;
+background:#00b7ff;
+cursor:pointer;
+font-weight:bold;
+">
+
+Detail
+
+</button>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="padding:14px;">Sinta Dewi</td>
+
+<td>Basis Data</td>
+
+<td style="color:#00ff9c;">Aktif</td>
+
+<td>
+
+<button style="
+padding:8px 18px;
+border:none;
+border-radius:10px;
+background:#00b7ff;
+cursor:pointer;
+font-weight:bold;
+">
+
+Detail
+
+</button>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="padding:14px;">Rina</td>
+
+<td>Mobile Programming</td>
+
+<td style="color:#00ff9c;">Aktif</td>
+
+<td>
+
+<button style="
+padding:8px 18px;
+border:none;
+border-radius:10px;
+background:#00b7ff;
+cursor:pointer;
+font-weight:bold;
+">
+
+Detail
+
+</button>
+
+</td>
+
+</tr>
+
+</table>
+
+</div>
+
+<!-- ========================= -->
+<!-- ========================= -->
+<!-- DATA SISWA & PERIZINAN -->
+
+<div style="
+display:grid;
+grid-template-columns:1.3fr 1fr;
+gap:25px;
+margin-bottom:30px;
+">
+
+<!-- Data Siswa -->
+
+<div class="card">
+
+<h2 style="margin-bottom:20px;">
+<i class="fa-solid fa-graduation-cap"></i>
+Data Siswa
+</h2>
+
+<table style="width:100%;border-collapse:collapse;">
+
+<tr>
+<th style="padding:15px;">Nama</th>
+<th>Kelas</th>
+<th>NIS</th>
+<th>Status</th>
+</tr>
+
+<tr>
+<td style="padding:14px;">Alya Putri</td>
+<td>XI RPL 1</td>
+<td>231001</td>
+<td style="color:#00ff95;">Aktif</td>
+</tr>
+
+<tr>
+<td style="padding:14px;">Kevin</td>
+<td>XI RPL 2</td>
+<td>231002</td>
+<td style="color:#00ff95;">Aktif</td>
+</tr>
+
+<tr>
+<td style="padding:14px;">Nabila</td>
+<td>XI RPL 3</td>
+<td>231003</td>
+<td style="color:#00ff95;">Aktif</td>
+</tr>
+
+<tr>
+<td style="padding:14px;">Farel</td>
+<td>XII RPL</td>
+<td>231004</td>
+<td style="color:#00ff95;">Aktif</td>
+</tr>
+
+</table>
+
+</div>
+
+<!-- Perizinan -->
+
+<div class="card">
+
+<h2 style="margin-bottom:20px;">
+<i class="fa-solid fa-file-circle-check"></i>
+Perizinan
+</h2>
+
+<div style="display:flex;flex-direction:column;gap:18px;">
+
+<div style="padding:15px;border-radius:15px;background:#ffc10725;">
+<b>Rizky Saputra</b>
+<p>Menunggu Persetujuan</p>
+</div>
+
+<div style="padding:15px;border-radius:15px;background:#00ff9d25;">
+<b>Kevin</b>
+<p>Izin Disetujui</p>
+</div>
+
+<div style="padding:15px;border-radius:15px;background:#ff666625;">
+<b>Dinda</b>
+<p>Ditolak</p>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ========================= -->
+
+<div class="card" style="margin-bottom:30px;">
+
+<h2 style="margin-bottom:20px;">
+<i class="fa-solid fa-clock-rotate-left"></i>
+Timeline Aktivitas
+</h2>
+
+<div style="display:flex;flex-direction:column;gap:18px;">
+
+<div style="padding:15px;background:rgba(255,255,255,.05);border-radius:15px;">
+🟢 Guru Andi mengisi jurnal kelas XI RPL 1
+</div>
+
+<div style="padding:15px;background:rgba(255,255,255,.05);border-radius:15px;">
+🟢 Presensi berhasil disimpan
+</div>
+
+<div style="padding:15px;background:rgba(255,255,255,.05);border-radius:15px;">
+🟡 Pengajuan izin baru diterima
+</div>
+
+<div style="padding:15px;background:rgba(255,255,255,.05);border-radius:15px;">
+🔵 Jadwal Putaran 2 telah diaktifkan
+</div>
+
+</div>
+
+</div>
+
+<!-- ========================= -->
+
+<div class="card" style="margin-bottom:30px;">
+
+<h2 style="margin-bottom:20px;">
+<i class="fa-solid fa-calendar"></i>
+Kalender Akademik
+</h2>
+
+<div style="
+display:grid;
+grid-template-columns:repeat(7,1fr);
+gap:12px;
+text-align:center;
+">
+
+<div>Sen</div>
+<div>Sel</div>
+<div>Rab</div>
+<div>Kam</div>
+<div>Jum</div>
+<div>Sab</div>
+<div>Min</div>
+
+<script>
+
+for(let i=1;i<=31;i++){
+
+document.write(`
+<div style="
+padding:15px;
+background:rgba(255,255,255,.05);
+border-radius:12px;
+transition:.3s;
+cursor:pointer;
+">
+${i}
+</div>`)
+
+}
+
+</script>
+
+</div>
+
+</div>
+
+<footer style="
+margin-top:40px;
+padding:25px;
+text-align:center;
+opacity:.7;
+">
+
+© 2026 School Class Progress Dashboard
+
+</footer>
+
+<script>
+
+document.querySelectorAll(".menu a").forEach(item=>{
+
+item.onclick=function(){
+
+document.querySelectorAll(".menu a").forEach(a=>a.classList.remove("active"));
+
+this.classList.add("active");
+
+}
+
+});
+
+document.querySelectorAll(".card").forEach(card=>{
+
+card.onmouseenter=()=>{
+
+card.style.transform="translateY(-10px)";
+
+};
+
+card.onmouseleave=()=>{
+
+card.style.transform="translateY(0px)";
+
+};
+
+});
+
+document.querySelector(".hero button").onclick=function(){
+
+alert("Selamat datang di School Class Progress!");
+
+};
+
+</script>
+
+</body>
+
+</html>
