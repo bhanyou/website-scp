@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attendance;
+use App\Models\BlockCycle;
 use App\Models\Journal;
 use App\Models\PermissionRequest;
 use App\Models\Schedule;
+use App\Models\SchoolClass;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class JournalController extends Controller
 {
@@ -734,6 +738,205 @@ class JournalController extends Controller
             'startDate',
             'endDate',
             'period'
+        ));
+    }
+
+    /**
+     * Halaman Khusus Monitoring Keterlambatan Pengisian Jurnal Mengajar (Waka Kurikulum / Admin).
+     */
+    public function lateMonitoring(Request $request)
+    {
+        $days = [
+            0 => 'Minggu',
+            1 => 'Senin',
+            2 => 'Selasa',
+            3 => 'Rabu',
+            4 => 'Kamis',
+            5 => 'Jumat',
+            6 => 'Sabtu',
+        ];
+
+        $targetDate = $request->filled('date')
+            ? Carbon::parse($request->query('date'))->startOfDay()
+            : Carbon::today();
+
+        $dayName = $days[$targetDate->dayOfWeek];
+        $isToday = $targetDate->isToday();
+        $dateFormatted = $targetDate->locale('id')->isoFormat('dddd, D MMMM Y');
+
+        $activeCycle = BlockCycle::where('is_active', true)->first();
+
+        $selectedGrade = $request->query('grade');
+        $selectedMajor = $request->query('major');
+        $selectedTeacherId = $request->query('teacher_id');
+        $selectedDelayLevel = $request->query('delay_level', 'all'); // all, warning (30-60m), medium (60-120m), critical (>120m)
+        $search = $request->query('search');
+
+        // Query master jadwal pada hari target
+        $query = Schedule::with([
+            'teacher',
+            'subject',
+            'schoolClass',
+            'room',
+            'blockCycle',
+        ])
+        ->where('day', $dayName);
+
+        if ($activeCycle) {
+            $query->where('block_cycle_id', $activeCycle->id);
+        }
+
+        if ($selectedTeacherId) {
+            $query->where('teacher_id', $selectedTeacherId);
+        }
+
+        if ($selectedGrade) {
+            $query->whereHas('schoolClass', function ($q) use ($selectedGrade) {
+                $grades = match (strtoupper($selectedGrade)) {
+                    '10', 'X' => ['10', 'X'],
+                    '11', 'XI' => ['11', 'XI'],
+                    '12', 'XII' => ['12', 'XII'],
+                    default => [$selectedGrade],
+                };
+                $q->where(function ($sub) use ($grades, $selectedGrade) {
+                    $sub->whereIn('grade', $grades)
+                        ->orWhere('name', 'like', $selectedGrade . ' %');
+                });
+            });
+        }
+
+        if ($selectedMajor) {
+            $query->whereHas('schoolClass', function ($q) use ($selectedMajor) {
+                $q->where('major', $selectedMajor);
+            });
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('teacher', fn($t) => $t->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('subject', fn($s) => $s->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('schoolClass', fn($c) => $c->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('room', fn($r) => $r->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $allDaySchedules = $query->orderBy('start_time')->get();
+
+        $totalSchedulesCount = $allDaySchedules->count();
+        $filledScheduleIds = Journal::whereDate('journal_date', $targetDate)
+            ->whereIn('schedule_id', $allDaySchedules->pluck('id'))
+            ->pluck('schedule_id')
+            ->unique();
+        $totalFilledCount = $filledScheduleIds->count();
+
+        // Kumpulkan data keterlambatan
+        $lateItems = collect();
+        $now = now();
+
+        foreach ($allDaySchedules as $schedule) {
+            // Jika sudah terisi jurnal pada tanggal tsb, maka tidak terlambat
+            if ($filledScheduleIds->contains($schedule->id)) {
+                continue;
+            }
+
+            // Hitung menit keterlambatan
+            $endDateTime = Carbon::parse($targetDate->format('Y-m-d') . ' ' . $schedule->end_time);
+
+            if ($isToday) {
+                $diffMinutes = $endDateTime->diffInMinutes($now, false);
+                // Hanya dianggap terlambat jika jadwal sudah usai lebih dari 30 menit
+                if ($diffMinutes <= 30) {
+                    continue;
+                }
+                $minutesLate = (int) $diffMinutes;
+            } else {
+                // Hari lampau dan belum terisi jurnal: otomatis terlambat
+                if ($targetDate->isPast()) {
+                    $minutesLate = max(31, (int) $endDateTime->diffInMinutes(now(), false));
+                } else {
+                    continue; // Hari depan
+                }
+            }
+
+            // Tentukan level keterlambatan
+            if ($minutesLate > 120) {
+                $level = 'critical';
+                $levelLabel = 'Kritis (>2 Jam)';
+                $badgeClass = 'badge-danger';
+            } elseif ($minutesLate > 60) {
+                $level = 'medium';
+                $levelLabel = 'Sedang (1-2 Jam)';
+                $badgeClass = 'badge-warning';
+            } else {
+                $level = 'warning';
+                $levelLabel = 'Perhatian (>30 Mnt)';
+                $badgeClass = 'badge-info';
+            }
+
+            // Filter delay level jika user memilih
+            if ($selectedDelayLevel !== 'all' && $selectedDelayLevel !== $level) {
+                continue;
+            }
+
+            // Format lama keterlambatan
+            $hours = floor($minutesLate / 60);
+            $mins = $minutesLate % 60;
+            if ($hours > 0) {
+                $formattedLate = "{$hours} jam {$mins} mnt";
+            } else {
+                $formattedLate = "{$mins} menit";
+            }
+
+            $lateItems->push([
+                'schedule' => $schedule,
+                'minutes_late' => $minutesLate,
+                'formatted_late' => $formattedLate,
+                'level' => $level,
+                'level_label' => $levelLabel,
+                'badge_class' => $badgeClass,
+                'end_time_formatted' => substr($schedule->end_time, 0, 5),
+                'time_range' => substr($schedule->start_time, 0, 5) . ' - ' . substr($schedule->end_time, 0, 5),
+            ]);
+        }
+
+        // Urutkan dari yang paling terlambat ke terendah
+        $lateItems = $lateItems->sortByDesc('minutes_late')->values();
+
+        $totalLateCount = $lateItems->count();
+        $criticalCount = $lateItems->where('level', 'critical')->count();
+        $mediumCount = $lateItems->where('level', 'medium')->count();
+        $warningCount = $lateItems->where('level', 'warning')->count();
+        $complianceRate = $totalSchedulesCount > 0
+            ? round(($totalFilledCount / $totalSchedulesCount) * 100, 1)
+            : 100;
+
+        $teachers = Teacher::orderBy('name')->get();
+        $majors = SchoolClass::whereNotNull('major')
+            ->where('major', '!=', '')
+            ->distinct()
+            ->orderBy('major')
+            ->pluck('major');
+
+        return view('waka.journals.late_monitoring', compact(
+            'lateItems',
+            'teachers',
+            'majors',
+            'targetDate',
+            'dayName',
+            'dateFormatted',
+            'isToday',
+            'selectedGrade',
+            'selectedMajor',
+            'selectedTeacherId',
+            'selectedDelayLevel',
+            'search',
+            'totalSchedulesCount',
+            'totalFilledCount',
+            'totalLateCount',
+            'criticalCount',
+            'mediumCount',
+            'warningCount',
+            'complianceRate'
         ));
     }
 }

@@ -927,13 +927,14 @@ class TeacherController extends Controller
                 }
 
                 // Cek apakah baris adalah header berulang atau baris ringkasan
-                $summaryHeaders = ['no', 'nomor', 'nip', 'nama', 'nama guru', 'rekap', 'jumlah', 'total', 'catatan', 'keterangan', 'mengetahui'];
+                $summaryHeaders = ['no', 'nomor', 'nip', 'nama', 'nama guru', 'rekap', 'jumlah', 'total', 'catatan', 'keterangan', 'mengetahui', 'l', 'p', 'lk', 'pr', 'laki-laki', 'perempuan', 'gender'];
                 if (in_array(strtolower($nip), $summaryHeaders) || in_array(strtolower($name), $summaryHeaders)) {
                     continue;
                 }
 
-                // Jika Nama guru kosong, abaikan baris ini
-                if (empty($name)) {
+                // Jika Nama guru kosong atau berupa baris footer rekapitulasi gender (seperti 'L' atau 'P'), abaikan baris ini
+                $cleanNameCheck = strtoupper(trim($name));
+                if (empty($name) || strlen(trim($name)) <= 2 || in_array($cleanNameCheck, ['L', 'P', 'LK', 'PR', 'TOTAL', 'JUMLAH', 'REKAP', 'LAKI-LAKI', 'PEREMPUAN', 'GENDER'])) {
                     continue;
                 }
 
@@ -963,6 +964,14 @@ class TeacherController extends Controller
                 // Jika NIP kosong tetapi guru ditemukan, gunakan NIP guru yang sudah ada
                 if (empty($nip) && $teacher) {
                     $nip = $teacher->nip;
+                }
+
+                // Pastikan NIP tidak pernah berupa string kosong '' agar tidak melanggar UNIQUE constraint di basis data
+                if (empty($nip)) {
+                    $nip = 'GURU' . date('Ymd') . rand(1000, 9999);
+                    while (Teacher::where('nip', $nip)->exists()) {
+                        $nip = 'GURU' . date('Ymd') . rand(1000, 9999);
+                    }
                 }
                 // Resolusi Username berurutan (guru1, guru2, dst) jika belum ada
                 $username = !empty($usernameVal) ? trim($usernameVal) : '';

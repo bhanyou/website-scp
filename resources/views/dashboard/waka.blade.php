@@ -179,54 +179,71 @@
     @endif
 </div>
 
-{{-- Monitoring Keterlambatan Jurnal Guru --}}
+{{-- Monitoring Keterlambatan Jurnal Guru (Secukupnya di Dashboard) --}}
 <div class="card" style="margin-bottom: 1.5rem;">
-    <h2 class="card-title">
-        <span>Monitoring Keterlambatan Pengisian Jurnal</span>
-        @if($journalAlerts->count())
-            <span class="badge badge-danger">{{ $journalAlerts->count() }} Jadwal Tertunda</span>
-        @else
-            <span class="badge badge-success">Semua Tertib</span>
-        @endif
-    </h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+        <h2 class="card-title" style="margin: 0;">
+            <span>Monitoring Keterlambatan Pengisian Jurnal</span>
+            @if($journalAlerts->count())
+                <span class="badge badge-danger">{{ $journalAlerts->count() }} Tertunda</span>
+            @else
+                <span class="badge badge-success">Semua Tertib</span>
+            @endif
+        </h2>
+        <a href="{{ route('monitoring.keterlambatan') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem;">
+            <span>Halaman Lengkap</span>
+            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+        </a>
+    </div>
 
     @if($journalAlerts->count())
-        <p style="color: var(--danger-text); font-size: 0.85rem; margin-bottom: 1rem;">
-            Perhatian: Terdapat jadwal yang telah usai lebih dari 30 menit namun jurnal mengajar belum diunggah oleh guru bersangkutan.
+        <p style="color: var(--danger-text); font-size: 0.82rem; margin-bottom: 0.75rem;">
+            Berikut ringkasan jadwal yang telah usai lebih dari 30 menit namun jurnal belum diisi.
         </p>
 
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>No</th>
+                        <th style="width: 40px; text-align: center;">No</th>
                         <th>Nama Guru</th>
                         <th>Mata Pelajaran</th>
                         <th>Kelas</th>
                         <th>Ruangan</th>
                         <th>Jam Selesai</th>
-                        <th>Keterlambatan</th>
+                        <th style="text-align: center;">Keterlambatan</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($journalAlerts as $alert)
+                    @foreach($journalAlerts->take(5) as $alert)
                         <tr>
-                            <td>{{ $loop->iteration }}</td>
+                            <td style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">{{ $loop->iteration }}</td>
                             <td><strong>{{ $alert['schedule']->teacher->name ?? '-' }}</strong></td>
                             <td>{{ $alert['schedule']->subject->name ?? '-' }}</td>
                             <td><span class="badge badge-info">{{ $alert['schedule']->schoolClass->name ?? '-' }}</span></td>
                             <td>{{ $alert['schedule']->room->name ?? '-' }}</td>
                             <td>{{ substr($alert['schedule']->start_time, 0, 5) }} - {{ substr($alert['schedule']->end_time, 0, 5) }}</td>
-                            <td><span class="badge badge-danger">{{ number_format($alert['minutes_late'], 0) }} menit</span></td>
+                            <td style="text-align: center;"><span class="badge badge-danger">{{ number_format($alert['minutes_late'], 0) }} menit</span></td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.85rem; background: var(--bg-hover, #f8fafc); border-radius: var(--radius-sm, 6px); margin-top: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="font-size: 0.8rem; color: var(--text-muted);">
+                Menampilkan <strong>{{ min(5, $journalAlerts->count()) }}</strong> dari <strong>{{ $journalAlerts->count() }}</strong> keterlambatan hari ini.
+            </div>
+            <a href="{{ route('monitoring.keterlambatan') }}" class="btn btn-danger btn-sm" style="font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+                Lihat Seluruh Keterlambatan ({{ $journalAlerts->count() }}) &rarr;
+            </a>
+        </div>
     @else
-        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background-color: var(--success-bg); border-radius: var(--radius-sm); color: var(--success-text);">
+        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem; background-color: var(--success-bg); border-radius: var(--radius-sm); color: var(--success-text);">
             <div>
-                <strong>Kondisi Ideal:</strong> Tidak ada keterlambatan pengisian jurnal hari ini. Seluruh kegiatan belajar mengajar berjalan sesuai agenda kurikulum.
+                <strong>Kondisi Ideal:</strong> Tidak ada keterlambatan pengisian jurnal hari ini. Seluruh KBM berjalan tertib sesuai kurikulum.
             </div>
         </div>
     @endif

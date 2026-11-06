@@ -147,12 +147,20 @@
                                 <span>Kenaikan Kelas</span>
                             </a>
                         </li>
-                        <li class="nav-item {{ request()->routeIs('waka.journals.*') ? 'active' : '' }}">
+                        <li class="nav-item {{ request()->routeIs('waka.journals.*') && !request()->routeIs('monitoring.keterlambatan') ? 'active' : '' }}">
                             <a href="{{ route('waka.journals.index') }}">
                                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
                                 <span>Monitoring Jurnal Guru</span>
+                            </a>
+                        </li>
+                        <li class="nav-item {{ request()->routeIs('monitoring.keterlambatan') ? 'active' : '' }}">
+                            <a href="{{ route('monitoring.keterlambatan') }}">
+                                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span>Keterlambatan Jurnal</span>
                             </a>
                         </li>
                         <li class="nav-item {{ request()->routeIs('attendances.*') ? 'active' : '' }}">

@@ -286,6 +286,13 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:guru');
 
     // Monitoring Jurnal Guru & Presensi - Waka
+    Route::get('/waka/journals/late-monitoring', [JournalController::class, 'lateMonitoring'])
+        ->middleware('role:waka')
+        ->name('monitoring.keterlambatan');
+
+    Route::get('/monitoring/keterlambatan', fn() => redirect()->route('monitoring.keterlambatan'))
+        ->middleware('role:waka');
+
     Route::get('/waka/journals/print', [JournalController::class, 'wakaPrint'])
         ->middleware('role:waka')
         ->name('waka.journals.print');
