@@ -1,0 +1,40 @@
+name: school_class_progress
+description: "School Class Progress - Mobile Client (Flutter) for Laravel 11 + Sanctum"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State Management & Routing
+  flutter_riverpod: ^2.6.1
+  go_router: ^14.8.1
+
+  # Network & Secure Storage
+  dio: ^5.11.1
+  flutter_secure_storage: ^9.2.4
+
+  # Utilities, Date, Image & Files
+  intl: ^0.20.3
+  image_picker: ^1.1.2
+  file_picker: ^8.3.7
+  flutter_image_compress: ^2.5.1
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+  google_fonts: ^6.3.3
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
