@@ -160,6 +160,30 @@ class SchoolClassController extends Controller
     }
 
     /**
+     * Membersihkan data kelas anomali (seperti nama orang/tanda tangan yang tidak sengaja terimport).
+     */
+    public function cleanAnomalies()
+    {
+        $classes = SchoolClass::all();
+        $deleted = 0;
+
+        foreach ($classes as $c) {
+            if (!preg_match('/^(X|XI|XII)\b/i', trim($c->name))) {
+                $studentCount = \App\Models\Student::where('class_id', $c->id)->count();
+                $scheduleCount = \App\Models\Schedule::where('class_id', $c->id)->count();
+                if ($studentCount === 0 && $scheduleCount === 0) {
+                    $c->delete();
+                    $deleted++;
+                }
+            }
+        }
+
+        return redirect()
+            ->route('classes.index')
+            ->with('success', "Pembersihan berhasil! Sebanyak {$deleted} data kelas anomali telah dihapus.");
+    }
+
+    /**
      * Import data kelas dari file Excel (.xlsx, .xls), CSV (.csv), Word (.docx), atau PDF (.pdf).
      */
     public function import(Request $request)

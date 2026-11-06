@@ -151,6 +151,10 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:waka')
         ->name('classes.import');
 
+    Route::post('/classes/clean-anomalies', [SchoolClassController::class, 'cleanAnomalies'])
+        ->middleware('role:waka')
+        ->name('classes.clean-anomalies');
+
     Route::resource('classes', SchoolClassController::class)
         ->middleware('role:waka');
 
