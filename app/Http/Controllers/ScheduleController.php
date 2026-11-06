@@ -38,7 +38,9 @@ class ScheduleController extends Controller
             'room',
         ]);
 
-        if ($user->role === 'guru') {
+        $isBk = $user->role === 'bk' || ($user->teacher && $user->teacher->isBkTeacher());
+
+        if ($user->role === 'guru' && !$isBk) {
             $teacher = $user->teacher ?? Teacher::where('user_id', $user->id)->first();
 
             if (!$teacher) {
@@ -53,8 +55,8 @@ class ScheduleController extends Controller
             } else {
                 $scheduleQuery->whereRaw('1 = 0');
             }
-        } elseif ($user->role === 'waka') {
-            // Waka otomatis melihat jadwal pada putaran yang aktif
+        } elseif ($user->role === 'waka' || $isBk) {
+            // Waka dan Guru BK otomatis melihat jadwal pada putaran yang aktif (BK dapat memantau jadwal semua kelas untuk keperluan bimbingan/pemanggilan siswa)
             if ($activeCycle) {
                 $scheduleQuery->where('block_cycle_id', $activeCycle->id);
             } elseif ($selectedCycleId) {
@@ -249,7 +251,9 @@ class ScheduleController extends Controller
             'room',
         ]);
 
-        if ($user->role === 'guru') {
+        $isBk = $user->role === 'bk' || ($user->teacher && $user->teacher->isBkTeacher());
+
+        if ($user->role === 'guru' && !$isBk) {
             $teacher = Teacher::where('user_id', $user->id)->first();
 
             if (!$teacher) {
@@ -257,7 +261,7 @@ class ScheduleController extends Controller
             }
 
             $query->where('teacher_id', $teacher->id);
-        } elseif ($user->role !== 'waka') {
+        } elseif ($user->role !== 'waka' && !$isBk) {
             abort(403, 'Kamu tidak memiliki akses ke jadwal.');
         }
 
@@ -560,7 +564,9 @@ class ScheduleController extends Controller
             'room',
         ]);
 
-        if ($user->role === 'guru') {
+        $isBk = $user->role === 'bk' || ($user->teacher && $user->teacher->isBkTeacher());
+
+        if ($user->role === 'guru' && !$isBk) {
             $teacher = $user->teacher ?? Teacher::where('user_id', $user->id)->first();
             if ($teacher) {
                 $scheduleQuery->where('teacher_id', $teacher->id);

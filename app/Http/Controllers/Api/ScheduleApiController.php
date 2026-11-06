@@ -18,7 +18,9 @@ class ScheduleApiController extends Controller
     {
         $user = $request->user();
 
-        if (!in_array($user->role, ['waka', 'guru'], true)) {
+        $isBk = $user->role === 'bk' || ($user->teacher && $user->teacher->isBkTeacher());
+
+        if (!in_array($user->role, ['waka', 'guru', 'bk'], true) && !$isBk) {
             return response()->json([
                 'success' => false,
                 'message' => 'Kamu tidak memiliki akses ke jadwal.',
@@ -27,7 +29,7 @@ class ScheduleApiController extends Controller
 
         $teacher = null;
 
-        if ($user->role === 'guru') {
+        if ($user->role === 'guru' && !$isBk) {
             $teacher = Teacher::where('user_id', $user->id)->first();
 
             if (!$teacher) {

@@ -141,7 +141,7 @@
             </select>
         </div>
 
-        @if(auth()->user()->role === 'waka')
+        @if(auth()->user()->role === 'waka' || auth()->user()->role === 'bk' || (auth()->user()->teacher && auth()->user()->teacher->isBkTeacher()))
             <div style="flex: 1.5; min-width: 180px;">
                 <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem; text-transform: uppercase;">
                     Guru Pengajar
