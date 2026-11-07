@@ -986,12 +986,11 @@
                     <div style="background: rgba(99, 102, 241, 0.05); border-left: 3px solid #6366f1; padding: 0.85rem 1rem; border-radius: 4px; font-size: 0.8rem; line-height: 1.5; color: var(--text-secondary);">
                         <strong style="color: var(--text-primary); display: block; margin-bottom: 0.35rem;">Petunjuk Format Berkas Jadwal:</strong>
                         <ul style="margin: 0; padding-left: 1.25rem;">
+                            <li><strong>Jadwal Kelas (FET):</strong> Mengimpor seluruh mata pelajaran, guru pengajar, rombel kelas, dan jam pelajaran.</li>
+                            <li><strong>Jadwal Ruangan (Matriks PDF Resmi):</strong> Mengunggah berkas denah ruangan (contoh: <em>JADWAL RUANGAN PUTARAN 1 / 2</em>) akan otomatis menyinkronkan seluruh rombel kelas ke ruangan fisik aslinya (R. 1 s/d R. 48, L.1 s/d L.22, HALL, OR).</li>
                             <li>Mendukung file dokumen <strong>PDF (.pdf)</strong>, <strong>Excel (.xlsx, .xls)</strong>, dan <strong>CSV (.csv)</strong> secara langsung.</li>
-                            <li>Kolom tabel disarankan: <strong>Hari, Guru (atau NIP), Mata Pelajaran, Kelas, Jam / Waktu, Ruangan</strong>.</li>
-                            <li><strong>Hari:</strong> Kolom 'Hari' bisa diisi di berkas, atau pilih dari dropdown di atas jika tidak ada kolom hari di file.</li>
-                            <li><strong>Ruangan:</strong> Ruangan baru yang ada di berkas akan otomatis dibuat dan otomatis masuk ke tabel <strong>Data Ruangan</strong>.</li>
-                            <li><strong>Jam:</strong> Format jam (contoh: <em>07:00 - 08:30</em>) atau jam terpisah (<em>Jam Mulai</em> & <em>Jam Selesai</em>), atau nomor jam pelajaran (<em>1 - 2</em>).</li>
-                            <li>Sistem otomatis mengenali nama guru meskipun terdapat gelar akademik (Drs, S.Pd, M.Kom, dll.) dan memvalidasi pencegahan tabrakan waktu.</li>
+                            <li><strong>Pilihan Putaran:</strong> Pastikan memilih Putaran 1 atau Putaran 2 sesuai berkas yang diunggah.</li>
+                            <li>Sistem otomatis mengenali nama guru meskipun terdapat gelar akademik (Drs, S.Pd, M.Kom, dll.) dan memvalidasi alokasi jam.</li>
                         </ul>
                     </div>
                 </div>
