@@ -94,7 +94,6 @@
     <div style="display: inline-flex; background: #e2e8f0; padding: 0.35rem; border-radius: 12px; gap: 0.35rem;">
         <a href="{{ route('schedules.index', array_merge(request()->except(['cycle', 'page']), ['cycle' => 1])) }}"
            style="padding: 0.65rem 1.6rem; border-radius: 9px; font-weight: 700; font-size: 0.92rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.55rem; transition: all 0.2s; {{ $selectedCycle == 1 ? 'background: #2563eb; color: #ffffff; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.3);' : 'background: transparent; color: #475569;' }}">
-            <span style="font-size: 1.05rem;">🔄</span>
             <span>Putaran 1</span>
             @if($activeCycleNumber == 1)
                 <span class="badge" style="font-size: 0.68rem; background: rgba(255,255,255,0.25); color: #fff; padding: 0.2rem 0.5rem; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em;">Aktif</span>
@@ -102,7 +101,6 @@
         </a>
         <a href="{{ route('schedules.index', array_merge(request()->except(['cycle', 'page']), ['cycle' => 2])) }}"
            style="padding: 0.65rem 1.6rem; border-radius: 9px; font-weight: 700; font-size: 0.92rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.55rem; transition: all 0.2s; {{ $selectedCycle == 2 ? 'background: #2563eb; color: #ffffff; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.3);' : 'background: transparent; color: #475569;' }}">
-            <span style="font-size: 1.05rem;">🔄</span>
             <span>Putaran 2</span>
             @if($activeCycleNumber == 2)
                 <span class="badge" style="font-size: 0.68rem; background: rgba(255,255,255,0.25); color: #fff; padding: 0.2rem 0.5rem; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em;">Aktif</span>
@@ -243,24 +241,19 @@
     {{-- Ringkasan Informasi jika Filter Ruangan Aktif --}}
     @if($selectedRoom)
         <div style="margin-bottom: 1.25rem; background: #eff6ff; border: 1px solid #bfdbfe; border-left: 5px solid #2563eb; color: #1e3a8a; border-radius: 8px; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
-            <div style="display: flex; align-items: center; gap: 0.85rem;">
-                <div style="width: 44px; height: 44px; border-radius: 8px; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #1d4ed8; flex-shrink: 0;">
-                    🏛️
+            <div>
+                <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; color: #2563eb; margin-bottom: 0.15rem;">
+                    Filter Khusus Pemakaian Ruangan
                 </div>
-                <div>
-                    <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; color: #2563eb; margin-bottom: 0.15rem;">
-                        Filter Khusus Pemakaian Ruangan
-                    </div>
-                    <div style="font-size: 1.2rem; font-weight: 800; color: #1e3a8a; line-height: 1.2;">
-                        Jadwal Penggunaan Ruang: {{ $selectedRoom->name }} - Putaran {{ $selectedCycle }}
-                    </div>
-                    <div style="font-size: 0.85rem; color: #475569; margin-top: 0.35rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-                        <span>Kategori: <strong>{{ $selectedRoom->type ?? 'Ruang Belajar' }}</strong></span>
-                        <span>&bull;</span>
-                        <span>Kapasitas: <strong>{{ $selectedRoom->capacity ?? 36 }} Siswa</strong></span>
-                        <span>&bull;</span>
-                        <span>Total Penggunaan: <strong style="color: #2563eb;">{{ $schedules->total() }} Sesi Mengajar</strong></span>
-                    </div>
+                <div style="font-size: 1.2rem; font-weight: 800; color: #1e3a8a; line-height: 1.2;">
+                    Jadwal Penggunaan Ruang: {{ $selectedRoom->name }} - Putaran {{ $selectedCycle }}
+                </div>
+                <div style="font-size: 0.85rem; color: #475569; margin-top: 0.35rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    <span>Kategori: <strong>{{ $selectedRoom->type ?? 'Ruang Belajar' }}</strong></span>
+                    <span>&bull;</span>
+                    <span>Kapasitas: <strong>{{ $selectedRoom->capacity ?? 36 }} Siswa</strong></span>
+                    <span>&bull;</span>
+                    <span>Total Penggunaan: <strong style="color: #2563eb;">{{ $schedules->total() }} Sesi Mengajar</strong></span>
                 </div>
             </div>
             <a href="{{ route('schedules.index', array_merge(request()->except('room_id'), ['cycle' => $selectedCycle, 'page' => 1])) }}" class="btn btn-secondary btn-sm" style="font-size: 0.8rem; background: white; border: 1px solid #cbd5e1; color: #334155; font-weight: 600;">
@@ -303,7 +296,7 @@
                         @if($selectedRoom)
                             <td>
                                 <span class="badge" style="background: #f1f5f9; color: #0f172a; font-weight: 700; border: 1px solid #cbd5e1; font-size: 0.82rem;">
-                                    📅 {{ $schedule->day }}
+                                    {{ $schedule->day }}
                                 </span>
                             </td>
                             <td>
@@ -324,7 +317,7 @@
                             </td>
                             <td>
                                 <span class="badge badge-info" style="font-size: 0.85rem; padding: 0.35rem 0.65rem; font-weight: 700;">
-                                    👥 {{ $schedule->schoolClass?->name ?? '-' }}
+                                    {{ $schedule->schoolClass?->name ?? '-' }}
                                 </span>
                             </td>
                             <td>
@@ -436,7 +429,7 @@
                             style="text-align: center; color: var(--text-muted); padding: 2.5rem;"
                         >
                             @if($selectedRoom)
-                                🏛️ Belum ada jadwal pemakaian untuk ruangan <strong>{{ $selectedRoom->name }}</strong> pada putaran ini.
+                                Belum ada jadwal pemakaian untuk ruangan <strong>{{ $selectedRoom->name }}</strong> pada putaran ini.
                             @else
                                 Belum ada jadwal mengajar pada putaran aktif saat ini.
                             @endif

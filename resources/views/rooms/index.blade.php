@@ -47,16 +47,16 @@
                         <td><strong>{{ $room->name }}</strong></td>
                         <td>
                             @if($type === 'Praktik')
-                                <span class="badge" style="background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.35rem;">
-                                    <span style="font-size: 0.8rem;">💻</span> Praktik
+                                <span class="badge" style="background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem;">
+                                    Praktik
                                 </span>
                             @elseif($type === 'Olahraga')
-                                <span class="badge" style="background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.35rem;">
-                                    <span style="font-size: 0.8rem;">⚽</span> Olahraga
+                                <span class="badge" style="background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem;">
+                                    Olahraga
                                 </span>
                             @else
-                                <span class="badge" style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.35rem;">
-                                    <span style="font-size: 0.8rem;">📖</span> Teori
+                                <span class="badge" style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem;">
+                                    Teori
                                 </span>
                             @endif
                         </td>
