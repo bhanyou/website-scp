@@ -26,9 +26,17 @@ class ScheduleController extends Controller
         $blockCycles = BlockCycle::orderBy('id', 'asc')->take(2)->get();
         $activeCycle = BlockCycle::where('is_active', true)->first();
 
-        // Jadwal mengajar otomatis menggunakan siklus / putaran yang sedang aktif
-        $selectedCycleId = $activeCycle?->id ?? $blockCycles->first()?->id;
-        $currentViewCycle = $activeCycle ?? $blockCycles->first();
+        // 1. Dukung filter putaran / siklus blok dari request (block_cycle_id / block_cycle)
+        $cycleFilter = $request->input('block_cycle_id') ?: $request->input('block_cycle');
+        if ($cycleFilter) {
+            $currentViewCycle = $blockCycles->firstWhere('id', $cycleFilter)
+                ?? $blockCycles->firstWhere('cycle', $cycleFilter)
+                ?? BlockCycle::find($cycleFilter)
+                ?? $activeCycle;
+        } else {
+            $currentViewCycle = $activeCycle ?? $blockCycles->first();
+        }
+        $selectedCycleId = $currentViewCycle?->id;
 
         $scheduleQuery = Schedule::with([
             'blockCycle',
@@ -49,15 +57,19 @@ class ScheduleController extends Controller
 
             $scheduleQuery->where('teacher_id', $teacher->id);
 
-            // Guru selalu melihat jadwal pada putaran yang sedang aktif
-            if ($activeCycle) {
+            // Guru melihat jadwal pada putaran yang dipilih atau aktif
+            if ($currentViewCycle) {
+                $scheduleQuery->where('block_cycle_id', $currentViewCycle->id);
+            } elseif ($activeCycle) {
                 $scheduleQuery->where('block_cycle_id', $activeCycle->id);
             } else {
                 $scheduleQuery->whereRaw('1 = 0');
             }
         } elseif ($user->role === 'waka' || $isBk) {
-            // Waka dan Guru BK otomatis melihat jadwal pada putaran yang aktif (BK dapat memantau jadwal semua kelas untuk keperluan bimbingan/pemanggilan siswa)
-            if ($activeCycle) {
+            // Waka dan Guru BK otomatis melihat jadwal pada putaran yang dipilih atau aktif
+            if ($currentViewCycle) {
+                $scheduleQuery->where('block_cycle_id', $currentViewCycle->id);
+            } elseif ($activeCycle) {
                 $scheduleQuery->where('block_cycle_id', $activeCycle->id);
             } elseif ($selectedCycleId) {
                 $scheduleQuery->where('block_cycle_id', $selectedCycleId);
@@ -79,9 +91,7 @@ class ScheduleController extends Controller
         });
 
         // 3. Filter Ruangan: Dropdown daftar ruangan (rooms)
-        $scheduleQuery->when($request->filled('room_id'), function ($q) use ($request) {
-            $q->where('room_id', $request->room_id);
-        });
+        $scheduleQuery->when($request->filled('room_id'), fn($q) => $q->where('room_id', $request->room_id));
 
         // 4. Filter Guru: Dropdown / input pencarian guru pengajar
         $scheduleQuery->when($request->filled('teacher_id'), function ($q) use ($request) {
@@ -108,10 +118,36 @@ class ScheduleController extends Controller
 
         $schedules = $scheduleQuery->paginate($perPage)->withQueryString();
 
+        $selectedRoom = $request->filled('room_id') ? Room::find($request->room_id) : null;
+
         $teachers = Teacher::orderBy('name')->get();
         $subjects = Subject::orderBy('name')->get();
         $classes = SchoolClass::orderBy('name')->get();
-        $rooms = Room::orderByRaw("FIELD(type, 'Praktik', 'Olahraga', 'Teori'), LENGTH(name), name ASC")->get();
+
+        // Urutkan Ruangan secara natural: L.1 s/d L.22, L.IPA, L.PB, OR s/d OR3, HALL, R. 1 s/d R. 48
+        $rooms = Room::all()->sortBy(function ($room) {
+            $name = trim($room->name);
+            if (preg_match('/^L\.(\d+)$/i', $name, $m)) {
+                return sprintf('01-%04d', (int) $m[1]);
+            }
+            if (strcasecmp($name, 'L.IPA') === 0) {
+                return '02-0001';
+            }
+            if (strcasecmp($name, 'L.PB') === 0) {
+                return '02-0002';
+            }
+            if (preg_match('/^OR(\d*)$/i', $name, $m)) {
+                $num = !empty($m[1]) ? (int) $m[1] : 0;
+                return sprintf('03-%04d', $num);
+            }
+            if (strcasecmp($name, 'HALL') === 0) {
+                return '04-0001';
+            }
+            if (preg_match('/^R\.\s*(\d+)$/i', $name, $m)) {
+                return sprintf('05-%04d', (int) $m[1]);
+            }
+            return '99-' . $name;
+        })->values();
 
         $periods = Schedule::PERIODS;
         $allLessonPeriods = [
@@ -128,6 +164,7 @@ class ScheduleController extends Controller
             'activeCycle',
             'currentViewCycle',
             'selectedCycleId',
+            'selectedRoom',
             'teachers',
             'subjects',
             'classes',

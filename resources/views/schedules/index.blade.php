@@ -94,13 +94,36 @@
     <form action="{{ route('schedules.index') }}" method="GET" style="display: flex; gap: 0.85rem; flex-wrap: wrap; align-items: flex-end;">
         <input type="hidden" name="per_page" value="{{ request('per_page', 15) }}">
 
-        <div style="flex: 1.5; min-width: 180px;">
+        {{-- Filter Putaran / Siklus Blok --}}
+        <div style="flex: 1.1; min-width: 140px;">
             <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem; text-transform: uppercase;">
-                Cari Mata Pelajaran
+                Putaran / Siklus
             </label>
-            <input type="text" name="search" class="form-control" placeholder="Ketik nama mata pelajaran..." value="{{ request('search') }}" style="width: 100%;">
+            <select name="block_cycle_id" class="form-control" style="width: 100%;">
+                @foreach($blockCycles as $cycle)
+                    <option value="{{ $cycle->id }}" {{ ((string)($selectedCycleId ?? '') === (string)$cycle->id || (string)request('block_cycle_id') === (string)$cycle->id) ? 'selected' : '' }}>
+                        {{ $cycle->cycle }} {{ $cycle->is_active ? '(Aktif)' : '' }}
+                    </option>
+                @endforeach
+            </select>
         </div>
 
+        {{-- Filter Ruangan / Lab --}}
+        <div style="flex: 1.3; min-width: 170px;">
+            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem; text-transform: uppercase;">
+                Pilih Ruangan / Lab
+            </label>
+            <select name="room_id" class="form-control" style="width: 100%;">
+                <option value="">Semua Ruangan / Lab</option>
+                @foreach($rooms as $r)
+                    <option value="{{ $r->id }}" {{ request('room_id') == $r->id ? 'selected' : '' }}>
+                        {{ $r->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        {{-- Filter Hari --}}
         <div style="flex: 1; min-width: 120px;">
             <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem; text-transform: uppercase;">
                 Hari
@@ -113,7 +136,8 @@
             </select>
         </div>
 
-        <div style="flex: 1.2; min-width: 140px;">
+        {{-- Filter Kelas --}}
+        <div style="flex: 1.1; min-width: 130px;">
             <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem; text-transform: uppercase;">
                 Kelas
             </label>
@@ -127,22 +151,16 @@
             </select>
         </div>
 
-        <div style="flex: 1.2; min-width: 140px;">
+        {{-- Cari Mapel --}}
+        <div style="flex: 1.3; min-width: 160px;">
             <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem; text-transform: uppercase;">
-                Ruangan
+                Cari Mata Pelajaran
             </label>
-            <select name="room_id" class="form-control" style="width: 100%;">
-                <option value="">Semua Ruangan</option>
-                @foreach($rooms as $r)
-                    <option value="{{ $r->id }}" {{ request('room_id') == $r->id ? 'selected' : '' }}>
-                        {{ $r->name }}
-                    </option>
-                @endforeach
-            </select>
+            <input type="text" name="search" class="form-control" placeholder="Ketik nama mapel..." value="{{ request('search') }}" style="width: 100%;">
         </div>
 
         @if(auth()->user()->role === 'waka' || auth()->user()->role === 'bk' || (auth()->user()->teacher && auth()->user()->teacher->isBkTeacher()))
-            <div style="flex: 1.5; min-width: 180px;">
+            <div style="flex: 1.3; min-width: 160px;">
                 <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem; text-transform: uppercase;">
                     Guru Pengajar
                 </label>
@@ -161,7 +179,7 @@
             <button type="submit" class="btn btn-primary" style="height: 42px; padding: 0 1.25rem;">
                 Terapkan
             </button>
-            @if(request()->filled('day') || request()->filled('class_group_id') || request()->filled('class_id') || request()->filled('room_id') || request()->filled('teacher_id') || request()->filled('search'))
+            @if(request()->filled('day') || request()->filled('class_group_id') || request()->filled('class_id') || request()->filled('room_id') || request()->filled('teacher_id') || request()->filled('search') || request()->filled('block_cycle_id'))
                 <a href="{{ route('schedules.index', ['per_page' => request('per_page', 15)]) }}" class="btn btn-secondary" style="height: 42px; display: inline-flex; align-items: center;">
                     Reset Filter
                 </a>
@@ -176,14 +194,17 @@
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
         <div>
             <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">
-                Putaran / Siklus Aktif
+                Putaran / Siklus Ditampilkan
             </div>
 
             <div style="font-size: 1.15rem; font-weight: 700; color: var(--accent);">
-                {{ $activeCycle?->cycle ?? 'Belum ada putaran aktif' }}
+                {{ $currentViewCycle?->cycle ?? ($activeCycle?->cycle ?? 'Belum ada putaran aktif') }}
+                @if($currentViewCycle && $currentViewCycle->is_active)
+                    <span class="badge badge-success" style="font-size: 0.75rem; vertical-align: middle; margin-left: 0.35rem;">Aktif</span>
+                @endif
             </div>
 
-            @if($activeCycle)
+            @if($currentViewCycle)
                 <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.2rem;">
                     Periode Pelaksanaan: <strong>2 Minggu</strong>
                 </div>
@@ -191,14 +212,14 @@
         </div>
 
         <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-            @if($activeCycle && $activeCycle->is_locked)
+            @if($currentViewCycle && $currentViewCycle->is_locked)
                 <span class="badge badge-danger">
                     🔒 Jadwal Sedang Dikunci Waka
                 </span>
                 <a href="{{ route('block-cycles.index') }}" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;">
                     Kelola di Siklus Blok
                 </a>
-            @elseif($activeCycle)
+            @elseif($currentViewCycle)
                 <span class="badge badge-success">
                     🔓 Jadwal Tidak Dikunci
                 </span>
@@ -210,18 +231,55 @@
         </div>
     </div>
 
+    {{-- Ringkasan Informasi jika Filter Ruangan Aktif --}}
+    @if($selectedRoom)
+        <div style="margin-bottom: 1.25rem; background: #eff6ff; border: 1px solid #bfdbfe; border-left: 5px solid #2563eb; color: #1e3a8a; border-radius: 8px; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
+                <div style="width: 44px; height: 44px; border-radius: 8px; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #1d4ed8; flex-shrink: 0;">
+                    🏛️
+                </div>
+                <div>
+                    <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; color: #2563eb; margin-bottom: 0.15rem;">
+                        Filter Khusus Pemakaian Ruangan
+                    </div>
+                    <div style="font-size: 1.2rem; font-weight: 800; color: #1e3a8a; line-height: 1.2;">
+                        Jadwal Penggunaan Ruang: {{ $selectedRoom->name }} - {{ $currentViewCycle?->cycle ?? ($activeCycle?->cycle ?? 'Putaran 1') }}
+                    </div>
+                    <div style="font-size: 0.85rem; color: #475569; margin-top: 0.35rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                        <span>Kategori: <strong>{{ $selectedRoom->type ?? 'Ruang Belajar' }}</strong></span>
+                        <span>&bull;</span>
+                        <span>Kapasitas: <strong>{{ $selectedRoom->capacity ?? 36 }} Siswa</strong></span>
+                        <span>&bull;</span>
+                        <span>Total Penggunaan: <strong style="color: #2563eb;">{{ $schedules->total() }} Sesi Mengajar</strong></span>
+                    </div>
+                </div>
+            </div>
+            <a href="{{ route('schedules.index', array_merge(request()->except('room_id'), ['page' => 1])) }}" class="btn btn-secondary btn-sm" style="font-size: 0.8rem; background: white; border: 1px solid #cbd5e1; color: #334155; font-weight: 600;">
+                ✕ Hapus Filter Ruangan
+            </a>
+        </div>
+    @endif
+
     {{-- Tabel jadwal --}}
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th>No</th>
-                    <th>Guru Pengajar</th>
-                    <th>Mata Pelajaran</th>
-                    <th>Kelas</th>
-                    <th>Ruangan</th>
-                    <th>Hari</th>
-                    <th>Jam Pelajaran</th>
+                    <th style="width: 50px;">No</th>
+                    @if($selectedRoom)
+                        <th>Hari</th>
+                        <th>Jam Pelajaran</th>
+                        <th>Kelas yang Memakai</th>
+                        <th>Mata Pelajaran</th>
+                        <th>Guru Pengajar</th>
+                    @else
+                        <th>Guru Pengajar</th>
+                        <th>Mata Pelajaran</th>
+                        <th>Kelas</th>
+                        <th>Ruangan</th>
+                        <th>Hari</th>
+                        <th>Jam Pelajaran</th>
+                    @endif
                     @if(auth()->user()->role === 'waka')
                         <th style="text-align: right;">Aksi</th>
                     @endif
@@ -233,44 +291,86 @@
                     <tr>
                         <td>{{ ($schedules->currentPage() - 1) * $schedules->perPage() + $loop->iteration }}</td>
 
-                        <td>
-                            <strong>
-                                {{ $schedule->teacher?->name ?? '-' }}
-                            </strong>
-                        </td>
-
-                        <td>
-                            {{ $schedule->subject?->name ?? '-' }}
-                        </td>
-
-                        <td>
-                            <span class="badge badge-info">
-                                {{ $schedule->schoolClass?->name ?? '-' }}
-                            </span>
-                        </td>
-
-                        <td>
-                            {{ $schedule->room?->name ?? '-' }}
-                        </td>
-
-                        <td>{{ $schedule->day }}</td>
-
-                        <td>
-                            <div style="font-weight: 600; color: #1e293b;">
-                                @if($schedule->start_period && $schedule->end_period)
-                                    @if($schedule->start_period == $schedule->end_period)
-                                        Jam ke-{{ $schedule->start_period }}
+                        @if($selectedRoom)
+                            <td>
+                                <span class="badge" style="background: #f1f5f9; color: #0f172a; font-weight: 700; border: 1px solid #cbd5e1; font-size: 0.82rem;">
+                                    📅 {{ $schedule->day }}
+                                </span>
+                            </td>
+                            <td>
+                                <div style="font-weight: 700; color: #1e293b;">
+                                    @if($schedule->start_period && $schedule->end_period)
+                                        @if($schedule->start_period == $schedule->end_period)
+                                            Jam ke-{{ $schedule->start_period }}
+                                        @else
+                                            Jam ke-{{ $schedule->start_period }} s.d. {{ $schedule->end_period }}
+                                        @endif
                                     @else
-                                        Jam ke-{{ $schedule->start_period }} s.d. {{ $schedule->end_period }}
+                                        Sesi Khusus
                                     @endif
-                                @else
-                                    Sesi Khusus
+                                </div>
+                                <small style="color: var(--text-muted); font-size: 0.75rem;">
+                                    {{ substr((string) $schedule->start_time, 0, 5) }} - {{ substr((string) $schedule->end_time, 0, 5) }}
+                                </small>
+                            </td>
+                            <td>
+                                <span class="badge badge-info" style="font-size: 0.85rem; padding: 0.35rem 0.65rem; font-weight: 700;">
+                                    👥 {{ $schedule->schoolClass?->name ?? '-' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div style="font-weight: 600; color: #0f172a;">
+                                    {{ $schedule->subject?->name ?? '-' }}
+                                </div>
+                                @if($schedule->subject?->code)
+                                    <small style="color: var(--text-muted); font-size: 0.75rem;">Kode: {{ $schedule->subject->code }}</small>
                                 @endif
-                            </div>
-                            <small style="color: var(--text-muted); font-size: 0.75rem;">
-                                {{ substr((string) $schedule->start_time, 0, 5) }} - {{ substr((string) $schedule->end_time, 0, 5) }}
-                            </small>
-                        </td>
+                            </td>
+                            <td>
+                                <strong>{{ $schedule->teacher?->name ?? '-' }}</strong>
+                            </td>
+                        @else
+                            <td>
+                                <strong>
+                                    {{ $schedule->teacher?->name ?? '-' }}
+                                </strong>
+                            </td>
+
+                            <td>
+                                {{ $schedule->subject?->name ?? '-' }}
+                            </td>
+
+                            <td>
+                                <span class="badge badge-info">
+                                    {{ $schedule->schoolClass?->name ?? '-' }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span style="font-weight: 600;">
+                                    {{ $schedule->room?->name ?? '-' }}
+                                </span>
+                            </td>
+
+                            <td>{{ $schedule->day }}</td>
+
+                            <td>
+                                <div style="font-weight: 600; color: #1e293b;">
+                                    @if($schedule->start_period && $schedule->end_period)
+                                        @if($schedule->start_period == $schedule->end_period)
+                                            Jam ke-{{ $schedule->start_period }}
+                                        @else
+                                            Jam ke-{{ $schedule->start_period }} s.d. {{ $schedule->end_period }}
+                                        @endif
+                                    @else
+                                        Sesi Khusus
+                                    @endif
+                                </div>
+                                <small style="color: var(--text-muted); font-size: 0.75rem;">
+                                    {{ substr((string) $schedule->start_time, 0, 5) }} - {{ substr((string) $schedule->end_time, 0, 5) }}
+                                </small>
+                            </td>
+                        @endif
 
                         @if(auth()->user()->role === 'waka')
                             <td style="text-align: right; white-space: nowrap;">
@@ -323,10 +423,14 @@
                 @empty
                     <tr>
                         <td
-                            colspan="{{ auth()->user()->role === 'waka' ? 8 : 7 }}"
+                            colspan="{{ auth()->user()->role === 'waka' ? ($selectedRoom ? 7 : 8) : ($selectedRoom ? 6 : 7) }}"
                             style="text-align: center; color: var(--text-muted); padding: 2.5rem;"
                         >
-                            Belum ada jadwal mengajar pada putaran aktif saat ini.
+                            @if($selectedRoom)
+                                🏛️ Belum ada jadwal pemakaian untuk ruangan <strong>{{ $selectedRoom->name }}</strong> pada putaran ini.
+                            @else
+                                Belum ada jadwal mengajar pada putaran aktif saat ini.
+                            @endif
                         </td>
                     </tr>
                 @endforelse

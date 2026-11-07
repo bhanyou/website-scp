@@ -16,12 +16,6 @@ class RoomSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Bersihkan data ruangan lama dengan aman (bypass foreign key)
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        Schedule::whereNotNull('room_id')->update(['room_id' => null]);
-        Room::truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-
         $rooms = [];
 
         // 2. Ruang Praktik / Khusus (Resmi SMKN 1 Bantul)
@@ -64,8 +58,8 @@ class RoomSeeder extends Seeder
             'capacity' => 50,
         ];
 
-        // 3. Ruang Teori: R. 1 s/d R. 34 (format "R. [nomor]")
-        for ($i = 1; $i <= 34; $i++) {
+        // 3. Ruang Teori: R. 1 s/d R. 48 (format "R. [nomor]")
+        for ($i = 1; $i <= 48; $i++) {
             $rooms[] = [
                 'name' => "R. {$i}",
                 'type' => 'Teori',
@@ -73,9 +67,9 @@ class RoomSeeder extends Seeder
             ];
         }
 
-        // Simpan seluruh data ke database
+        // Simpan seluruh data ke database tanpa merusak data relasi yang sudah ada
         foreach ($rooms as $item) {
-            Room::create($item);
+            Room::firstOrCreate(['name' => $item['name']], $item);
         }
     }
 }
