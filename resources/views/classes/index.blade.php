@@ -7,12 +7,6 @@
         <p class="page-subtitle">Daftar rombongan belajar, wali kelas, dan kuota siswa</p>
     </div>
     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
-        <form action="{{ route('classes.clean-anomalies') }}" method="POST" style="display: inline;" onsubmit="return confirm('Bersihkan seluruh nama kelas anomali (nama orang/bukan format rombel X/XI/XII)?')">
-            @csrf
-            <button type="submit" class="btn btn-secondary" style="color: #ef4444; border-color: #fca5a5; display: inline-flex; align-items: center; gap: 0.35rem;" title="Hapus kelas yang bukan nama rombel resmi">
-                <span>🧹</span> Bersihkan Anomali
-            </button>
-        </form>
         <a href="{{ route('classes.template') }}" class="btn btn-secondary">
             Unduh Format CSV
         </a>
