@@ -28,7 +28,6 @@
                     <th style="width: 140px;">KODE MAPEL</th>
                     <th>NAMA MATA PELAJARAN</th>
                     <th style="width: 150px;">KATEGORI</th>
-                    <th style="width: 130px; text-align: center;">BEBAN (JP)</th>
                     <th style="width: 140px; text-align: right;">AKSI</th>
                 </tr>
             </thead>
@@ -47,28 +46,23 @@
                         <td><strong>{{ $subject->name }}</strong></td>
                         <td>
                             @if($cat === 'Kejuruan')
-                                <span class="badge" style="background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.35rem;">
-                                    <span style="font-size: 0.8rem;">💻</span> Kejuruan
+                                <span class="badge" style="background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem; display: inline-flex; align-items: center;">
+                                    Kejuruan
                                 </span>
                             @elseif($cat === 'Olahraga')
-                                <span class="badge" style="background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.35rem;">
-                                    <span style="font-size: 0.8rem;">⚽</span> Olahraga
+                                <span class="badge" style="background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem; display: inline-flex; align-items: center;">
+                                    Olahraga
                                 </span>
                             @else
-                                <span class="badge" style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.35rem;">
-                                    <span style="font-size: 0.8rem;">📖</span> Umum
+                                <span class="badge" style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem; display: inline-flex; align-items: center;">
+                                    Umum
                                 </span>
                             @endif
-                        </td>
-                        <td style="text-align: center;">
-                            <span style="font-weight: 700; color: var(--text-primary);">
-                                {{ $subject->total_hours ?? 2 }} JP
-                            </span>
                         </td>
                         <td style="text-align: right; white-space: nowrap;">
                             <button type="button" 
                                 class="btn btn-secondary btn-sm" 
-                                onclick="openEditSubjectModal({{ $subject->id }}, '{{ addslashes($subject->code) }}', '{{ addslashes($subject->name) }}', '{{ addslashes($cat) }}', {{ $subject->total_hours ?? 2 }})">
+                                onclick="openEditSubjectModal({{ $subject->id }}, '{{ addslashes($subject->code) }}', '{{ addslashes($subject->name) }}', '{{ addslashes($cat) }}')">
                                 Edit
                             </button>
                             <form action="{{ route('subjects.destroy', $subject->id) }}" method="POST" style="display:inline;">
@@ -82,7 +76,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
                             Belum ada mata pelajaran yang ditambahkan.
                         </td>
                     </tr>
@@ -187,8 +181,7 @@
                     <ul style="margin: 0; padding-left: 1.25rem;">
                         <li>Kolom wajib: <strong>kode_mapel</strong> (contoh: <em>MP-001</em>) dan <strong>nama_mapel</strong> (contoh: <em>Pemrograman Web</em>).</li>
                         <li>Kolom opsional: <strong>kategori</strong> (<em>Kejuruan</em>, <em>Umum</em>, atau <em>Olahraga</em> - default: <em>Umum</em>).</li>
-                        <li>Kolom opsional: <strong>beban_jp</strong> (alokasi jam pelajaran, default: <em>2</em>).</li>
-                        <li>Jika kode mata pelajaran sudah ada di database, data kategori dan beban JP akan diperbarui otomatis tanpa membuat data ganda.</li>
+                        <li>Jika kode mata pelajaran sudah ada di database, data kategori akan diperbarui otomatis tanpa membuat data ganda.</li>
                     </ul>
                     <div style="margin-top: 0.75rem;">
                         <a href="{{ route('subjects.template') }}" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 0.25rem 0.65rem;">
@@ -236,20 +229,13 @@
                     <input type="text" name="name" id="create_name" placeholder="Contoh: Pemrograman Web" required>
                 </div>
 
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label for="create_category">Kategori Mapel</label>
-                        <select name="category" id="create_category">
-                            <option value="Umum" selected>Umum</option>
-                            <option value="Kejuruan">Kejuruan</option>
-                            <option value="Olahraga">Olahraga</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="create_total_hours">Beban Jam Pelajaran (JP)</label>
-                        <input type="number" name="total_hours" id="create_total_hours" value="2" min="1" max="20" placeholder="2">
-                    </div>
+                <div class="form-group">
+                    <label for="create_category">Kategori Mapel</label>
+                    <select name="category" id="create_category">
+                        <option value="Umum" selected>Umum</option>
+                        <option value="Kejuruan">Kejuruan</option>
+                        <option value="Olahraga">Olahraga</option>
+                    </select>
                 </div>
             </div>
 
@@ -292,20 +278,13 @@
                     <input type="text" name="name" id="edit_name" required>
                 </div>
 
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label for="edit_category">Kategori Mapel</label>
-                        <select name="category" id="edit_category">
-                            <option value="Umum">Umum</option>
-                            <option value="Kejuruan">Kejuruan</option>
-                            <option value="Olahraga">Olahraga</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="edit_total_hours">Beban Jam Pelajaran (JP)</label>
-                        <input type="number" name="total_hours" id="edit_total_hours" min="1" max="20" required>
-                    </div>
+                <div class="form-group">
+                    <label for="edit_category">Kategori Mapel</label>
+                    <select name="category" id="edit_category">
+                        <option value="Umum">Umum</option>
+                        <option value="Kejuruan">Kejuruan</option>
+                        <option value="Olahraga">Olahraga</option>
+                    </select>
                 </div>
             </div>
 
@@ -365,13 +344,12 @@
         window.location.href = url.toString();
     }
 
-    function openEditSubjectModal(id, code, name, category, totalHours) {
+    function openEditSubjectModal(id, code, name, category) {
         const form = document.getElementById('formEditSubject');
         form.action = `/subjects/${id}`;
         document.getElementById('edit_code').value = code;
         document.getElementById('edit_name').value = name;
         document.getElementById('edit_category').value = category || 'Umum';
-        document.getElementById('edit_total_hours').value = totalHours || 2;
         openModal('modalEditSubject');
     }
 </script>

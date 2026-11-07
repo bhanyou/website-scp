@@ -24,18 +24,13 @@
         <p>
             @php $cat = $subject->category ?? 'Umum'; @endphp
             @if($cat === 'Kejuruan')
-                <span class="badge" style="background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 600;">💻 Kejuruan</span>
+                <span class="badge" style="background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 600;">Kejuruan</span>
             @elseif($cat === 'Olahraga')
-                <span class="badge" style="background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 600;">⚽ Olahraga</span>
+                <span class="badge" style="background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 600;">Olahraga</span>
             @else
-                <span class="badge" style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 600;">📖 Umum</span>
+                <span class="badge" style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 600;">Umum</span>
             @endif
         </p>
-    </div>
-
-    <div class="detail-item">
-        <strong>Beban Jam Pelajaran</strong>
-        <p>{{ $subject->total_hours ?? 2 }} JP</p>
     </div>
 
     <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 1.5rem;">

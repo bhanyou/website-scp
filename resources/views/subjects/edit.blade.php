@@ -23,20 +23,13 @@
             <input type="text" id="name" name="name" value="{{ old('name', $subject->name) }}" required>
         </div>
 
-        <div class="grid-2">
-            <div class="form-group">
-                <label for="category">Kategori Mapel</label>
-                <select id="category" name="category">
-                    <option value="Umum" {{ old('category', $subject->category) == 'Umum' ? 'selected' : '' }}>Umum</option>
-                    <option value="Kejuruan" {{ old('category', $subject->category) == 'Kejuruan' ? 'selected' : '' }}>Kejuruan</option>
-                    <option value="Olahraga" {{ old('category', $subject->category) == 'Olahraga' ? 'selected' : '' }}>Olahraga</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="total_hours">Beban Jam Pelajaran (JP)</label>
-                <input type="number" id="total_hours" name="total_hours" value="{{ old('total_hours', $subject->total_hours ?? 2) }}" min="1" max="20" required>
-            </div>
+        <div class="form-group">
+            <label for="category">Kategori Mapel</label>
+            <select id="category" name="category">
+                <option value="Umum" {{ old('category', $subject->category) == 'Umum' ? 'selected' : '' }}>Umum</option>
+                <option value="Kejuruan" {{ old('category', $subject->category) == 'Kejuruan' ? 'selected' : '' }}>Kejuruan</option>
+                <option value="Olahraga" {{ old('category', $subject->category) == 'Olahraga' ? 'selected' : '' }}>Olahraga</option>
+            </select>
         </div>
 
         <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 1.5rem;">
