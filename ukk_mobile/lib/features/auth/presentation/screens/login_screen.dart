@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/di/core_providers.dart';
+import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/validator.dart';
 import '../controllers/auth_controller.dart';
@@ -45,18 +47,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
 
     if (success && mounted) {
+      final user = ref.read(authControllerProvider).user;
+      final role = user?.role.toLowerCase() ?? 'siswa';
+
+      String targetRoute = RouteNames.siswaDashboard;
+      if (role == 'guru' || role == 'bk') {
+        targetRoute = RouteNames.guruDashboard;
+      } else if (role == 'kesiswaan' || role == 'waka') {
+        targetRoute = RouteNames.kesiswaanDashboard;
+      }
+
+      context.go(targetRoute);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Row(
             children: [
-              Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-              SizedBox(width: 10),
-              Text('Selamat datang di School Class Progress!'),
+              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Text('Selamat datang, ${user?.name ?? 'Pengguna'}!'),
             ],
           ),
           backgroundColor: AppColors.hadir,
           behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 2),
         ),
       );
     }

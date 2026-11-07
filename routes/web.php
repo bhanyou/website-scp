@@ -97,7 +97,7 @@ Route::middleware('auth')->group(function () {
         ->name('dashboard.waka');
 
     Route::get('/dashboard/guru', [DashboardController::class, 'guru'])
-        ->middleware('role:guru')
+        ->middleware('role:guru,bk')
         ->name('dashboard.guru');
 
     Route::get('/dashboard/siswa', [DashboardController::class, 'siswa'])

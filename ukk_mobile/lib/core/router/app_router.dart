@@ -47,9 +47,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // 2. Jika sudah terautentikasi dan berada di /login atau root -> arahkan ke dashboard sesuai role
       if (isLoggingIn || state.matchedLocation == RouteNames.splash) {
         final role = authState.user?.role.toLowerCase() ?? 'siswa';
-        if (role == 'guru') {
+        if (role == 'guru' || role == 'bk') {
           return RouteNames.guruDashboard;
-        } else if (role == 'kesiswaan') {
+        } else if (role == 'kesiswaan' || role == 'waka') {
           return RouteNames.kesiswaanDashboard;
         } else {
           return RouteNames.siswaDashboard;

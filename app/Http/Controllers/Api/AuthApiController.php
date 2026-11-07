@@ -60,23 +60,32 @@ class AuthApiController extends Controller
             ], 401);
         }
 
-        // Aturan SRS KF77: Waka Kurikulum dikhususkan untuk portal web
-        if ($user->role === 'waka') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Role Waka Kurikulum hanya dapat diakses melalui portal web.',
-            ], 403);
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        $teacher = $user->teacher ?? Teacher::where('user_id', $user->id)->first();
+        if (!$teacher && in_array($user->role, ['guru', 'bk'], true)) {
+            $teacher = Teacher::where('name', $user->name)
+                ->orWhere('username', $user->username)
+                ->first();
+            if ($teacher && empty($teacher->user_id)) {
+                $teacher->update(['user_id' => $user->id]);
+            }
         }
 
-        $token = $user->createToken('postman')->plainTextToken;
-
-        $teacher = $user->teacher;
         $homeroomClasses = $teacher ? $teacher->homeroomClasses()->pluck('name')->all() : [];
         $isHomeroom = count($homeroomClasses) > 0;
 
-        $activeStudent = $user->student;
+        $activeStudent = $user->student ?? Student::where('user_id', $user->id)->first();
         if (!$activeStudent && $user->parent) {
             $activeStudent = $user->parent->students()->with('schoolClass')->first();
+        }
+        if (!$activeStudent && in_array($user->role, ['siswa', 'ortu'], true)) {
+            $activeStudent = Student::where('username', $user->username)
+                ->orWhere('name', $user->name)
+                ->first();
+            if ($activeStudent && empty($activeStudent->user_id)) {
+                $activeStudent->update(['user_id' => $user->id]);
+            }
         }
 
         return response()->json([

@@ -35,11 +35,29 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user->teacher) {
-            abort(403, 'Akun Guru belum terhubung dengan data guru.');
+        $teacher = $user->teacher ?? Teacher::where('user_id', $user->id)->first();
+
+        if (!$teacher) {
+            $teacher = Teacher::where('name', $user->name)
+                ->orWhere('username', $user->username)
+                ->first();
+            if ($teacher && empty($teacher->user_id)) {
+                $teacher->update(['user_id' => $user->id]);
+            }
         }
 
-        $teacher = $user->teacher->load('homeroomClasses.students');
+        if (!$teacher) {
+            // Otomatis buat profil guru/BK jika belum ada agar semua role langsung dapat masuk dashboard tanpa error 403
+            $teacher = Teacher::create([
+                'user_id'  => $user->id,
+                'nip'      => ($user->role === 'bk' ? 'BK' : 'GURU') . str_pad((string)$user->id, 6, '0', STR_PAD_LEFT),
+                'username' => $user->username ?: 'guru' . $user->id,
+                'name'     => $user->name,
+                'mapel'    => $user->role === 'bk' ? 'BIMBINGAN KONSELING' : null,
+            ]);
+        }
+
+        $teacher->load('homeroomClasses.students');
         $activeCycle = BlockCycle::where('is_active', true)->first();
         $today = Carbon::today();
         $days = $this->getIndonesianDays();
@@ -210,6 +228,14 @@ class DashboardController extends Controller
         $student = $user->student;
         if (!$student && $user->parent) {
             $student = $user->parent->students()->first();
+        }
+        if (!$student && $user->role === 'siswa') {
+            $student = Student::where('username', $user->username)
+                ->orWhere('name', $user->name)
+                ->first();
+            if ($student && empty($student->user_id)) {
+                $student->update(['user_id' => $user->id]);
+            }
         }
 
         $activeCycle = BlockCycle::where('is_active', true)->first();
