@@ -209,11 +209,14 @@ class ScheduleImportService
             $text = $page->getText();
             $lines = array_values(array_filter(array_map('trim', explode("\n", $text))));
 
-            // Deteksi Nama Kelas di bagian atas halaman (contoh: X RPL1, XI TKJ2, XII BD)
+            // Deteksi Nama Kelas di bagian atas halaman (contoh: X RPL 1, XI TKJ 2, XII BD)
             $className = null;
             foreach (array_slice($lines, 0, 6) as $l) {
-                if (preg_match('/\b(X|XI|XII)\s*([A-Za-z0-9]+)\b/i', $l, $m)) {
-                    $className = strtoupper($m[1]) . ' ' . strtoupper($m[2]);
+                if (preg_match('/^(XII|XI|X)\s*([A-Za-z]+)\s*(\d+)?$/i', $l, $m)) {
+                    $grade = strtoupper($m[1]);
+                    $major = strtoupper($m[2]);
+                    $no = isset($m[3]) ? ' ' . $m[3] : '';
+                    $className = "{$grade} {$major}{$no}";
                     break;
                 }
             }
@@ -468,7 +471,7 @@ class ScheduleImportService
                 $x = (float)($el[0][4] ?? 0);
                 $y = (float)($el[0][5] ?? 0);
                 $text = trim($el[1] ?? '');
-                if ($y >= 505 && $y <= 540 && $x >= 100) {
+                if ($y >= 490 && $y <= 545 && $x >= 100) {
                     $colHeaders[] = ['text' => $text, 'x' => $x, 'y' => $y];
                 }
             }
@@ -478,7 +481,7 @@ class ScheduleImportService
             foreach ($colHeaders as $ch) {
                 $matched = false;
                 foreach ($columns as &$col) {
-                    if (abs($col['x_avg'] - $ch['x']) <= 6.0) {
+                    if (abs($col['x_avg'] - $ch['x']) <= 5.0) {
                         $col['items'][] = $ch;
                         $col['x_avg'] = array_sum(array_column($col['items'], 'x')) / count($col['items']);
                         $matched = true;
@@ -494,6 +497,7 @@ class ScheduleImportService
             }
 
             foreach ($columns as &$col) {
+                usort($col['items'], fn($a, $b) => $b['y'] <=> $a['y']);
                 $texts = array_column($col['items'], 'text');
                 $rawName = implode(' ', $texts);
                 $grade = null;
