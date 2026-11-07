@@ -698,25 +698,26 @@ function updateSelectedCount() {
 function submitBulkDestroy() {
     const checked = document.querySelectorAll('.teacher-select-cb:checked');
     if (checked.length === 0) {
-        alert('Silakan pilih minimal satu guru yang ingin dihapus.');
+        window.showCustomAlert('Silakan pilih minimal satu guru yang ingin dihapus.');
         return;
     }
-    if (!confirm(`PERINGATAN:\nApakah Anda yakin ingin menghapus ${checked.length} data guru terpilih beserta akun loginnya secara permanen?`)) {
-        return;
-    }
-    const form = document.getElementById('formBulkDestroy');
-    form.innerHTML = `
-        @csrf
-        @method('DELETE')
-    `;
-    checked.forEach(cb => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'teacher_ids[]';
-        input.value = cb.value;
-        form.appendChild(input);
+    const msg = `PERINGATAN:\nApakah Anda yakin ingin menghapus ${checked.length} data guru terpilih beserta akun loginnya secara permanen?`;
+    window.showCustomConfirm(msg, function(confirmed) {
+        if (!confirmed) return;
+        const form = document.getElementById('formBulkDestroy');
+        form.innerHTML = `
+            @csrf
+            @method('DELETE')
+        `;
+        checked.forEach(cb => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'teacher_ids[]';
+            input.value = cb.value;
+            form.appendChild(input);
+        });
+        form.submit();
     });
-    form.submit();
 }
 
 function clearSelection() {

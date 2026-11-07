@@ -559,7 +559,205 @@
                 if (e.key === 'Escape') hideTooltip();
             });
         })();
+
+        // ==========================================================================
+        // CUSTOM POPUP KONFIRMASI (Pengganti confirm() & alert() Google Chrome)
+        // Terletak di tengah-tengah layar dengan animasi CSS modern
+        // ==========================================================================
+        window.showCustomConfirm = function(message, callback, options = {}) {
+            const overlay = document.getElementById('customConfirmOverlay');
+            const titleEl = document.getElementById('customConfirmTitle');
+            const msgEl = document.getElementById('customConfirmMessage');
+            const iconWrap = document.getElementById('customConfirmIconWrap');
+            const btnCancel = document.getElementById('customConfirmBtnCancel');
+            const btnOk = document.getElementById('customConfirmBtnOk');
+
+            if (!overlay || !msgEl || !btnOk || !btnCancel) {
+                if (typeof callback === 'function') callback(window.confirm(message));
+                return;
+            }
+
+            const lowerMsg = (message || '').toLowerCase();
+            const isDanger = lowerMsg.includes('hapus') || lowerMsg.includes('permanen') || lowerMsg.includes('batalkan');
+            const isWarning = lowerMsg.includes('kunci') || lowerMsg.includes('peringatan') || lowerMsg.includes('reset');
+
+            titleEl.textContent = options.title || (isDanger ? 'Peringatan Penghapusan' : (isWarning ? 'Konfirmasi Pilihan' : 'Konfirmasi Tindakan'));
+            msgEl.textContent = message || '';
+
+            // Sesuaikan Ikon SVG
+            iconWrap.className = 'custom-confirm-icon-wrap ' + (isDanger ? 'type-danger' : (isWarning ? 'type-warning' : 'type-primary'));
+            const iconSvg = document.getElementById('customConfirmIconSvg');
+            if (isDanger) {
+                iconSvg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />';
+            } else if (isWarning) {
+                iconSvg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />';
+            } else {
+                iconSvg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />';
+            }
+
+            // Tombol Konfirmasi & Batal di Tengah
+            btnOk.className = 'custom-confirm-btn custom-confirm-btn-confirm ' + (isDanger ? 'is-danger' : (isWarning ? 'is-warning' : ''));
+            btnOk.textContent = options.okText || (isDanger ? 'Ya, Hapus' : (isWarning ? 'Ya, Lanjutkan' : 'Oke'));
+
+            if (options.isAlertOnly) {
+                btnCancel.style.display = 'none';
+            } else {
+                btnCancel.style.display = 'inline-flex';
+                btnCancel.textContent = options.cancelText || 'Batal';
+            }
+
+            overlay.classList.add('is-open');
+            overlay.setAttribute('aria-hidden', 'false');
+            btnOk.focus();
+
+            let resolved = false;
+            function cleanup(confirmed) {
+                if (resolved) return;
+                resolved = true;
+                overlay.classList.remove('is-open');
+                overlay.setAttribute('aria-hidden', 'true');
+                btnOk.removeEventListener('click', onOk);
+                btnCancel.removeEventListener('click', onCancel);
+                document.removeEventListener('keydown', onKeyDown);
+                overlay.removeEventListener('click', onBackdrop);
+                if (typeof callback === 'function') {
+                    callback(confirmed);
+                }
+            }
+
+            function onOk() { cleanup(true); }
+            function onCancel() { cleanup(false); }
+            function onBackdrop(e) {
+                if (e.target === overlay) cleanup(false);
+            }
+            function onKeyDown(e) {
+                if (e.key === 'Escape') cleanup(false);
+                if (e.key === 'Enter') cleanup(true);
+            }
+
+            btnOk.addEventListener('click', onOk);
+            btnCancel.addEventListener('click', onCancel);
+            overlay.addEventListener('click', onBackdrop);
+            document.addEventListener('keydown', onKeyDown);
+        };
+
+        window.showCustomAlert = function(message, callback) {
+            window.showCustomConfirm(message, callback, {
+                title: 'Informasi',
+                isAlertOnly: true,
+                okText: 'Mengerti'
+            });
+        };
+
+        // Ganti fungsi bawaan window.alert
+        window.alert = function(msg) {
+            window.showCustomAlert(msg);
+        };
+
+        // Otomatis intersep semua elemen dengan onclick="return confirm(...)" atau onsubmit="return confirm(...)"
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('button, a, input[type="submit"]');
+            if (!btn) return;
+
+            if (btn._isCustomConfirmed) {
+                btn._isCustomConfirmed = false;
+                return;
+            }
+
+            let message = null;
+            const onclickAttr = btn.getAttribute('onclick');
+            if (onclickAttr && onclickAttr.includes('confirm(')) {
+                const m = onclickAttr.match(/confirm\s*\(\s*(['"`])([\s\S]*?)\1\s*\)/i);
+                if (m) {
+                    message = m[2].replace(/\\'/g, "'").replace(/\\"/g, '"');
+                }
+            }
+
+            if (!message && (btn.type === 'submit' || !btn.type)) {
+                const form = btn.closest('form');
+                if (form && !form._isCustomConfirmed) {
+                    const onsubmitAttr = form.getAttribute('onsubmit');
+                    if (onsubmitAttr && onsubmitAttr.includes('confirm(')) {
+                        const m = onsubmitAttr.match(/confirm\s*\(\s*(['"`])([\s\S]*?)\1\s*\)/i);
+                        if (m) {
+                            message = m[2].replace(/\\'/g, "'").replace(/\\"/g, '"');
+                        }
+                    }
+                }
+            }
+
+            if (message) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                window.showCustomConfirm(message, function(confirmed) {
+                    if (confirmed) {
+                        btn._isCustomConfirmed = true;
+                        const form = btn.closest('form');
+                        if (form) form._isCustomConfirmed = true;
+
+                        if (btn.tagName === 'A' && btn.href) {
+                            window.location.href = btn.href;
+                        } else if (btn.form) {
+                            if (btn.name) {
+                                const hidden = document.createElement('input');
+                                hidden.type = 'hidden';
+                                hidden.name = btn.name;
+                                hidden.value = btn.value;
+                                btn.form.appendChild(hidden);
+                            }
+                            btn.form.requestSubmit ? btn.form.requestSubmit(btn) : btn.form.submit();
+                        } else {
+                            btn.click();
+                        }
+                    }
+                });
+            }
+        }, true);
+
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            if (!form) return;
+            if (form._isCustomConfirmed) {
+                form._isCustomConfirmed = false;
+                return;
+            }
+
+            const onsubmitAttr = form.getAttribute('onsubmit');
+            if (onsubmitAttr && onsubmitAttr.includes('confirm(')) {
+                const m = onsubmitAttr.match(/confirm\s*\(\s*(['"`])([\s\S]*?)\1\s*\)/i);
+                if (m) {
+                    const message = m[2].replace(/\\'/g, "'").replace(/\\"/g, '"');
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+
+                    window.showCustomConfirm(message, function(confirmed) {
+                        if (confirmed) {
+                            form._isCustomConfirmed = true;
+                            form.submit();
+                        }
+                    });
+                }
+            }
+        }, true);
     </script>
+
+    <!-- Modal Popup Konfirmasi Custom (Di Tengah Layar) -->
+    <div class="custom-confirm-overlay" id="customConfirmOverlay" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="custom-confirm-card" id="customConfirmCard">
+            <div class="custom-confirm-icon-wrap type-primary" id="customConfirmIconWrap">
+                <svg id="customConfirmIconSvg" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+            <h4 class="custom-confirm-title" id="customConfirmTitle">Konfirmasi Tindakan</h4>
+            <div class="custom-confirm-message" id="customConfirmMessage">Apakah Anda yakin?</div>
+            <div class="custom-confirm-actions">
+                <button type="button" class="custom-confirm-btn custom-confirm-btn-cancel" id="customConfirmBtnCancel">Batal</button>
+                <button type="button" class="custom-confirm-btn custom-confirm-btn-confirm" id="customConfirmBtnOk">Oke</button>
+            </div>
+        </div>
+    </div>
     @stack('scripts')
 </body>
 </html>

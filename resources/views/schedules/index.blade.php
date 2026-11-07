@@ -283,7 +283,7 @@
                         <th>Jam Pelajaran</th>
                     @endif
                     @if(auth()->user()->role === 'waka')
-                        <th style="text-align: right;">Aksi</th>
+                        <th style="text-align: center;">Aksi</th>
                     @endif
                 </tr>
             </thead>
@@ -375,7 +375,7 @@
                         @endif
 
                         @if(auth()->user()->role === 'waka')
-                            <td style="text-align: right; white-space: nowrap;">
+                            <td style="text-align: center; white-space: nowrap;">
                                 @if(!$schedule->blockCycle?->is_locked)
                                     {{-- Tombol Edit Modal (Tidak Berpindah Halaman) --}}
                                     <button

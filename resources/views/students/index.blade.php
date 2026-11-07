@@ -742,25 +742,26 @@ function updateSelectedCount() {
 function submitBulkDestroy() {
     const checked = document.querySelectorAll('.student-select-cb:checked');
     if (checked.length === 0) {
-        alert('Silakan pilih minimal satu siswa yang ingin dihapus.');
+        window.showCustomAlert('Silakan pilih minimal satu siswa yang ingin dihapus.');
         return;
     }
-    if (!confirm(`PERINGATAN:\nApakah Anda yakin ingin menghapus ${checked.length} data siswa terpilih beserta akun loginnya secara permanen?`)) {
-        return;
-    }
-    const form = document.getElementById('formBulkDestroy');
-    form.innerHTML = `
-        @csrf
-        @method('DELETE')
-    `;
-    checked.forEach(cb => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'student_ids[]';
-        input.value = cb.value;
-        form.appendChild(input);
+    const msg = `PERINGATAN:\nApakah Anda yakin ingin menghapus ${checked.length} data siswa terpilih beserta akun loginnya secara permanen?`;
+    window.showCustomConfirm(msg, function(confirmed) {
+        if (!confirmed) return;
+        const form = document.getElementById('formBulkDestroy');
+        form.innerHTML = `
+            @csrf
+            @method('DELETE')
+        `;
+        checked.forEach(cb => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'student_ids[]';
+            input.value = cb.value;
+            form.appendChild(input);
+        });
+        form.submit();
     });
-    form.submit();
 }
 
 function clearSelection() {
