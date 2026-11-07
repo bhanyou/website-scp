@@ -18,7 +18,7 @@
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-danger btn-sm" style="background-color: #ef4444; color: white; border: none; display: inline-flex; align-items: center; gap: 0.35rem;">
-                    <span>🗑️</span> Hapus Semua Ruangan
+                    Hapus Semua Ruangan
                 </button>
             </form>
         @endif

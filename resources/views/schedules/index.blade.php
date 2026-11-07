@@ -16,7 +16,7 @@
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-danger btn-sm" style="background-color: #ef4444; color: white; border: none; display: inline-flex; align-items: center; gap: 0.35rem;">
-                    <span>🗑️</span> Hapus Semua Jadwal
+                    Hapus Semua Jadwal
                 </button>
             </form>
             @if($activeCycle && $activeCycle->is_locked)
@@ -66,7 +66,7 @@
 @if(session('import_warnings') && count(session('import_warnings')) > 0)
     <div class="alert alert-warning" style="margin-bottom: 1.25rem; background-color: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; color: #92400e; border-radius: 6px; padding: 0.85rem 1rem;">
         <div style="font-weight: 700; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.35rem;">
-            <span>⚠️</span> Catatan Peringatan / Bentrok Jadwal (Data Tetap Disimpan Sesuai Jadwal Kurikulum):
+            Catatan Peringatan / Bentrok Jadwal (Data Tetap Disimpan Sesuai Jadwal Kurikulum):
         </div>
         <ul style="margin: 0; padding-left: 1.25rem; max-height: 160px; overflow-y: auto; font-size: 0.82rem; line-height: 1.5;">
             @foreach(session('import_warnings') as $warn)
@@ -225,14 +225,14 @@
         <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
             @if($currentViewCycle && $currentViewCycle->is_locked)
                 <span class="badge badge-danger">
-                    🔒 Jadwal Sedang Dikunci Waka
+                    Jadwal Sedang Dikunci Waka
                 </span>
                 <a href="{{ route('block-cycles.index') }}" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;">
                     Kelola di Siklus Blok
                 </a>
             @else
                 <span class="badge badge-success">
-                    🔓 Jadwal Tidak Dikunci
+                    Jadwal Tidak Dikunci
                 </span>
             @endif
         </div>

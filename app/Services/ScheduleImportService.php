@@ -73,6 +73,9 @@ class ScheduleImportService
 
         // 1. Ekstraksi Data Berdasarkan Tipe File
         if ($extension === 'pdf') {
+            if ($this->isRoomMatrixPdf($filePath)) {
+                return $this->importRoomMatrixPdf($filePath, $targetCycleId);
+            }
             $parsedRows = $this->parsePdfFile($filePath);
         } else {
             // Gunakan DocumentTableExtractor untuk CSV / XLSX / XLS / DOCX dengan konteks jadwal
@@ -400,6 +403,289 @@ class ScheduleImportService
         }
 
         return $allRows;
+    }
+
+    /**
+     * Memeriksa apakah berkas PDF merupakan matriks jadwal ruangan (JADWAL RUANG / JADWAL KBM PUTARAN).
+     */
+    public function isRoomMatrixPdf(string $filePath): bool
+    {
+        try {
+            $parser = new SmalotPdfParser();
+            $pdf = $parser->parseFile($filePath);
+            $pages = $pdf->getPages();
+            if (empty($pages)) {
+                return false;
+            }
+            $textUpper = strtoupper($pages[0]->getText());
+            return (str_contains($textUpper, 'HARIJAM WAKTU') || str_contains($textUpper, 'HARI JAM WAKTU') || str_contains($textUpper, 'JADWAL KBM PUTARAN'))
+                && (str_contains($textUpper, 'RPL1') || str_contains($textUpper, 'RPL 1') || str_contains($textUpper, 'TKJ'));
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Sinkronisasi ruangan dari matriks PDF Jadwal Ruangan resmi (48 kolom kelas).
+     */
+    public function importRoomMatrixPdf(string $filePath, ?int $targetCycleId = null): array
+    {
+        try {
+            $parser = new SmalotPdfParser();
+            $pdf = $parser->parseFile($filePath);
+            $pages = $pdf->getPages();
+            if (empty($pages)) {
+                return [
+                    'success' => false,
+                    'message' => 'Berkas PDF kosong atau tidak dapat dibaca.',
+                    'schedules_count' => 0,
+                    'subjects_count' => 0,
+                    'rooms_count' => 0,
+                    'classes_count' => 0,
+                    'majors_count' => 0,
+                    'skipped_errors' => ['PDF tidak memiliki halaman.'],
+                    'warning_logs' => [],
+                ];
+            }
+
+            // Tentukan Putaran (Cycle 1 atau 2)
+            $cycles = BlockCycle::all();
+            $targetCycle = $targetCycleId
+                ? $cycles->firstWhere('id', $targetCycleId)
+                : ($cycles->firstWhere('is_active', true) ?: $cycles->first());
+
+            $cycleNumber = 1;
+            if ($targetCycle) {
+                $cycleNumber = (int) $targetCycle->cycle;
+            } elseif ($targetCycleId && in_array((int)$targetCycleId, [1, 2])) {
+                $cycleNumber = (int) $targetCycleId;
+            }
+
+            // Ekstraksi 48 Kolom dari Halaman 1
+            $dataTm1 = $pages[0]->getDataTm();
+            $colHeaders = [];
+            foreach ($dataTm1 as $el) {
+                $x = (float)($el[0][4] ?? 0);
+                $y = (float)($el[0][5] ?? 0);
+                $text = trim($el[1] ?? '');
+                if ($y >= 505 && $y <= 540 && $x >= 100) {
+                    $colHeaders[] = ['text' => $text, 'x' => $x, 'y' => $y];
+                }
+            }
+            usort($colHeaders, fn($a, $b) => $a['x'] <=> $b['x']);
+
+            $columns = [];
+            foreach ($colHeaders as $ch) {
+                $matched = false;
+                foreach ($columns as &$col) {
+                    if (abs($col['x_avg'] - $ch['x']) <= 6.0) {
+                        $col['items'][] = $ch;
+                        $col['x_avg'] = array_sum(array_column($col['items'], 'x')) / count($col['items']);
+                        $matched = true;
+                        break;
+                    }
+                }
+                if (!$matched) {
+                    $columns[] = [
+                        'x_avg' => $ch['x'],
+                        'items' => [$ch],
+                    ];
+                }
+            }
+
+            foreach ($columns as &$col) {
+                $texts = array_column($col['items'], 'text');
+                $rawName = implode(' ', $texts);
+                $grade = null;
+                if (preg_match('/\b(10|11|12)\b/', $rawName, $gm)) {
+                    $grade = $gm[1];
+                }
+                $cleanMajor = preg_replace('/\b(10|11|12)\b/', '', $rawName);
+                $cleanMajor = trim(preg_replace('/\s+/', ' ', $cleanMajor));
+                $cleanMajor = preg_replace('/([A-Za-z]+)(\d+)/', '$1 $2', $cleanMajor);
+                $col['class_name'] = trim("$grade $cleanMajor");
+            }
+
+            $pageDays = [
+                0 => ['Senin', 'Selasa'],
+                1 => ['Rabu', 'Kamis'],
+                2 => ['Jumat']
+            ];
+
+            $allCells = [];
+
+            foreach ($pages as $pIdx => $page) {
+                $days = $pageDays[$pIdx] ?? [];
+                if (empty($days)) continue;
+
+                $dataTm = $page->getDataTm();
+
+                // Cari period (angka jam 1..10 di koordinat X 45..62)
+                $periodElements = [];
+                foreach ($dataTm as $el) {
+                    $x = (float)($el[0][4] ?? 0);
+                    $y = (float)($el[0][5] ?? 0);
+                    $text = trim($el[1] ?? '');
+                    if ($x >= 45 && $x <= 62 && is_numeric($text)) {
+                        $periodElements[] = ['period' => (int)$text, 'y' => $y];
+                    }
+                }
+                usort($periodElements, fn($a, $b) => $b['y'] <=> $a['y']);
+
+                $dayPeriods = [];
+                if (count($days) == 2) {
+                    $d1 = [];
+                    $d2 = [];
+                    $splitY = 300;
+                    $ones = array_values(array_filter($periodElements, fn($p) => $p['period'] === 1));
+                    if (count($ones) >= 2) {
+                        $splitY = ($ones[0]['y'] + $ones[1]['y']) / 2;
+                    }
+                    foreach ($periodElements as $p) {
+                        if ($p['y'] > $splitY) {
+                            $d1[] = $p;
+                        } else {
+                            $d2[] = $p;
+                        }
+                    }
+                    $dayPeriods[$days[0]] = $d1;
+                    $dayPeriods[$days[1]] = $d2;
+                } else {
+                    $dayPeriods[$days[0]] = $periodElements;
+                }
+
+                foreach ($dayPeriods as $dName => $pList) {
+                    foreach ($pList as $p) {
+                        $py = $p['y'];
+                        $pNum = $p['period'];
+
+                        foreach ($columns as $col) {
+                            $cx = $col['x_avg'];
+                            $cName = $col['class_name'];
+
+                            $roomText = null;
+                            $bestDist = 999;
+                            foreach ($dataTm as $el) {
+                                $ex = (float)($el[0][4] ?? 0);
+                                $ey = (float)($el[0][5] ?? 0);
+                                $txt = trim($el[1] ?? '');
+                                if ($txt === '' || $ex < 65) continue;
+                                if (abs($ey - $py) <= 5.0 && abs($ex - $cx) <= 7.0) {
+                                    $dist = abs($ex - $cx);
+                                    if ($dist < $bestDist) {
+                                        $bestDist = $dist;
+                                        $roomText = $txt;
+                                    }
+                                }
+                            }
+
+                            if ($roomText) {
+                                $allCells[] = [
+                                    'day' => $dName,
+                                    'period' => $pNum,
+                                    'class' => $cName,
+                                    'room' => $roomText
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (empty($allCells)) {
+                return [
+                    'success' => false,
+                    'message' => 'Tidak dapat menemukan data sel ruangan dalam tabel PDF.',
+                    'schedules_count' => 0,
+                    'subjects_count' => 0,
+                    'rooms_count' => 0,
+                    'classes_count' => 0,
+                    'majors_count' => 0,
+                    'skipped_errors' => ['Format sel ruangan tidak terbaca.'],
+                    'warning_logs' => [],
+                ];
+            }
+
+            $allClasses = SchoolClass::all();
+            $rooms = Room::all()->keyBy(fn($r) => strtolower(trim($r->name)));
+            $newRoomsCount = 0;
+            $updatedSchedules = 0;
+
+            foreach ($allCells as $entry) {
+                $cName = $entry['class'];
+                $cleanCName = trim(preg_replace('/\s+/', ' ', $cName));
+
+                $cls = $allClasses->first(function($c) use ($cleanCName) {
+                    $cDb = trim(preg_replace('/\s+/', ' ', $c->name));
+                    $cNorm1 = str_ireplace(['XII ', 'XI ', 'X '], ['12 ', '11 ', '10 '], $cDb);
+                    $cNorm2 = str_ireplace(['XII ', 'XI ', 'X '], ['12 ', '11 ', '10 '], $cleanCName);
+                    return strcasecmp($cNorm1, $cNorm2) === 0 || strcasecmp(str_replace(' ', '', $cNorm1), str_replace(' ', '', $cNorm2)) === 0;
+                });
+
+                if (!$cls) continue;
+
+                $rRaw = trim($entry['room']);
+                $rName = $rRaw;
+                if (is_numeric($rRaw)) {
+                    $rName = "R. " . (int)$rRaw;
+                } elseif (preg_match('/^L\.?\s*(\d+)$/i', $rRaw, $rm)) {
+                    $rName = "L." . $rm[1];
+                }
+
+                $rKey = strtolower($rName);
+                if (!isset($rooms[$rKey])) {
+                    $newR = Room::firstOrCreate(
+                        ['name' => $rName],
+                        ['type' => str_starts_with($rName, 'L.') ? 'Praktik' : 'Teori', 'capacity' => 36]
+                    );
+                    $rooms[$rKey] = $newR;
+                    $newRoomsCount++;
+                }
+                $roomObj = $rooms[$rKey];
+
+                $day = $entry['day'];
+                $period = $entry['period'];
+
+                $schedules = Schedule::where('block_cycle', $cycleNumber)
+                    ->where('class_id', $cls->id)
+                    ->where('day', $day)
+                    ->where('start_period', '<=', $period)
+                    ->where('end_period', '>=', $period)
+                    ->get();
+
+                foreach ($schedules as $sched) {
+                    if ($sched->room_id != $roomObj->id) {
+                        $sched->room_id = $roomObj->id;
+                        $sched->save();
+                        $updatedSchedules++;
+                    }
+                }
+            }
+
+            return [
+                'success' => true,
+                'message' => "Sinkronisasi Matriks Ruangan Berhasil! Berkas Jadwal Ruangan Putaran {$cycleNumber} berhasil diproses. Sebanyak {$updatedSchedules} jadwal rombel diperbarui ruangannya sesuai denah resmi sekolah.",
+                'schedules_count' => $updatedSchedules,
+                'subjects_count' => 0,
+                'rooms_count' => $newRoomsCount,
+                'classes_count' => 0,
+                'majors_count' => 0,
+                'skipped_errors' => [],
+                'warning_logs' => [],
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat memproses matriks ruangan PDF: ' . $e->getMessage(),
+                'schedules_count' => 0,
+                'subjects_count' => 0,
+                'rooms_count' => 0,
+                'classes_count' => 0,
+                'majors_count' => 0,
+                'skipped_errors' => [$e->getMessage()],
+                'warning_logs' => [],
+            ];
+        }
     }
 
     /**
