@@ -158,51 +158,248 @@ class ScheduleImportService
             return $fetRows;
         }
 
-        // Prioritas 2: Parser menggunakan library Smalot PDF Parser
+        // Prioritas 2: Parser cerdas FET Timetable PDF multi-halaman berbasis koordinat Smalot
         try {
             if (class_exists(SmalotPdfParser::class)) {
-                $parser = new SmalotPdfParser();
-                $pdf = $parser->parseFile($filePath);
-                $pages = $pdf->getPages();
-
-                $allExtracted = [];
-                $allExtracted[] = ['putaran', 'hari', 'nip_guru', 'nama_guru', 'mata_pelajaran', 'kelas', 'ruangan', 'jam_mulai', 'jam_selesai'];
-
-                foreach ($pages as $page) {
-                    $text = $page->getText();
-                    if (!empty($text)) {
-                        $lines = preg_split('/[\r\n]+/', $text);
-                        foreach ($lines as $line) {
-                            $trimmed = trim($line);
-                            if (strlen($trimmed) > 5) {
-                                // Ekstraksi pola guru
-                                if (preg_match('/"(\d+)\.\s*([^"\n]+)"/i', $trimmed, $m)) {
-                                    $allExtracted[] = [
-                                        '1',
-                                        'Senin',
-                                        $m[1],
-                                        $m[2],
-                                        'Pembelajaran',
-                                        'Kelas Umum',
-                                        '',
-                                        '07:15:00',
-                                        '08:45:00'
-                                    ];
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (count($allExtracted) > 1) {
-                    return $allExtracted;
+                $classPdfRows = $this->parseFetClassPdfSmalot($filePath);
+                if (!empty($classPdfRows) && count($classPdfRows) > 1) {
+                    return $classPdfRows;
                 }
             }
         } catch (\Throwable $e) {
-            Log::warning('Smalot PDF Parser fallback warning: ' . $e->getMessage());
+            Log::warning('Smalot FET Class PDF Parser fallback warning: ' . $e->getMessage());
         }
 
         return DocumentTableExtractor::extractPdf($filePath);
+    }
+
+    /**
+     * Ekstraksi jadwal FET Timetable (PDF per kelas / per ruangan) menggunakan koordinat Smalot PDF Parser.
+     */
+    protected function parseFetClassPdfSmalot(string $filePath): array
+    {
+        $parser = new SmalotPdfParser();
+        $pdf = $parser->parseFile($filePath);
+        $pages = $pdf->getPages();
+
+        if (empty($pages)) {
+            return [];
+        }
+
+        $timeSlotsDef = [
+            ['time' => '07:15:00', 'endTime' => '08:00:00', 'y' => -1474.0],
+            ['time' => '08:00:00', 'endTime' => '08:45:00', 'y' => -1526.0],
+            ['time' => '08:45:00', 'endTime' => '09:45:00', 'y' => -1573.0],
+            ['time' => '09:45:00', 'endTime' => '10:30:00', 'y' => -1619.0],
+            ['time' => '10:30:00', 'endTime' => '11:15:00', 'y' => -1666.0],
+            ['time' => '11:15:00', 'endTime' => '12:30:00', 'y' => -1713.0],
+            ['time' => '12:30:00', 'endTime' => '13:15:00', 'y' => -1759.0],
+            ['time' => '13:15:00', 'endTime' => '14:00:00', 'y' => -1807.0],
+            ['time' => '14:00:00', 'endTime' => '14:45:00', 'y' => -1853.0],
+            ['time' => '14:45:00', 'endTime' => '15:30:00', 'y' => -1900.0],
+        ];
+
+        $allRows = [];
+        $allRows[] = ['putaran', 'hari', 'nip_guru', 'nama_guru', 'mata_pelajaran', 'kelas', 'ruangan', 'jam_mulai', 'jam_selesai'];
+
+        foreach ($pages as $page) {
+            $text = $page->getText();
+            $lines = array_values(array_filter(array_map('trim', explode("\n", $text))));
+
+            // Deteksi Nama Kelas di bagian atas halaman (contoh: X RPL1, XI TKJ2, XII BD)
+            $className = null;
+            foreach (array_slice($lines, 0, 6) as $l) {
+                if (preg_match('/\b(X|XI|XII)\s*([A-Za-z0-9]+)\b/i', $l, $m)) {
+                    $className = strtoupper($m[1]) . ' ' . strtoupper($m[2]);
+                    break;
+                }
+            }
+            if (!$className) {
+                continue;
+            }
+
+            $dataTm = $page->getDataTm();
+            if (empty($dataTm)) {
+                continue;
+            }
+
+            // Temukan koordinat kolom hari (Senin s.d Jumat) dan slot waktu
+            $dayCols = [];
+            $pageSlots = [];
+            foreach ($dataTm as $item) {
+                $t = trim($item[1] ?? '');
+                $x = (float)($item[0][4] ?? 0);
+                $y = (float)($item[0][5] ?? 0);
+
+                if (in_array($t, ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'])) {
+                    $dayCols[$t] = $x;
+                } elseif (preg_match('/^\d{2}:\d{2}$/', $t) && $x < 150) {
+                    $pageSlots[$t] = $y;
+                }
+            }
+
+            if (count($dayCols) < 3) {
+                continue;
+            }
+
+            uasort($dayCols, fn($a, $b) => $a <=> $b);
+            $days = array_keys($dayCols);
+            $dayX = array_values($dayCols);
+
+            $colBounds = [];
+            for ($i = 0; $i < count($dayX); $i++) {
+                $left = ($i === 0) ? 145.0 : ($dayX[$i - 1] + $dayX[$i]) / 2;
+                $right = ($i === count($dayX) - 1) ? 660.0 : ($dayX[$i] + $dayX[$i + 1]) / 2;
+                $colBounds[$days[$i]] = ['left' => $left, 'right' => $right];
+            }
+
+            $slots = $timeSlotsDef;
+            if (count($pageSlots) >= 8) {
+                uasort($pageSlots, fn($a, $b) => $b <=> $a);
+                $newSlots = [];
+                $slotKeys = array_keys($pageSlots);
+                for ($k = 0; $k < count($slotKeys); $k++) {
+                    $st = $slotKeys[$k];
+                    $en = ($k < count($slotKeys) - 1) ? $slotKeys[$k + 1] . ':00' : '15:30:00';
+                    $newSlots[] = [
+                        'time' => $st . ':00',
+                        'endTime' => $en,
+                        'y' => $pageSlots[$st]
+                    ];
+                }
+                $slots = $newSlots;
+            }
+
+            // Ekstraksi teks per kolom hari dan kelompokkan per blok sesi pelajaran
+            foreach ($colBounds as $dayName => $b) {
+                $colItems = [];
+                foreach ($dataTm as $item) {
+                    $t = trim($item[1] ?? '');
+                    if ($t === '' || in_array($t, ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat']) || preg_match('/^\d{2}:\d{2}$/', $t)) {
+                        continue;
+                    }
+                    if (str_contains($t, 'SMK NEGERI') || str_contains($t, 'FET') || str_contains($t, 'Kembali ke atas') || $t === $className) {
+                        continue;
+                    }
+
+                    $x = (float)($item[0][4] ?? 0);
+                    $y = (float)($item[0][5] ?? 0);
+
+                    if ($x >= $b['left'] && $x < $b['right']) {
+                        $colItems[] = ['x' => $x, 'y' => $y, 'text' => $t];
+                    }
+                }
+
+                if (empty($colItems)) {
+                    continue;
+                }
+
+                usort($colItems, function($a, $b) {
+                    if (abs($a['y'] - $b['y']) <= 3.0) {
+                        return $a['x'] <=> $b['x'];
+                    }
+                    return $b['y'] <=> $a['y'];
+                });
+
+                $clusters = [];
+                $curCluster = [];
+                $lastY = null;
+
+                foreach ($colItems as $it) {
+                    if ($lastY !== null && ($lastY - $it['y']) > 35.0) {
+                        if (!empty($curCluster)) {
+                            $clusters[] = $curCluster;
+                        }
+                        $curCluster = [];
+                    }
+                    $curCluster[] = $it;
+                    $lastY = $it['y'];
+                }
+                if (!empty($curCluster)) {
+                    $clusters[] = $curCluster;
+                }
+
+                foreach ($clusters as $cluster) {
+                    $fullText = implode(' ', array_map(fn($it) => $it['text'], $cluster));
+                    $fullText = trim(preg_replace('/\s+/', ' ', $fullText));
+
+                    if ($fullText === '' || $fullText === '-x-' || $fullText === '-x' || $fullText === '-') {
+                        continue;
+                    }
+
+                    $topY = $cluster[0]['y'];
+                    $botY = $cluster[count($cluster) - 1]['y'];
+
+                    // Parse Guru ("kode.nama guru")
+                    $teacherCode = '';
+                    $teacherName = '';
+                    if (preg_match('/"(\d+)\.\s*([^"\n\r]+?)"/i', $fullText, $tm)) {
+                        $teacherCode = $tm[1];
+                        $teacherName = trim($tm[2]);
+                        $fullText = trim(str_replace($tm[0], '', $fullText));
+                    }
+
+                    // Abaikan footer atau baris tanpa guru/mapel
+                    if (empty($teacherName) && empty($teacherCode)) {
+                        continue;
+                    }
+
+                    // Parse Ruangan (LAB XX, L.XX, L.IPA, L.PB, OR, HALL, R. XX, dst.)
+                    $roomName = '';
+                    if (preg_match('/\b(LAB\s*\d+|L\.\d+|L\.IPA|L\.PB|OR\d*|HALL|R\.\s*\d+)\b/i', $fullText, $rm)) {
+                        $roomName = trim($rm[1]);
+                        $fullText = trim(str_replace($rm[0], '', $fullText));
+                    }
+
+                    $subjectName = trim(preg_replace('/\s+/', ' ', $fullText));
+                    if (empty($subjectName) && empty($teacherName)) {
+                        continue;
+                    }
+
+                    // Tentukan jam mulai
+                    $startTime = '07:15:00';
+                    $minTopDiff = 999999;
+                    $startSlotIdx = 0;
+                    foreach ($slots as $sIdx => $sl) {
+                        $diff = abs($sl['y'] - $topY);
+                        if ($diff < $minTopDiff) {
+                            $minTopDiff = $diff;
+                            $startTime = $sl['time'];
+                            $startSlotIdx = $sIdx;
+                        }
+                    }
+
+                    // Tentukan jam selesai
+                    $endTime = $slots[$startSlotIdx]['endTime'] ?? '08:45:00';
+                    $minBotDiff = 999999;
+                    $endSlotIdx = $startSlotIdx;
+                    foreach ($slots as $sIdx => $sl) {
+                        $diff = abs($sl['y'] - $botY);
+                        if ($diff < $minBotDiff) {
+                            $minBotDiff = $diff;
+                            $endSlotIdx = $sIdx;
+                        }
+                    }
+                    if ($endSlotIdx >= $startSlotIdx && isset($slots[$endSlotIdx])) {
+                        $endTime = $slots[$endSlotIdx]['endTime'];
+                    }
+
+                    $allRows[] = [
+                        '2',
+                        $dayName,
+                        $teacherCode,
+                        $teacherName,
+                        $subjectName,
+                        $className,
+                        $roomName,
+                        $startTime,
+                        $endTime,
+                    ];
+                }
+            }
+        }
+
+        return $allRows;
     }
 
     /**
