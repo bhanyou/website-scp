@@ -339,7 +339,7 @@ class ScheduleImportService
                     // Parse Guru ("kode.nama guru")
                     $teacherCode = '';
                     $teacherName = '';
-                    if (preg_match('/"(\d+)\.\s*([^"\n\r]+?)"/i', $fullText, $tm)) {
+                    if (preg_match('/"(\d+)\.?\s*([^"\n\r]+?)(?:"|\s+(?:LAB|L\.|R\.|HALL|OR)|$)/i', $fullText, $tm)) {
                         $teacherCode = $tm[1];
                         $teacherName = trim($tm[2]);
                         $fullText = trim(str_replace($tm[0], '', $fullText));
@@ -1075,19 +1075,20 @@ class ScheduleImportService
                 $cycleNumber = 1;
             }
 
-            // H. Simpan ke Tabel 'schedules'
-            Schedule::create([
-                'block_cycle_id' => $targetCycle ? $targetCycle->id : $cycleNumber,
+            // H. Simpan ke Tabel 'schedules' (updateOrCreate untuk mencegah duplikasi data)
+            Schedule::updateOrCreate([
                 'block_cycle'    => $cycleNumber,
+                'class_id'       => $selectedClass->id,
                 'day'            => $dayClean,
-                'start_time'     => $startTime,
-                'end_time'       => $endTime,
                 'start_period'   => $startPeriod,
                 'end_period'     => $endPeriod,
+            ], [
+                'block_cycle_id' => $targetCycle ? $targetCycle->id : $cycleNumber,
+                'start_time'     => $startTime,
+                'end_time'       => $endTime,
                 'jam_ke'         => $jamKe,
                 'teacher_id'     => $selectedTeacher->id,
                 'subject_id'     => $selectedSubject->id,
-                'class_id'       => $selectedClass->id,
                 'class_group_id' => $selectedClass->id,
                 'room_id'        => $selectedRoom ? $selectedRoom->id : null,
             ]);
