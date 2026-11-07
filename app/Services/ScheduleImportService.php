@@ -231,7 +231,7 @@ class ScheduleImportService
 
             // Temukan koordinat kolom hari (Senin s.d Jumat) dan slot waktu
             $dayCols = [];
-            $pageSlots = [];
+            $times = [];
             foreach ($dataTm as $item) {
                 $t = trim($item[1] ?? '');
                 $x = (float)($item[0][4] ?? 0);
@@ -239,13 +239,50 @@ class ScheduleImportService
 
                 if (in_array($t, ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'])) {
                     $dayCols[$t] = $x;
-                } elseif (preg_match('/^\d{2}:\d{2}$/', $t) && $x < 150) {
-                    $pageSlots[$t] = $y;
+                } elseif ($x < 150 && (preg_match('/^\d{1,2}:\d{2}$/', $t) || $t === '1' || $t === '1:15')) {
+                    $times[] = ['t' => $t, 'y' => $y];
                 }
             }
 
             if (count($dayCols) < 3) {
                 continue;
+            }
+
+            // Gabungkan token waktu terpisah pada koordinat Y berdekatan (misal '1' dan '1:15' -> '11:15')
+            $groupedTimes = [];
+            foreach ($times as $tm) {
+                $found = false;
+                foreach ($groupedTimes as &$gt) {
+                    if (abs($gt['y'] - $tm['y']) <= 5.0) {
+                        $gt['t'] .= $tm['t'];
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
+                    $groupedTimes[] = $tm;
+                }
+            }
+            uasort($groupedTimes, fn($a, $b) => $b['y'] <=> $a['y']);
+            $slotYs = array_values(array_column($groupedTimes, 'y'));
+
+            $slots = $timeSlotsDef;
+            $dividers = [];
+            if (count($slotYs) >= 10) {
+                $h = ($slotYs[0] - $slotYs[9]) / 9;
+                $dividers[0] = $slotYs[0] + $h / 2;
+                for ($i = 0; $i < 9; $i++) {
+                    $dividers[$i + 1] = ($slotYs[$i] + $slotYs[$i + 1]) / 2;
+                }
+                $dividers[10] = $slotYs[9] - $h / 2;
+            } else {
+                $baseY = -1474.0;
+                $h = 47.0;
+                $dividers[0] = $baseY + $h / 2;
+                for ($i = 0; $i < 9; $i++) {
+                    $dividers[$i + 1] = $baseY - ($i * $h) - ($h / 2);
+                }
+                $dividers[10] = $baseY - (9 * $h) - ($h / 2);
             }
 
             uasort($dayCols, fn($a, $b) => $a <=> $b);
@@ -259,37 +296,24 @@ class ScheduleImportService
                 $colBounds[$days[$i]] = ['left' => $left, 'right' => $right];
             }
 
-            $slots = $timeSlotsDef;
-            if (count($pageSlots) >= 8) {
-                uasort($pageSlots, fn($a, $b) => $b <=> $a);
-                $newSlots = [];
-                $slotKeys = array_keys($pageSlots);
-                for ($k = 0; $k < count($slotKeys); $k++) {
-                    $st = $slotKeys[$k];
-                    $en = ($k < count($slotKeys) - 1) ? $slotKeys[$k + 1] . ':00' : '15:30:00';
-                    $newSlots[] = [
-                        'time' => $st . ':00',
-                        'endTime' => $en,
-                        'y' => $pageSlots[$st]
-                    ];
-                }
-                $slots = $newSlots;
-            }
-
             // Ekstraksi teks per kolom hari dan kelompokkan per blok sesi pelajaran
             foreach ($colBounds as $dayName => $b) {
                 $colItems = [];
                 foreach ($dataTm as $item) {
                     $t = trim($item[1] ?? '');
-                    if ($t === '' || in_array($t, ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat']) || preg_match('/^\d{2}:\d{2}$/', $t)) {
+                    if ($t === '' || in_array($t, ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat']) || preg_match('/^\d{2}:\d{2}$/', $t) || $t === '1' || $t === '1:15') {
                         continue;
                     }
-                    if (str_contains($t, 'SMK NEGERI') || str_contains($t, 'FET') || str_contains($t, 'Kembali ke atas') || $t === $className) {
+                    if (str_contains($t, 'SMK NEGERI') || str_contains($t, 'FET') || str_contains($t, 'Kembali ke atas') || str_contains($t, 'Jadwal dihasilkan') || str_contains($t, 'pada 26/08')) {
                         continue;
                     }
-
                     $x = (float)($item[0][4] ?? 0);
                     $y = (float)($item[0][5] ?? 0);
+
+                    // Abaikan teks di atas batas header tabel
+                    if ($y > $dividers[0]) {
+                        continue;
+                    }
 
                     if ($x >= $b['left'] && $x < $b['right']) {
                         $colItems[] = ['x' => $x, 'y' => $y, 'text' => $t];
@@ -312,7 +336,7 @@ class ScheduleImportService
                 $lastY = null;
 
                 foreach ($colItems as $it) {
-                    if ($lastY !== null && ($lastY - $it['y']) > 35.0) {
+                    if ($lastY !== null && ($lastY - $it['y']) > 25.0) {
                         if (!empty($curCluster)) {
                             $clusters[] = $curCluster;
                         }
@@ -325,16 +349,69 @@ class ScheduleImportService
                     $clusters[] = $curCluster;
                 }
 
+                $validClusters = [];
                 foreach ($clusters as $cluster) {
                     $fullText = implode(' ', array_map(fn($it) => $it['text'], $cluster));
                     $fullText = trim(preg_replace('/\s+/', ' ', $fullText));
+                    $isDash = ($fullText === '' || $fullText === '-x-' || $fullText === '-x' || $fullText === '-');
+                    $validClusters[] = [
+                        'cluster' => $cluster,
+                        'fullText' => $fullText,
+                        'topY' => $cluster[0]['y'],
+                        'botY' => $cluster[count($cluster) - 1]['y'],
+                        'isDash' => $isDash,
+                    ];
+                }
 
-                    if ($fullText === '' || $fullText === '-x-' || $fullText === '-x' || $fullText === '-') {
+                $numClusters = count($validClusters);
+                for ($cIdx = 0; $cIdx < $numClusters; $cIdx++) {
+                    $vc = $validClusters[$cIdx];
+                    if ($vc['isDash']) {
                         continue;
                     }
 
-                    $topY = $cluster[0]['y'];
-                    $botY = $cluster[count($cluster) - 1]['y'];
+                    // Tentukan baris mulai (0 s/d 9)
+                    if ($cIdx === 0) {
+                        $startRow = 0;
+                    } else {
+                        $prevBot = $validClusters[$cIdx - 1]['botY'];
+                        $midY = ($prevBot + $vc['topY']) / 2;
+                        $minDiff = 999999;
+                        $startRow = 0;
+                        for ($d = 1; $d < 10; $d++) {
+                            $diff = abs($dividers[$d] - $midY);
+                            if ($diff < $minDiff) {
+                                $minDiff = $diff;
+                                $startRow = $d;
+                            }
+                        }
+                    }
+
+                    // Tentukan baris selesai (0 s/d 9)
+                    if ($cIdx === $numClusters - 1) {
+                        $endRow = 9;
+                    } else {
+                        $nextTop = $validClusters[$cIdx + 1]['topY'];
+                        $midY = ($vc['botY'] + $nextTop) / 2;
+                        $minDiff = 999999;
+                        $endRow = 9;
+                        for ($d = 1; $d < 10; $d++) {
+                            $diff = abs($dividers[$d] - $midY);
+                            if ($diff < $minDiff) {
+                                $minDiff = $diff;
+                                $endRow = $d - 1;
+                            }
+                        }
+                    }
+
+                    if ($endRow < $startRow) {
+                        $endRow = $startRow;
+                    }
+
+                    $startTime = $slots[$startRow]['time'] ?? '07:15:00';
+                    $endTime   = $slots[$endRow]['endTime'] ?? '15:30:00';
+
+                    $fullText = $vc['fullText'];
 
                     // Parse Guru ("kode.nama guru")
                     $teacherCode = '';
@@ -345,7 +422,7 @@ class ScheduleImportService
                         $fullText = trim(str_replace($tm[0], '', $fullText));
                     }
 
-                    // Abaikan footer atau baris tanpa guru/mapel
+                    // Abaikan baris tanpa guru/mapel
                     if (empty($teacherName) && empty($teacherCode)) {
                         continue;
                     }
@@ -360,34 +437,6 @@ class ScheduleImportService
                     $subjectName = trim(preg_replace('/\s+/', ' ', $fullText));
                     if (empty($subjectName) && empty($teacherName)) {
                         continue;
-                    }
-
-                    // Tentukan jam mulai
-                    $startTime = '07:15:00';
-                    $minTopDiff = 999999;
-                    $startSlotIdx = 0;
-                    foreach ($slots as $sIdx => $sl) {
-                        $diff = abs($sl['y'] - $topY);
-                        if ($diff < $minTopDiff) {
-                            $minTopDiff = $diff;
-                            $startTime = $sl['time'];
-                            $startSlotIdx = $sIdx;
-                        }
-                    }
-
-                    // Tentukan jam selesai
-                    $endTime = $slots[$startSlotIdx]['endTime'] ?? '08:45:00';
-                    $minBotDiff = 999999;
-                    $endSlotIdx = $startSlotIdx;
-                    foreach ($slots as $sIdx => $sl) {
-                        $diff = abs($sl['y'] - $botY);
-                        if ($diff < $minBotDiff) {
-                            $minBotDiff = $diff;
-                            $endSlotIdx = $sIdx;
-                        }
-                    }
-                    if ($endSlotIdx >= $startSlotIdx && isset($slots[$endSlotIdx])) {
-                        $endTime = $slots[$endSlotIdx]['endTime'];
                     }
 
                     $allRows[] = [
