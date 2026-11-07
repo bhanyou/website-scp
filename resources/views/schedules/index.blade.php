@@ -89,24 +89,39 @@
     </div>
 @endif
 
+{{-- Switcher Tab Putaran 1 & Putaran 2 --}}
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+    <div style="display: inline-flex; background: #e2e8f0; padding: 0.35rem; border-radius: 12px; gap: 0.35rem;">
+        <a href="{{ route('schedules.index', array_merge(request()->except(['cycle', 'page']), ['cycle' => 1])) }}"
+           style="padding: 0.65rem 1.6rem; border-radius: 9px; font-weight: 700; font-size: 0.92rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.55rem; transition: all 0.2s; {{ $selectedCycle == 1 ? 'background: #2563eb; color: #ffffff; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.3);' : 'background: transparent; color: #475569;' }}">
+            <span style="font-size: 1.05rem;">🔄</span>
+            <span>Putaran 1</span>
+            @if($activeCycleNumber == 1)
+                <span class="badge" style="font-size: 0.68rem; background: rgba(255,255,255,0.25); color: #fff; padding: 0.2rem 0.5rem; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em;">Aktif</span>
+            @endif
+        </a>
+        <a href="{{ route('schedules.index', array_merge(request()->except(['cycle', 'page']), ['cycle' => 2])) }}"
+           style="padding: 0.65rem 1.6rem; border-radius: 9px; font-weight: 700; font-size: 0.92rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.55rem; transition: all 0.2s; {{ $selectedCycle == 2 ? 'background: #2563eb; color: #ffffff; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.3);' : 'background: transparent; color: #475569;' }}">
+            <span style="font-size: 1.05rem;">🔄</span>
+            <span>Putaran 2</span>
+            @if($activeCycleNumber == 2)
+                <span class="badge" style="font-size: 0.68rem; background: rgba(255,255,255,0.25); color: #fff; padding: 0.2rem 0.5rem; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em;">Aktif</span>
+            @endif
+        </a>
+    </div>
+
+    {{-- Penanda Putaran Aktif Sistem --}}
+    <div style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 0.55rem 1rem; border-radius: 10px; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+        <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);"></span>
+        <span>Putaran Aktif: <strong>Putaran {{ $activeCycleNumber }}</strong></span>
+    </div>
+</div>
+
 {{-- Panel Filter Jadwal Mengajar --}}
 <div class="card" style="margin-bottom: 1.5rem; padding: 1.25rem;">
     <form action="{{ route('schedules.index') }}" method="GET" style="display: flex; gap: 0.85rem; flex-wrap: wrap; align-items: flex-end;">
+        <input type="hidden" name="cycle" value="{{ $selectedCycle }}">
         <input type="hidden" name="per_page" value="{{ request('per_page', 15) }}">
-
-        {{-- Filter Putaran / Siklus Blok --}}
-        <div style="flex: 1.1; min-width: 140px;">
-            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.35rem; text-transform: uppercase;">
-                Putaran / Siklus
-            </label>
-            <select name="block_cycle_id" class="form-control" style="width: 100%;">
-                @foreach($blockCycles as $cycle)
-                    <option value="{{ $cycle->id }}" {{ ((string)($selectedCycleId ?? '') === (string)$cycle->id || (string)request('block_cycle_id') === (string)$cycle->id) ? 'selected' : '' }}>
-                        {{ $cycle->cycle }} {{ $cycle->is_active ? '(Aktif)' : '' }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
 
         {{-- Filter Ruangan / Lab --}}
         <div style="flex: 1.3; min-width: 170px;">
@@ -179,8 +194,8 @@
             <button type="submit" class="btn btn-primary" style="height: 42px; padding: 0 1.25rem;">
                 Terapkan
             </button>
-            @if(request()->filled('day') || request()->filled('class_group_id') || request()->filled('class_id') || request()->filled('room_id') || request()->filled('teacher_id') || request()->filled('search') || request()->filled('block_cycle_id'))
-                <a href="{{ route('schedules.index', ['per_page' => request('per_page', 15)]) }}" class="btn btn-secondary" style="height: 42px; display: inline-flex; align-items: center;">
+            @if(request()->filled('day') || request()->filled('class_group_id') || request()->filled('class_id') || request()->filled('room_id') || request()->filled('teacher_id') || request()->filled('search'))
+                <a href="{{ route('schedules.index', ['cycle' => $selectedCycle, 'per_page' => request('per_page', 15)]) }}" class="btn btn-secondary" style="height: 42px; display: inline-flex; align-items: center;">
                     Reset Filter
                 </a>
             @endif
@@ -198,17 +213,15 @@
             </div>
 
             <div style="font-size: 1.15rem; font-weight: 700; color: var(--accent);">
-                {{ $currentViewCycle?->cycle ?? ($activeCycle?->cycle ?? 'Belum ada putaran aktif') }}
-                @if($currentViewCycle && $currentViewCycle->is_active)
-                    <span class="badge badge-success" style="font-size: 0.75rem; vertical-align: middle; margin-left: 0.35rem;">Aktif</span>
+                Putaran {{ $selectedCycle }}
+                @if($activeCycleNumber == $selectedCycle)
+                    <span class="badge badge-success" style="font-size: 0.75rem; vertical-align: middle; margin-left: 0.35rem;">Aktif Saat Ini</span>
                 @endif
             </div>
 
-            @if($currentViewCycle)
-                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.2rem;">
-                    Periode Pelaksanaan: <strong>2 Minggu</strong>
-                </div>
-            @endif
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.2rem;">
+                Periode Pelaksanaan: <strong>2 Minggu</strong>
+            </div>
         </div>
 
         <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
@@ -219,13 +232,9 @@
                 <a href="{{ route('block-cycles.index') }}" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;">
                     Kelola di Siklus Blok
                 </a>
-            @elseif($currentViewCycle)
+            @else
                 <span class="badge badge-success">
                     🔓 Jadwal Tidak Dikunci
-                </span>
-            @else
-                <span class="badge badge-warning">
-                    Tidak Ada Siklus
                 </span>
             @endif
         </div>
@@ -243,7 +252,7 @@
                         Filter Khusus Pemakaian Ruangan
                     </div>
                     <div style="font-size: 1.2rem; font-weight: 800; color: #1e3a8a; line-height: 1.2;">
-                        Jadwal Penggunaan Ruang: {{ $selectedRoom->name }} - {{ $currentViewCycle?->cycle ?? ($activeCycle?->cycle ?? 'Putaran 1') }}
+                        Jadwal Penggunaan Ruang: {{ $selectedRoom->name }} - Putaran {{ $selectedCycle }}
                     </div>
                     <div style="font-size: 0.85rem; color: #475569; margin-top: 0.35rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                         <span>Kategori: <strong>{{ $selectedRoom->type ?? 'Ruang Belajar' }}</strong></span>
@@ -254,7 +263,7 @@
                     </div>
                 </div>
             </div>
-            <a href="{{ route('schedules.index', array_merge(request()->except('room_id'), ['page' => 1])) }}" class="btn btn-secondary btn-sm" style="font-size: 0.8rem; background: white; border: 1px solid #cbd5e1; color: #334155; font-weight: 600;">
+            <a href="{{ route('schedules.index', array_merge(request()->except('room_id'), ['cycle' => $selectedCycle, 'page' => 1])) }}" class="btn btn-secondary btn-sm" style="font-size: 0.8rem; background: white; border: 1px solid #cbd5e1; color: #334155; font-weight: 600;">
                 ✕ Hapus Filter Ruangan
             </a>
         </div>
@@ -929,6 +938,26 @@
                         <input type="file" name="file" id="import_schedule_file" accept=".pdf, .xlsx, .xls, .csv, .docx, .txt" required style="width: 100%; max-width: 320px; margin: 0 auto; display: block; font-size: 0.85rem;">
                         <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.5rem;">
                             Maksimal ukuran file 20MB. Format didukung: PDF (.pdf), Excel (.xlsx, .xls), CSV (.csv), Word (.docx)
+                        </small>
+                    </div>
+
+                    {{-- Pilihan Putaran Jadwal --}}
+                    <div class="form-group" style="text-align: left; margin-bottom: 1.25rem;">
+                        <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.5rem; display: block;">
+                            Pilih Putaran Jadwal:
+                        </label>
+                        <div style="display: flex; gap: 1.5rem; align-items: center; background: #f8fafc; padding: 0.75rem 1.25rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <label style="display: inline-flex; align-items: center; gap: 0.5rem; margin: 0; cursor: pointer; font-weight: 700; font-size: 0.9rem; color: #1e293b;">
+                                <input type="radio" name="block_cycle" value="1" {{ ($selectedCycle ?? 1) == 1 ? 'checked' : '' }} style="cursor: pointer; width: 18px; height: 18px;">
+                                <span>Putaran 1</span>
+                            </label>
+                            <label style="display: inline-flex; align-items: center; gap: 0.5rem; margin: 0; cursor: pointer; font-weight: 700; font-size: 0.9rem; color: #1e293b;">
+                                <input type="radio" name="block_cycle" value="2" {{ ($selectedCycle ?? 1) == 2 ? 'checked' : '' }} style="cursor: pointer; width: 18px; height: 18px;">
+                                <span>Putaran 2</span>
+                            </label>
+                        </div>
+                        <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.35rem;">
+                            Seluruh jadwal yang diimpor dari berkas akan disimpan ke putaran yang dipilih.
                         </small>
                     </div>
 

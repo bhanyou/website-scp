@@ -19,9 +19,19 @@ class RoomController extends Controller
             $perPage = 15;
         }
 
-        $rooms = Room::orderByRaw("FIELD(type, 'Praktik', 'Olahraga', 'Teori'), LENGTH(name), name ASC")
-            ->paginate($perPage)
-            ->withQueryString();
+        $rooms = Room::orderByRaw("
+            CASE 
+                WHEN name REGEXP '^L\\.[0-9]+$' THEN 1
+                WHEN name = 'L.IPA' THEN 2
+                WHEN name = 'L.PB' THEN 3
+                WHEN name = 'HALL' THEN 4
+                WHEN name REGEXP '^OR' THEN 5
+                WHEN name REGEXP '^R\\.' THEN 6
+                ELSE 7
+            END,
+            LENGTH(name) ASC,
+            name ASC
+        ")->paginate($perPage)->withQueryString();
 
         return view('rooms.index', compact('rooms'));
     }

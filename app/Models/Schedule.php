@@ -11,6 +11,7 @@ class Schedule extends Model
 {
     protected $fillable = [
         'block_cycle_id',
+        'block_cycle',
         'teacher_id',
         'subject_id',
         'class_id',

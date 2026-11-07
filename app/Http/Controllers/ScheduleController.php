@@ -25,18 +25,19 @@ class ScheduleController extends Controller
         $user = Auth::user();
         $blockCycles = BlockCycle::orderBy('id', 'asc')->take(2)->get();
         $activeCycle = BlockCycle::where('is_active', true)->first();
+        $activeCycleNumber = (int) ($activeCycle?->cycle ?? 1);
 
-        // 1. Dukung filter putaran / siklus blok dari request (block_cycle_id / block_cycle)
-        $cycleFilter = $request->input('block_cycle_id') ?: $request->input('block_cycle');
-        if ($cycleFilter) {
-            $currentViewCycle = $blockCycles->firstWhere('id', $cycleFilter)
-                ?? $blockCycles->firstWhere('cycle', $cycleFilter)
-                ?? BlockCycle::find($cycleFilter)
-                ?? $activeCycle;
-        } else {
-            $currentViewCycle = $activeCycle ?? $blockCycles->first();
+        // 1. Dukungan Sistem Blok Putaran 1 & Putaran 2
+        // Filter jadwal berdasarkan cycle: $query->where('block_cycle', $request->get('cycle', 1));
+        $selectedCycle = (int) $request->get('cycle', 1);
+        if (!in_array($selectedCycle, [1, 2])) {
+            $selectedCycle = 1;
         }
-        $selectedCycleId = $currentViewCycle?->id;
+
+        $currentViewCycle = $blockCycles->firstWhere('cycle', (string) $selectedCycle)
+            ?? $blockCycles->firstWhere('id', $selectedCycle)
+            ?? BlockCycle::find($selectedCycle);
+        $selectedCycleId = $currentViewCycle?->id ?? $selectedCycle;
 
         $scheduleQuery = Schedule::with([
             'blockCycle',
@@ -45,6 +46,9 @@ class ScheduleController extends Controller
             'schoolClass',
             'room',
         ]);
+
+        // Filter jadwal berdasarkan block_cycle (Putaran 1 / Putaran 2)
+        $scheduleQuery->where('block_cycle', $selectedCycle);
 
         $isBk = $user->role === 'bk' || ($user->teacher && $user->teacher->isBkTeacher());
 
@@ -56,29 +60,13 @@ class ScheduleController extends Controller
             }
 
             $scheduleQuery->where('teacher_id', $teacher->id);
-
-            // Guru melihat jadwal pada putaran yang dipilih atau aktif
-            if ($currentViewCycle) {
-                $scheduleQuery->where('block_cycle_id', $currentViewCycle->id);
-            } elseif ($activeCycle) {
-                $scheduleQuery->where('block_cycle_id', $activeCycle->id);
-            } else {
-                $scheduleQuery->whereRaw('1 = 0');
-            }
         } elseif ($user->role === 'waka' || $isBk) {
-            // Waka dan Guru BK otomatis melihat jadwal pada putaran yang dipilih atau aktif
-            if ($currentViewCycle) {
-                $scheduleQuery->where('block_cycle_id', $currentViewCycle->id);
-            } elseif ($activeCycle) {
-                $scheduleQuery->where('block_cycle_id', $activeCycle->id);
-            } elseif ($selectedCycleId) {
-                $scheduleQuery->where('block_cycle_id', $selectedCycleId);
-            }
+            // Waka dan Guru BK dapat memantau jadwal semua kelas pada putaran yang dipilih
         } else {
             abort(403, 'Kamu tidak memiliki akses ke jadwal.');
         }
 
-        // --- FITUR FILTER JADWAL MENGAJAR ---
+        // --- FITUR FILTER JADWAL MENGAJAR (Berjalan di dalam tab putaran yang dipilih) ---
         // 1. Filter Hari: Dropdown (Semua Hari, Senin, Selasa, Rabu, Kamis, Jumat)
         $scheduleQuery->when($request->filled('day'), function ($q) use ($request) {
             $q->where('day', $request->day);
@@ -162,8 +150,10 @@ class ScheduleController extends Controller
             'schedules',
             'blockCycles',
             'activeCycle',
+            'activeCycleNumber',
             'currentViewCycle',
             'selectedCycleId',
+            'selectedCycle',
             'selectedRoom',
             'teachers',
             'subjects',
@@ -256,8 +246,14 @@ class ScheduleController extends Controller
         // Cek bentrok ruangan dan kelas pada putaran tersebut
         $this->ensureNoConflict($validated, $targetCycle->id);
 
+        $cycleNumber = (int) preg_replace('/\D/', '', $targetCycle->cycle ?: $targetCycle->id);
+        if (!in_array($cycleNumber, [1, 2])) {
+            $cycleNumber = 1;
+        }
+
         Schedule::create([
             'block_cycle_id' => $targetCycle->id,
+            'block_cycle'    => $cycleNumber,
             'teacher_id'     => $validated['teacher_id'],
             'subject_id'     => $validated['subject_id'],
             'class_id'       => $validated['class_id'],
@@ -268,7 +264,7 @@ class ScheduleController extends Controller
         ]);
 
         return redirect()
-            ->route('schedules.index', ['cycle_id' => $targetCycle->id])
+            ->route('schedules.index', ['cycle' => $cycleNumber])
             ->with('success', "Jadwal berhasil ditambahkan ke Putaran {$targetCycle->cycle}.");
     }
 
@@ -710,24 +706,33 @@ class ScheduleController extends Controller
             ? $request->boolean('bypass_conflict')
             : true;
 
+        $cycle = (int) $request->input('block_cycle', $request->input('cycle', 1));
+        if (!in_array($cycle, [1, 2])) {
+            $cycle = 1;
+        }
+
+        $targetCycle = BlockCycle::where('cycle', (string) $cycle)->first()
+            ?? BlockCycle::find($cycle);
+        $targetCycleId = $targetCycle ? $targetCycle->id : $cycle;
+
         $result = $importService->import(
             $request->file('file'),
             $request->input('default_day'),
-            null,
+            $targetCycleId,
             $currentTeacher,
             $bypassConflict
         );
 
         if (!$result['success']) {
             return redirect()
-                ->route('schedules.index')
+                ->route('schedules.index', ['cycle' => $cycle])
                 ->with('error', $result['message'])
                 ->with('import_errors', $result['skipped_errors'] ?? [])
                 ->with('import_warnings', $result['warning_logs'] ?? []);
         }
 
         return redirect()
-            ->route('schedules.index')
+            ->route('schedules.index', ['cycle' => $cycle])
             ->with('success', $result['message'])
             ->with('import_errors', $result['skipped_errors'] ?? [])
             ->with('import_warnings', $result['warning_logs'] ?? []);

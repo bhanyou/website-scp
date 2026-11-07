@@ -583,9 +583,15 @@ class ScheduleImportService
             $batchBookings[$classKey] = true;
             $batchBookings[$teacherKey] = true;
 
+            $cycleNumber = $targetCycle ? (int) preg_replace('/\D/', '', $targetCycle->cycle ?: $targetCycle->id) : ($targetCycleId ?: 1);
+            if (!in_array($cycleNumber, [1, 2])) {
+                $cycleNumber = 1;
+            }
+
             // H. Simpan ke Tabel 'schedules'
             Schedule::create([
-                'block_cycle_id' => $targetCycle ? $targetCycle->id : 1,
+                'block_cycle_id' => $targetCycle ? $targetCycle->id : $cycleNumber,
+                'block_cycle'    => $cycleNumber,
                 'day'            => $dayClean,
                 'start_time'     => $startTime,
                 'end_time'       => $endTime,
