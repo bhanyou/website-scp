@@ -540,10 +540,13 @@ class ScheduleImportService
                 if (count($days) == 2) {
                     $d1 = [];
                     $d2 = [];
-                    $splitY = 300;
-                    $ones = array_values(array_filter($periodElements, fn($p) => $p['period'] === 1));
-                    if (count($ones) >= 2) {
-                        $splitY = ($ones[0]['y'] + $ones[1]['y']) / 2;
+                    $splitY = 268;
+                    // Cari batas pemisah saat nomor jam berulang (contoh: Jam 10 selesai -> Jam 1 hari kedua)
+                    for ($i = 1; $i < count($periodElements); $i++) {
+                        if ($periodElements[$i]['period'] < $periodElements[$i - 1]['period']) {
+                            $splitY = ($periodElements[$i - 1]['y'] + $periodElements[$i]['y']) / 2;
+                            break;
+                        }
                     }
                     foreach ($periodElements as $p) {
                         if ($p['y'] > $splitY) {
