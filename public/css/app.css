@@ -2304,3 +2304,60 @@ textarea {
     cursor: not-allowed;
     opacity: 0.6;
 }
+
+
+/* ==========================================================================
+   CUSTOM CSS TOOLTIP (Pengganti Tooltip Bawaan Browser Google Chrome)
+   Elegan, Modern, Presisi, Animasi Halus Tanpa Delay Bawaan Browser
+   ========================================================================== */
+.custom-tooltip-box {
+    position: fixed;
+    z-index: 9999999;
+    pointer-events: none;
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 6px 11px;
+    font-size: 0.775rem;
+    font-family: inherit;
+    font-weight: 500;
+    line-height: 1.35;
+    border-radius: 6px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35), 0 8px 10px -6px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.12);
+    max-width: 280px;
+    text-align: center;
+    white-space: normal;
+    word-break: break-word;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px) scale(0.96);
+    transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.15s;
+}
+
+.custom-tooltip-box.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+/* Panah Indikator Segitiga Tooltip */
+.custom-tooltip-box::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 5px solid transparent;
+}
+
+.custom-tooltip-box.pos-top::after {
+    top: 100%;
+    left: var(--arrow-left, 50%);
+    transform: translateX(-50%);
+    border-top-color: #0f172a;
+}
+
+.custom-tooltip-box.pos-bottom::after {
+    bottom: 100%;
+    left: var(--arrow-left, 50%);
+    transform: translateX(-50%);
+    border-bottom-color: #0f172a;
+}

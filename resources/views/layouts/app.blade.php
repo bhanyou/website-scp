@@ -454,6 +454,111 @@
                 document.body.style.overflow = '';
             }
         });
+
+        // ==========================================================================
+        // CUSTOM CSS TOOLTIP ENGINE (Pengganti Tooltip Bawaan Google Chrome)
+        // ==========================================================================
+        (function() {
+            let tooltipEl = null;
+            let currentTarget = null;
+            let hideTimer = null;
+
+            function createTooltipElement() {
+                if (!tooltipEl) {
+                    tooltipEl = document.createElement('div');
+                    tooltipEl.className = 'custom-tooltip-box';
+                    tooltipEl.setAttribute('role', 'tooltip');
+                    tooltipEl.setAttribute('aria-hidden', 'true');
+                    document.body.appendChild(tooltipEl);
+                }
+                return tooltipEl;
+            }
+
+            function showTooltip(el, text) {
+                if (!text || !text.trim()) return;
+                clearTimeout(hideTimer);
+                const tt = createTooltipElement();
+                tt.textContent = text.trim();
+                currentTarget = el;
+
+                tt.className = 'custom-tooltip-box';
+                tt.style.visibility = 'hidden';
+                tt.style.opacity = '0';
+                tt.style.display = 'block';
+                tt.style.left = '0px';
+                tt.style.top = '0px';
+
+                const rect = el.getBoundingClientRect();
+                if (rect.width === 0 && rect.height === 0) return;
+
+                const ttRect = tt.getBoundingClientRect();
+                const gap = 8;
+                const viewportWidth = window.innerWidth;
+
+                let isTop = rect.top - ttRect.height - gap >= 10;
+                let top = isTop ? (rect.top - ttRect.height - gap) : (rect.bottom + gap);
+
+                let left = rect.left + (rect.width / 2) - (ttRect.width / 2);
+                const padding = 10;
+                let clampedLeft = Math.max(padding, Math.min(left, viewportWidth - ttRect.width - padding));
+
+                let arrowOffset = (rect.left + rect.width / 2) - clampedLeft;
+                arrowOffset = Math.max(12, Math.min(arrowOffset, ttRect.width - 12));
+
+                tt.style.top = `${top}px`;
+                tt.style.left = `${clampedLeft}px`;
+                tt.style.setProperty('--arrow-left', `${arrowOffset}px`);
+
+                tt.classList.add(isTop ? 'pos-top' : 'pos-bottom');
+                tt.classList.add('is-visible');
+            }
+
+            function hideTooltip() {
+                if (tooltipEl) {
+                    tooltipEl.classList.remove('is-visible');
+                    hideTimer = setTimeout(() => {
+                        if (tooltipEl && !tooltipEl.classList.contains('is-visible')) {
+                            tooltipEl.style.display = 'none';
+                        }
+                    }, 150);
+                }
+                currentTarget = null;
+            }
+
+            document.addEventListener('mouseover', function(e) {
+                const target = e.target.closest('[title], [data-tooltip]');
+                if (!target) return;
+
+                // Cegah tooltip bawaan Google Chrome dengan memindahkan attribute title ke data-tooltip
+                if (target.hasAttribute('title')) {
+                    const rawTitle = target.getAttribute('title');
+                    if (rawTitle && rawTitle.trim()) {
+                        target.setAttribute('data-tooltip', rawTitle.trim());
+                    }
+                    target.removeAttribute('title');
+                }
+
+                const tooltipText = target.getAttribute('data-tooltip');
+                if (tooltipText) {
+                    showTooltip(target, tooltipText);
+                }
+            }, { passive: true });
+
+            document.addEventListener('mouseout', function(e) {
+                if (currentTarget) {
+                    const related = e.relatedTarget;
+                    if (!related || (!currentTarget.contains(related) && currentTarget !== related)) {
+                        hideTooltip();
+                    }
+                }
+            }, { passive: true });
+
+            window.addEventListener('scroll', hideTooltip, { passive: true });
+            document.addEventListener('click', hideTooltip, { passive: true });
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') hideTooltip();
+            });
+        })();
     </script>
     @stack('scripts')
 </body>
