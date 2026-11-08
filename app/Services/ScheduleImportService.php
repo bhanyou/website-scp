@@ -689,13 +689,18 @@ class ScheduleImportService
                     $rName = "R. " . (int)$rRaw;
                 } elseif (preg_match('/^L\.?\s*(\d+)$/i', $rRaw, $rm)) {
                     $rName = "L." . $rm[1];
+                } elseif (preg_match('/^OR\s*\d*$/i', $rRaw) || preg_match('/^LAP/i', $rRaw)) {
+                    $rName = "OR";
                 }
 
                 $rKey = strtolower($rName);
                 if (!isset($rooms[$rKey])) {
                     $newR = Room::firstOrCreate(
                         ['name' => $rName],
-                        ['type' => str_starts_with($rName, 'L.') ? 'Praktik' : 'Teori', 'capacity' => 36]
+                        [
+                            'type' => ($rName === 'OR') ? 'Olahraga' : (str_starts_with($rName, 'L.') ? 'Praktik' : 'Teori'),
+                            'capacity' => ($rName === 'OR') ? 72 : 36
+                        ]
                     );
                     $rooms[$rKey] = $newR;
                     $newRoomsCount++;
@@ -1391,12 +1396,10 @@ class ScheduleImportService
         }
 
         // Kategori b: Area Khusus / Olahraga
-        // Teks "OR", "OR1", "OR2", "OR3" -> Tipe: 'Olahraga', kapasitas: 72
-        if (preg_match('/^OR([1-3])?$/i', $token, $m)) {
-            $suffix = isset($m[1]) && $m[1] !== '' ? $m[1] : '';
-            $name = $suffix !== '' ? "OR{$suffix}" : "OR";
+        // Teks "OR", "OR1", "OR2", "OR3", "LAPANGAN" -> Cukup berikan "OR" saja sebagai penanda jam olahraga
+        if (preg_match('/^OR([1-3])?$/i', $token, $m) || preg_match('/^LAP/i', $token)) {
             return [
-                'name' => $name,
+                'name' => 'OR',
                 'type' => 'Olahraga',
                 'capacity' => 72,
             ];

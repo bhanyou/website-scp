@@ -634,7 +634,12 @@
                     // Klasifikasi Tipe Ruangan & Visual Tags
                     $isLab = preg_match('/^L\./i', $roomName) && strcasecmp($roomName, 'L.IPA') !== 0;
                     $isIpa = (strcasecmp($roomName, 'L.IPA') === 0);
-                    $isSport = preg_match('/^(OR|HALL)/i', $roomName) || str_contains($subjName, 'pjok') || str_contains($subjName, 'olahraga') || str_contains($subjName, 'penjas');
+                    $isSport = preg_match('/^(OR|HALL|LAP)/i', $roomName) || str_contains($subjName, 'pjok') || str_contains($subjName, 'olahraga') || str_contains($subjName, 'penjas');
+
+                    // Jam Olahraga selalu ditampilkan dengan kode ruangan 'OR'
+                    if ($isSport && strcasecmp($roomName, 'HALL') !== 0) {
+                        $roomName = 'OR';
+                    }
 
                     // Badge Tipe Mapel
                     if ($isLab || str_contains($subjName, 'praktik') || str_contains($subjName, 'lab')) {

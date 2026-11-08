@@ -14,6 +14,18 @@ class Room extends Model
     ];
 
     /**
+     * Normalisasi nama ruangan: area olahraga selalu berlabel 'OR'.
+     */
+    public function getNameAttribute($value): string
+    {
+        $val = trim((string)$value);
+        if (preg_match('/^OR\s*\d*$/i', $val) || preg_match('/^LAPANGAN\s*OR/i', $val)) {
+            return 'OR';
+        }
+        return $val;
+    }
+
+    /**
      * Label tipe ruangan terformat ('Praktik', 'Olahraga', 'Teori').
      */
     public function getTypeLabelAttribute(): string
