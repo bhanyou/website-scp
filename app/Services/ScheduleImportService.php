@@ -1189,6 +1189,20 @@ class ScheduleImportService
     ): ?SchoolClass {
         $formattedClassName = trim($kelasRaw);
 
+        // Abaikan teks legenda/keterangan yang memuat '=' atau bukan nama kelas
+        if (str_contains($formattedClassName, '=') || preg_match('/^(KETERANGAN|LEGENDA|DAFTAR|HARI|JAM)/i', $formattedClassName)) {
+            return null;
+        }
+
+        // Hilangkan prefix "KELAS :" atau "KELAS " jika ada
+        $formattedClassName = trim(preg_replace('/^KELAS\s*:?\s*/i', '', $formattedClassName));
+
+        // Validasi ketat: Rombel resmi harus memiliki tingkat (X, XI, atau XII)
+        if (!preg_match('/^(X|XI|XII)\b/i', $formattedClassName)) {
+            return null;
+        }
+
+        // Normalisasi format nama rombel (contoh: 'X AK 1' -> 'X AKL 1' jika kelas yang terdaftar adalah AKL)
         // 1. Ekstrak Tingkat dan Jurusan menggunakan regex: /(X|XI|XII)\s+([A-Z]+)/
         $grade = 'X';
         $kodeJurusan = 'UMUM';
