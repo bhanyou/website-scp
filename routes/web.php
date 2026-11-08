@@ -166,6 +166,10 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:waka')
         ->name('subjects.import');
 
+    Route::delete('/subjects/destroy-all', [SubjectController::class, 'destroyAll'])
+        ->middleware('role:waka')
+        ->name('subjects.destroy-all');
+
     Route::resource('subjects', SubjectController::class)
         ->middleware('role:waka');
 

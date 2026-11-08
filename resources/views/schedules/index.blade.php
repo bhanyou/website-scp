@@ -12,7 +12,7 @@
     {{-- Tombol aksi Waka & Ekspor (Hanya untuk Waka) --}}
     @if(auth()->user()->role === 'waka')
         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-            <form action="{{ route('schedules.destroy-all') }}" method="POST" style="margin: 0;" onsubmit="return confirm('PERINGATAN: Seluruh data jadwal mengajar (pada putaran yang tidak dikunci) akan dihapus permanen, termasuk jurnal dan absensi yang terkait.\n\nApakah Anda yakin ingin menghapus SEMUA jadwal mengajar?')">
+            <form action="{{ route('schedules.destroy-all') }}" method="POST" style="margin: 0;" data-custom-confirm="PERINGATAN: Seluruh data jadwal mengajar (pada putaran yang tidak dikunci) akan dihapus permanen, termasuk jurnal dan absensi yang terkait. Apakah Anda yakin ingin menghapus SEMUA jadwal mengajar?">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-danger btn-sm" style="background-color: #ef4444; color: white; border: none; display: inline-flex; align-items: center; gap: 0.35rem;">

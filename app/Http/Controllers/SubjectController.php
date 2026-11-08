@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Subject;
+use App\Models\BlockCycle;
+use App\Models\Schedule;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use App\Services\DocumentTableExtractor;
 
 class SubjectController extends Controller
@@ -97,6 +100,41 @@ class SubjectController extends Controller
         return redirect()
             ->route('subjects.index')
             ->with('success', 'Mata pelajaran berhasil dihapus.');
+    }
+
+    /**
+     * Hapus seluruh data mata pelajaran (kecuali yang terikat pada jadwal siklus yang dikunci).
+     */
+    public function destroyAll()
+    {
+        $currentUser = Auth::user();
+        if ($currentUser->role !== 'waka') {
+            abort(403, 'Hanya Waka Kurikulum yang dapat menghapus seluruh data mata pelajaran.');
+        }
+
+        $lockedCycleIds = BlockCycle::where('is_locked', true)->pluck('id');
+        $lockedSubjectIds = Schedule::whereIn('block_cycle_id', $lockedCycleIds)
+            ->pluck('subject_id')
+            ->unique()
+            ->filter();
+
+        $countDeleted = 0;
+        DB::transaction(function () use ($lockedSubjectIds, &$countDeleted) {
+            $query = Subject::query();
+            if ($lockedSubjectIds->isNotEmpty()) {
+                $query->whereNotIn('id', $lockedSubjectIds);
+            }
+            $countDeleted = $query->delete();
+        });
+
+        $message = "Seluruh data mata pelajaran berhasil dihapus ({$countDeleted} mata pelajaran).";
+        if ($lockedSubjectIds->isNotEmpty()) {
+            $message .= " Beberapa mata pelajaran tidak dihapus karena masih digunakan pada jadwal siklus yang sedang dikunci.";
+        }
+
+        return redirect()
+            ->route('subjects.index')
+            ->with('success', $message);
     }
 
     /**

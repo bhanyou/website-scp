@@ -16,6 +16,15 @@
         <button type="button" class="btn btn-secondary btn-sm" onclick="openModal('modalCreateSubject')">
             + Tambah Manual
         </button>
+        @if($subjects->total() > 0)
+            <form action="{{ route('subjects.destroy-all') }}" method="POST" style="margin: 0;" data-custom-confirm="PERINGATAN: Seluruh data mata pelajaran akan dihapus secara permanen. Apakah Anda yakin ingin menghapus SEMUA data mata pelajaran?">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger btn-sm" style="background-color: #ef4444; color: white; border: none; display: inline-flex; align-items: center; gap: 0.35rem;">
+                    Hapus Semua Mapel
+                </button>
+            </form>
+        @endif
     </div>
 </div>
 

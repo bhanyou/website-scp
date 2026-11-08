@@ -166,11 +166,11 @@
             + Tambah Manual
         </button>
         @if($students->count() > 0)
-            <form action="{{ route('students.destroy-all') }}" method="POST" style="margin: 0;" onsubmit="return confirm('PERINGATAN: Seluruh data siswa beserta akun pengguna siswa akan dihapus secara permanen.\n\nApakah Anda yakin ingin menghapus SEMUA data siswa?')">
+            <form action="{{ route('students.destroy-all') }}" method="POST" style="margin: 0;" data-custom-confirm="PERINGATAN: Seluruh data siswa beserta akun pengguna siswa akan dihapus secara permanen. Apakah Anda yakin ingin menghapus SEMUA data siswa?">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-danger btn-sm" style="background-color: #ef4444; color: white; border: none; display: inline-flex; align-items: center; gap: 0.35rem;">
-                    <span>🗑️</span> Hapus Semua Siswa
+                    Hapus Semua Siswa
                 </button>
             </form>
         @endif
