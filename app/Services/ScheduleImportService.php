@@ -1060,7 +1060,9 @@ class ScheduleImportService
                             $selectedTeacher = $teachers->first(fn($t) => (string)$t->id === (string)$rawTeacher || str_ends_with((string)$t->nip, (string)$rawTeacher));
                         }
                         if (!$selectedTeacher) {
-                            $skippedErrors[] = "Baris #{$rowNum} dilewati: nama guru tidak valid ('{$rawTeacher}').";
+                            if (!empty($rawTeacher)) {
+                                $skippedErrors[] = "Baris #{$rowNum} dilewati: nama guru tidak valid ('{$rawTeacher}').";
+                            }
                             continue;
                         }
                     } else {
