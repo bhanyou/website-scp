@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\BlockCycle;
 use App\Models\ClassGroup;
 use App\Models\Major;
+use App\Models\LessonHour;
 use App\Models\Room;
 use App\Models\Schedule;
 use App\Models\SchoolClass;
@@ -667,6 +668,8 @@ class ScheduleImportService
             $newRoomsCount = 0;
             $updatedSchedules = 0;
 
+            $matrixMap = []; // [$cls->id][$day][$period] = $roomObj;
+
             foreach ($allCells as $entry) {
                 $cName = $entry['class'];
                 $cleanCName = trim(preg_replace('/\s+/', ' ', $cName));
@@ -701,18 +704,112 @@ class ScheduleImportService
 
                 $day = $entry['day'];
                 $period = $entry['period'];
+                $matrixMap[$cls->id][$day][$period] = $roomObj;
+            }
 
-                $schedules = Schedule::where('block_cycle', $cycleNumber)
-                    ->where('class_id', $cls->id)
-                    ->where('day', $day)
-                    ->where('start_period', '<=', $period)
-                    ->where('end_period', '>=', $period)
-                    ->get();
+            // Proses pemetaan ruangan ke jadwal (mendukung pemecahan segmen jika ruangan berbeda di tengah jam)
+            $existingSchedules = Schedule::where('block_cycle', $cycleNumber)->get();
 
-                foreach ($schedules as $sched) {
-                    if ($sched->room_id != $roomObj->id) {
-                        $sched->room_id = $roomObj->id;
+            foreach ($existingSchedules as $sched) {
+                if (!isset($matrixMap[$sched->class_id][$sched->day])) continue;
+                $dayRooms = $matrixMap[$sched->class_id][$sched->day];
+
+                $periodRooms = [];
+                for ($p = (int)$sched->start_period; $p <= (int)$sched->end_period; $p++) {
+                    if (isset($dayRooms[$p])) {
+                        $periodRooms[$p] = $dayRooms[$p];
+                    }
+                }
+                if (empty($periodRooms)) continue;
+
+                // Kelompokkan menjadi contiguous segments dengan room yang sama
+                $segments = [];
+                $curStart = null;
+                $curEnd = null;
+                $curRoom = null;
+
+                foreach ($periodRooms as $p => $rObj) {
+                    if ($curRoom === null) {
+                        $curStart = $p;
+                        $curEnd = $p;
+                        $curRoom = $rObj;
+                    } elseif ($curRoom->id === $rObj->id && $p === $curEnd + 1) {
+                        $curEnd = $p;
+                    } else {
+                        $segments[] = ['start' => $curStart, 'end' => $curEnd, 'room' => $curRoom];
+                        $curStart = $p;
+                        $curEnd = $p;
+                        $curRoom = $rObj;
+                    }
+                }
+                if ($curRoom !== null) {
+                    $segments[] = ['start' => $curStart, 'end' => $curEnd, 'room' => $curRoom];
+                }
+
+                if (count($segments) === 1) {
+                    $seg = $segments[0];
+                    if ($sched->room_id != $seg['room']->id) {
+                        $sched->room_id = $seg['room']->id;
                         $sched->save();
+                        $updatedSchedules++;
+                    }
+                } elseif (count($segments) > 1) {
+                    $lessonPeriods = LessonHour::getPeriodsForDay($sched->day);
+
+                    // Segmen pertama: perbarui jadwal yang ada
+                    $firstSeg = $segments[0];
+                    $startT = $lessonPeriods[$firstSeg['start']]['start'] ?? $sched->start_time;
+                    $endT = $lessonPeriods[$firstSeg['end']]['end'] ?? $sched->end_time;
+                    if (strlen($startT) === 5) $startT .= ':00';
+                    if (strlen($endT) === 5) $endT .= ':00';
+
+                    $sched->update([
+                        'start_period' => $firstSeg['start'],
+                        'end_period' => $firstSeg['end'],
+                        'start_time' => $startT,
+                        'end_time' => $endT,
+                        'room_id' => $firstSeg['room']->id,
+                    ]);
+                    $updatedSchedules++;
+
+                    // Segmen selanjutnya: buat/perbarui baris jadwal baru
+                    for ($i = 1; $i < count($segments); $i++) {
+                        $seg = $segments[$i];
+                        $segStartT = $lessonPeriods[$seg['start']]['start'] ?? $sched->start_time;
+                        $segEndT = $lessonPeriods[$seg['end']]['end'] ?? $sched->end_time;
+                        if (strlen($segStartT) === 5) $segStartT .= ':00';
+                        if (strlen($segEndT) === 5) $segEndT .= ':00';
+
+                        $existingSeg = Schedule::where('teacher_id', $sched->teacher_id)
+                            ->where('subject_id', $sched->subject_id)
+                            ->where('class_id', $sched->class_id)
+                            ->where('day', $sched->day)
+                            ->where('block_cycle', $sched->block_cycle)
+                            ->where('start_period', $seg['start'])
+                            ->where('end_period', $seg['end'])
+                            ->first();
+
+                        if (!$existingSeg) {
+                            Schedule::create([
+                                'teacher_id' => $sched->teacher_id,
+                                'subject_id' => $sched->subject_id,
+                                'class_id' => $sched->class_id,
+                                'room_id' => $seg['room']->id,
+                                'day' => $sched->day,
+                                'block_cycle' => $sched->block_cycle,
+                                'block_cycle_id' => $sched->block_cycle_id,
+                                'start_period' => $seg['start'],
+                                'end_period' => $seg['end'],
+                                'start_time' => $segStartT,
+                                'end_time' => $segEndT,
+                            ]);
+                        } else {
+                            $existingSeg->update([
+                                'room_id' => $seg['room']->id,
+                                'start_time' => $segStartT,
+                                'end_time' => $segEndT,
+                            ]);
+                        }
                         $updatedSchedules++;
                     }
                 }
