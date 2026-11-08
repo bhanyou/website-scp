@@ -316,9 +316,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/attendances', [AttendanceController::class, 'index'])
         ->name('attendances.index');
 
-    // Jadwal Pelajaran - Siswa & Orang Tua
+    // Jadwal Pelajaran - Siswa, Orang Tua, Guru & Waka
     Route::get('/student/schedule', [ScheduleController::class, 'studentSchedule'])
-        ->middleware('role:siswa,ortu')
+        ->middleware('role:siswa,ortu,guru,waka')
         ->name('student.schedule');
 
     // Pengajuan Izin - Siswa & Orang Tua

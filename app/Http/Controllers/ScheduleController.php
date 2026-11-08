@@ -832,12 +832,23 @@ class ScheduleController extends Controller
             $student = $user->parent->students()->first();
         }
 
-        if (!$student) {
-            abort(403, 'Akun Anda tidak terhubung dengan data siswa.');
-        }
+        $teacher = null;
+        $schoolClass = null;
 
-        $student->load(['schoolClass.homeroomTeacher', 'parent']);
-        $schoolClass = $student->schoolClass;
+        if ($student) {
+            $student->load(['schoolClass.homeroomTeacher', 'parent']);
+            $schoolClass = $student->schoolClass;
+        } elseif ($user->role === 'guru') {
+            $teacher = $user->teacher ?? \App\Models\Teacher::where('user_id', $user->id)->first();
+            if ($teacher && $teacher->homeroomClasses->isNotEmpty()) {
+                $schoolClass = $teacher->homeroomClasses->first();
+            }
+        } elseif ($user->role === 'waka') {
+            $classId = request('class_id');
+            $schoolClass = $classId ? \App\Models\SchoolClass::find($classId) : \App\Models\SchoolClass::first();
+        } else {
+            abort(403, 'Akun Anda tidak memiliki akses ke jadwal pelajaran.');
+        }
 
         // Ambil putaran aktif yang ditetapkan oleh Waka Kurikulum
         $activeCycle = \App\Models\BlockCycle::where('is_active', true)->first();
@@ -857,14 +868,25 @@ class ScheduleController extends Controller
         ];
         $todayName = $indonesianDays[now()->dayOfWeek] ?? 'Senin';
 
-        // Ambil seluruh jadwal kelas siswa untuk putaran aktif (Senin - Jumat)
+        // Ambil jadwal
         $schedules = collect();
-        if ($schoolClass && $activeCycle) {
-            $schedules = \App\Models\Schedule::with(['subject', 'teacher', 'room'])
+        if ($schoolClass && $activeCycle && (!$teacher || request('view') === 'class')) {
+            $schedules = \App\Models\Schedule::with(['subject', 'teacher', 'room', 'schoolClass'])
                 ->where('class_id', $schoolClass->id)
                 ->where('block_cycle_id', $activeCycle->id)
-                ->orderBy('day')
-                ->orderBy('start_time')
+                ->orderByRaw("FIELD(day, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'), start_time ASC")
+                ->get();
+        } elseif ($teacher && $activeCycle) {
+            $schedules = \App\Models\Schedule::with(['subject', 'teacher', 'room', 'schoolClass'])
+                ->where('teacher_id', $teacher->id)
+                ->where('block_cycle_id', $activeCycle->id)
+                ->orderByRaw("FIELD(day, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'), start_time ASC")
+                ->get();
+        } elseif ($schoolClass && $activeCycle) {
+            $schedules = \App\Models\Schedule::with(['subject', 'teacher', 'room', 'schoolClass'])
+                ->where('class_id', $schoolClass->id)
+                ->where('block_cycle_id', $activeCycle->id)
+                ->orderByRaw("FIELD(day, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'), start_time ASC")
                 ->get();
         }
 
@@ -886,9 +908,15 @@ class ScheduleController extends Controller
             'Jumat' => \App\Models\LessonHour::getPeriodsForDay('Jumat'),
         ];
 
+        $allClasses = ($user->role === 'waka' || ($user->role === 'guru' && $teacher && $teacher->homeroomClasses->isNotEmpty()))
+            ? \App\Models\SchoolClass::orderBy('name')->get()
+            : collect();
+
         return view('schedules.student', compact(
             'student',
+            'teacher',
             'schoolClass',
+            'allClasses',
             'activeCycle',
             'todayName',
             'schedules',
