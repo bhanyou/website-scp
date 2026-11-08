@@ -69,7 +69,10 @@ class DashboardController extends Controller
 
         if ($activeCycle) {
             $totalMySchedules = Schedule::where('teacher_id', $teacher->id)
-                ->where('block_cycle_id', $activeCycle->id)
+                ->where(function ($q) use ($activeCycle) {
+                    $q->where('block_cycle_id', $activeCycle->id)
+                      ->orWhere('block_cycle', $activeCycle->cycle);
+                })
                 ->count();
 
             $schedules = Schedule::with([
@@ -79,7 +82,10 @@ class DashboardController extends Controller
                 'blockCycle',
             ])
                 ->where('teacher_id', $teacher->id)
-                ->where('block_cycle_id', $activeCycle->id)
+                ->where(function ($q) use ($activeCycle) {
+                    $q->where('block_cycle_id', $activeCycle->id)
+                      ->orWhere('block_cycle', $activeCycle->cycle);
+                })
                 ->where('day', $todayName)
                 ->orderBy('start_time')
                 ->get();
@@ -151,7 +157,10 @@ class DashboardController extends Controller
                 'room',
                 'blockCycle',
             ])
-                ->where('block_cycle_id', $activeCycle->id)
+                ->where(function ($q) use ($activeCycle) {
+                    $q->where('block_cycle_id', $activeCycle->id)
+                      ->orWhere('block_cycle', $activeCycle->cycle);
+                })
                 ->where('day', $todayName)
                 ->orderBy('start_time')
                 ->get();
@@ -276,7 +285,10 @@ class DashboardController extends Controller
             if ($activeCycle && $student->class_id) {
                 $todaySchedules = Schedule::with(['subject', 'teacher', 'room'])
                     ->where('class_id', $student->class_id)
-                    ->where('block_cycle_id', $activeCycle->id)
+                    ->where(function ($q) use ($activeCycle) {
+                        $q->where('block_cycle_id', $activeCycle->id)
+                          ->orWhere('block_cycle', $activeCycle->cycle);
+                    })
                     ->where('day', $todayName)
                     ->orderBy('start_time')
                     ->get();

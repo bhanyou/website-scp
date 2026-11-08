@@ -10,6 +10,8 @@ use App\Models\Teacher;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 
 class AttendanceController extends Controller
 {
@@ -126,16 +128,46 @@ class AttendanceController extends Controller
                 });
             }
 
-            $students = $studentsQuery->orderBy('name')->get();
-            $studentIds = $students->pluck('id');
+            // Summary Total untuk 4 Stat Cards dihitung dari seluruh siswa sesuai filter (bukan per halaman)
+            $allStudentIds = (clone $studentsQuery)->pluck('id');
+            $summaryQuery = Attendance::whereIn('student_id', $allStudentIds);
+            if ($startDate) {
+                $summaryQuery->whereDate('date', '>=', $startDate);
+            }
+            if ($endDate) {
+                $summaryQuery->whereDate('date', '<=', $endDate);
+            }
 
-            // Query Data Presensi
+            $statusCounts = (clone $summaryQuery)
+                ->selectRaw('status, count(*) as count')
+                ->groupBy('status')
+                ->pluck('count', 'status');
+
+            $summary = [
+                'hadir' => (int) ($statusCounts['Hadir'] ?? 0),
+                'sakit' => (int) ($statusCounts['Sakit'] ?? 0),
+                'izin' => (int) ($statusCounts['Izin'] ?? 0),
+                'alpa' => (int) ($statusCounts['Alpa'] ?? 0),
+                'total' => (int) $statusCounts->sum(),
+            ];
+
+            // Pagination parameter sama seperti Data Siswa & Guru (10, 15, 25, 50, 100)
+            $perPage = (int) $request->query('per_page', 15);
+            if (!in_array($perPage, [10, 15, 25, 50, 100])) {
+                $perPage = 15;
+            }
+
+            // Paginate data siswa
+            $students = $studentsQuery->orderBy('name')->paginate($perPage)->withQueryString();
+            $pageStudentIds = $students->pluck('id');
+
+            // Query Data Presensi untuk siswa pada halaman saat ini
             $attendancesQuery = Attendance::with([
                 'student.schoolClass',
                 'schedule.subject',
                 'schedule.schoolClass',
                 'schedule.blockCycle',
-            ])->whereIn('student_id', $studentIds);
+            ])->whereIn('student_id', $pageStudentIds);
 
             if ($startDate) {
                 $attendancesQuery->whereDate('date', '>=', $startDate);
@@ -146,8 +178,8 @@ class AttendanceController extends Controller
 
             $attendances = $attendancesQuery->latest('date')->latest('id')->get();
 
-            // Hitung Rekapitulasi per Siswa (Nama, Kelas, Hadir, Sakit, Izin, Alpa, Total - Tanpa %)
-            $studentsRecap = $students->map(function ($std) use ($attendances) {
+            // Hitung Rekapitulasi per Siswa pada Halaman Aktif (Nama, Kelas, Hadir, Sakit, Izin, Alpa, Total)
+            $recapCollection = $students->getCollection()->map(function ($std) use ($attendances) {
                 $studentAtts = $attendances->where('student_id', $std->id);
                 $hadir = $studentAtts->where('status', 'Hadir')->count();
                 $sakit = $studentAtts->where('status', 'Sakit')->count();
@@ -169,14 +201,13 @@ class AttendanceController extends Controller
                 ];
             });
 
-            // Summary Total untuk 4 Stat Cards
-            $summary = [
-                'hadir' => $attendances->where('status', 'Hadir')->count(),
-                'sakit' => $attendances->where('status', 'Sakit')->count(),
-                'izin' => $attendances->where('status', 'Izin')->count(),
-                'alpa' => $attendances->where('status', 'Alpa')->count(),
-                'total' => $attendances->count(),
-            ];
+            $studentsRecap = new LengthAwarePaginator(
+                $recapCollection,
+                $students->total(),
+                $students->perPage(),
+                $students->currentPage(),
+                ['path' => Paginator::resolveCurrentPath(), 'query' => $request->query()]
+            );
 
             return view('attendances.index', compact(
                 'attendances',

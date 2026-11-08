@@ -190,12 +190,6 @@
                 <span class="badge badge-success">Semua Tertib</span>
             @endif
         </h2>
-        <a href="{{ route('monitoring.keterlambatan') }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem;">
-            <span>Halaman Lengkap</span>
-            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-            </svg>
-        </a>
     </div>
 
     @if($journalAlerts->count())
@@ -236,8 +230,8 @@
             <div style="font-size: 0.8rem; color: var(--text-muted);">
                 Menampilkan <strong>{{ min(5, $journalAlerts->count()) }}</strong> dari <strong>{{ $journalAlerts->count() }}</strong> keterlambatan hari ini.
             </div>
-            <a href="{{ route('monitoring.keterlambatan') }}" class="btn btn-danger btn-sm" style="font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
-                Lihat Seluruh Keterlambatan ({{ $journalAlerts->count() }}) &rarr;
+            <a href="{{ route('waka.journals.index', ['status' => 'belum']) }}" class="btn btn-danger btn-sm" style="font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+                Lihat di Monitoring Jurnal ({{ $journalAlerts->count() }}) &rarr;
             </a>
         </div>
     @else

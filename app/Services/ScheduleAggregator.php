@@ -51,11 +51,6 @@ class ScheduleAggregator
             return false;
         }
 
-        // Tidak boleh melintasi batas jam istirahat
-        if (self::crossesBreakBoundary((int)$slotA['end_period'], (int)$slotB['period'])) {
-            return false;
-        }
-
         // 1. Guru pengajar sama
         if ((int)$slotA['teacher_id'] !== (int)$slotB['teacher_id']) {
             return false;
@@ -190,11 +185,26 @@ class ScheduleAggregator
                             $roomObj = $matrixMap[$cls->id][$day][$p] ?? null;
                             $roomId = $roomObj ? $roomObj->id : $sched->room_id;
 
+                            $teacherId = $sched->teacher_id;
+                            $subjectId = $sched->subject_id;
+
+                            // Jika ruangan jam ini berganti ke Lab (L.XX) sementara jadwal saat ini adalah teori,
+                            // sesuaikan mapel & guru ke sesi praktik lab yang bersangkutan.
+                            if ($roomObj && str_starts_with($roomObj->name, 'L.')) {
+                                foreach ($existingSchedules as $otherSched) {
+                                    if ($otherSched->id !== $sched->id && ($otherSched->room_id === $roomObj->id || ($otherSched->room && $otherSched->room->name === $roomObj->name))) {
+                                        $teacherId = $otherSched->teacher_id;
+                                        $subjectId = $otherSched->subject_id;
+                                        break;
+                                    }
+                                }
+                            }
+
                             $slots[] = [
                                 'class_id' => $cls->id,
                                 'period' => $p,
-                                'teacher_id' => $sched->teacher_id,
-                                'subject_id' => $sched->subject_id,
+                                'teacher_id' => $teacherId,
+                                'subject_id' => $subjectId,
                                 'room_id' => $roomId,
                                 'block_cycle' => $cycleNumber,
                                 'block_cycle_id' => $blockCycleId,

@@ -219,7 +219,7 @@
     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
         <button type="button" class="tab-btn active" onclick="switchFilter('all', this)">
             Semua Siswa
-            <span class="tab-badge" id="badge-all">{{ $studentsRecap->count() }}</span>
+            <span class="tab-badge" id="badge-all">{{ $studentsRecap->total() }}</span>
         </button>
 
         <button type="button" class="tab-btn" onclick="switchFilter('hadir', this)" style="--active-color: #10b981;">
@@ -295,7 +295,7 @@
     <div class="card" id="recapTableCard">
         <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
             <span id="recapTableTitle">Daftar Rekap Presensi Siswa</span>
-            <span class="badge badge-info" id="recapCountLabel">{{ $studentsRecap->count() }} Siswa</span>
+            <span class="badge badge-info" id="recapCountLabel">{{ $studentsRecap->total() }} Siswa</span>
         </div>
 
         <div class="table-container">
@@ -314,13 +314,17 @@
                 </thead>
                 <tbody>
                     @forelse($studentsRecap as $recap)
+                        @php
+                            $rowIndex = $loop->iteration + ($studentsRecap->currentPage() - 1) * $studentsRecap->perPage();
+                        @endphp
                         <tr class="recap-row" 
+                            data-index="{{ $rowIndex }}"
                             data-hadir="{{ $recap->hadir }}" 
                             data-sakit="{{ $recap->sakit }}" 
                             data-izin="{{ $recap->izin }}" 
                             data-alpa="{{ $recap->alpa }}">
                             <td style="text-align: center; color: var(--text-muted); font-size: 0.8rem;" class="row-number">
-                                {{ $loop->iteration }}
+                                {{ $rowIndex }}
                             </td>
                             <td>
                                 <strong>{{ $recap->name }}</strong>
@@ -397,6 +401,64 @@
             </table>
         </div>
 
+        {{-- Navigasi Halaman (Pagination Rekap Presensi) --}}
+        @if ($studentsRecap->hasPages() || $studentsRecap->total() > 10)
+            <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border-color, #e2e8f0); flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.85rem; font-size: 0.85rem; color: var(--text-secondary);">
+                    <span>
+                        Menampilkan <strong>{{ $studentsRecap->firstItem() ?? 0 }}</strong> - <strong>{{ $studentsRecap->lastItem() ?? 0 }}</strong> dari <strong>{{ $studentsRecap->total() }}</strong> siswa
+                    </span>
+                    <div style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <label for="per_page_select_attendance" style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Baris per hal:</label>
+                        <select id="per_page_select_attendance" onchange="changePerPage(this.value)" style="padding: 0.2rem 0.4rem; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--border-color, #cbd5e1); background: #fff; cursor: pointer;">
+                            @foreach([10, 15, 25, 50, 100] as $opt)
+                                <option value="{{ $opt }}" {{ $studentsRecap->perPage() == $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 0.35rem; align-items: center;">
+                    {{-- Tombol Pertama --}}
+                    @if ($studentsRecap->currentPage() > 2)
+                        <a href="{{ $studentsRecap->url(1) }}" class="btn-page" title="Halaman Pertama">&laquo;&laquo;</a>
+                    @endif
+
+                    {{-- Tombol Sebelumnya --}}
+                    @if ($studentsRecap->onFirstPage())
+                        <span class="btn-page disabled">&laquo; Prev</span>
+                    @else
+                        <a href="{{ $studentsRecap->previousPageUrl() }}" class="btn-page">&laquo; Prev</a>
+                    @endif
+
+                    {{-- Link Nomor Halaman --}}
+                    @php
+                        $startPage = max(1, $studentsRecap->currentPage() - 2);
+                        $endPage = min($studentsRecap->lastPage(), $studentsRecap->currentPage() + 2);
+                    @endphp
+                    @for ($p = $startPage; $p <= $endPage; $p++)
+                        @if ($p == $studentsRecap->currentPage())
+                            <span class="btn-page active">{{ $p }}</span>
+                        @else
+                            <a href="{{ $studentsRecap->url($p) }}" class="btn-page">{{ $p }}</a>
+                        @endif
+                    @endfor
+
+                    {{-- Tombol Selanjutnya --}}
+                    @if ($studentsRecap->hasMorePages())
+                        <a href="{{ $studentsRecap->nextPageUrl() }}" class="btn-page">Next &raquo;</a>
+                    @else
+                        <span class="btn-page disabled">Next &raquo;</span>
+                    @endif
+
+                    {{-- Tombol Terakhir --}}
+                    @if ($studentsRecap->currentPage() < $studentsRecap->lastPage() - 1)
+                        <a href="{{ $studentsRecap->url($studentsRecap->lastPage()) }}" class="btn-page" title="Halaman Terakhir">&raquo;&raquo;</a>
+                    @endif
+                </div>
+            </div>
+        @endif
+
         {{-- Kotak Ringkasan & Keterangan Mode Cetak --}}
         <div class="print-summary-box">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -408,7 +470,7 @@
                     <strong>A:</strong> Alpa (Tanpa Keterangan)
                 </div>
                 <div>
-                    Total Siswa: <strong>{{ $studentsRecap->count() }}</strong> Siswa &bull; 
+                    Total Siswa: <strong>{{ $studentsRecap->total() }}</strong> Siswa &bull; 
                     Akumulasi Presensi: <strong>{{ $summary['total'] ?? 0 }}</strong> Pertemuan
                 </div>
             </div>
@@ -569,6 +631,41 @@
     .tab-btn.active .tab-badge {
         background: rgba(255, 255, 255, 0.25);
         color: #fff;
+    }
+
+    /* Styling Navigasi Pagination */
+    .btn-page {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 32px;
+        height: 32px;
+        padding: 0 0.5rem;
+        font-size: 0.825rem;
+        font-weight: 500;
+        color: var(--text-primary, #1e293b);
+        background: #ffffff;
+        border: 1px solid var(--border-color, #cbd5e1);
+        border-radius: 6px;
+        text-decoration: none;
+        transition: all 0.15s ease;
+    }
+    .btn-page:hover:not(.disabled):not(.active) {
+        background-color: #f1f5f9;
+        border-color: #94a3b8;
+    }
+    .btn-page.active {
+        background-color: var(--accent, #4f46e5);
+        color: #ffffff;
+        border-color: var(--accent, #4f46e5);
+        font-weight: 700;
+    }
+    .btn-page.disabled {
+        color: #94a3b8;
+        background-color: #f8fafc;
+        border-color: #e2e8f0;
+        cursor: not-allowed;
+        opacity: 0.6;
     }
 
     /* Sembunyikan elemen cetak di layar monitor */
@@ -826,15 +923,24 @@
                 row.style.display = '';
                 visibleCount++;
                 const rowNum = row.querySelector('.row-number');
-                if (rowNum) rowNum.textContent = visibleCount;
+                if (rowNum) {
+                    rowNum.textContent = status === 'all' ? (row.getAttribute('data-index') || visibleCount) : visibleCount;
+                }
             } else {
                 row.style.display = 'none';
             }
         });
 
         if (countElem) {
-            countElem.textContent = visibleCount + ' Siswa';
+            countElem.textContent = (status === 'all' ? '{{ $studentsRecap->total() }}' : visibleCount) + ' Siswa';
         }
+    }
+
+    function changePerPage(limit) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('per_page', limit);
+        url.searchParams.set('page', 1);
+        window.location.href = url.toString();
     }
 
     function switchViewMode(mode, btnElem) {

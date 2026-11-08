@@ -58,6 +58,13 @@ class BlockCycleController extends Controller
     {
         $cycle = BlockCycle::findOrFail($id);
 
+        $activeLocked = BlockCycle::where('is_active', true)->where('is_locked', true)->first();
+        if ($activeLocked && $activeLocked->id !== $cycle->id) {
+            return redirect()
+                ->route('block-cycles.index')
+                ->with('error', 'Tidak dapat beralih putaran karena jadwal saat ini sedang dikunci oleh Waka Kurikulum.');
+        }
+
         // Nonaktifkan semua siklus lain
         BlockCycle::where('id', '!=', $cycle->id)
             ->update([
