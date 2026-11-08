@@ -870,22 +870,27 @@ class ScheduleController extends Controller
 
         // Ambil jadwal
         $schedules = collect();
+        $cycleFilter = function($q) use ($activeCycle) {
+            $q->where('block_cycle_id', $activeCycle->id)
+              ->orWhere('block_cycle', $activeCycle->cycle);
+        };
+
         if ($schoolClass && $activeCycle && (!$teacher || request('view') === 'class')) {
             $schedules = \App\Models\Schedule::with(['subject', 'teacher', 'room', 'schoolClass'])
                 ->where('class_id', $schoolClass->id)
-                ->where('block_cycle_id', $activeCycle->id)
+                ->where($cycleFilter)
                 ->orderByRaw("FIELD(day, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'), start_time ASC")
                 ->get();
         } elseif ($teacher && $activeCycle) {
             $schedules = \App\Models\Schedule::with(['subject', 'teacher', 'room', 'schoolClass'])
                 ->where('teacher_id', $teacher->id)
-                ->where('block_cycle_id', $activeCycle->id)
+                ->where($cycleFilter)
                 ->orderByRaw("FIELD(day, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'), start_time ASC")
                 ->get();
         } elseif ($schoolClass && $activeCycle) {
             $schedules = \App\Models\Schedule::with(['subject', 'teacher', 'room', 'schoolClass'])
                 ->where('class_id', $schoolClass->id)
-                ->where('block_cycle_id', $activeCycle->id)
+                ->where($cycleFilter)
                 ->orderByRaw("FIELD(day, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'), start_time ASC")
                 ->get();
         }

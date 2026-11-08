@@ -21,7 +21,7 @@
                 </span>
                 <form action="{{ route('block-cycles.toggle-lock', $activeCycle->id) }}" method="POST" style="margin: 0;">
                     @csrf
-                    <button type="submit" class="btn btn-secondary" style="font-weight: 600; padding: 0.5rem 1rem; border: 1px solid var(--border-color); background-color: #f1f5f9; color: #334155;" onclick="return confirm('Buka kunci jadwal {{ $activeCycleName }}? Waka akan dapat beralih mengaktifkan putaran lain kembali.')">
+                    <button type="submit" class="btn btn-secondary" style="font-weight: 600; padding: 0.5rem 1rem; border: 1px solid var(--border-color); background-color: #f1f5f9; color: #334155;" data-custom-confirm="Buka kunci jadwal {{ $activeCycleName }}? Waka akan dapat beralih mengaktifkan putaran lain kembali.">
                         Buka Kunci Jadwal
                     </button>
                 </form>
@@ -31,7 +31,7 @@
                 </span>
                 <form action="{{ route('block-cycles.toggle-lock', $activeCycle->id) }}" method="POST" style="margin: 0;">
                     @csrf
-                    <button type="submit" class="btn" style="background-color: #f59e0b; color: #ffffff; font-weight: 600; padding: 0.5rem 1rem; border: none; border-radius: var(--radius-sm);" onclick="return confirm('Kunci jadwal {{ $activeCycleName }}? Setelah dikunci, putaran tidak dapat diganti ke putaran lain sampai kunci dibuka.')">
+                    <button type="submit" class="btn" style="background-color: #f59e0b; color: #ffffff; font-weight: 600; padding: 0.5rem 1rem; border: none; border-radius: var(--radius-sm);" data-custom-confirm="Kunci jadwal {{ $activeCycleName }}? Setelah dikunci, putaran tidak dapat diganti ke putaran lain sampai kunci dibuka.">
                         Kunci Jadwal
                     </button>
                 </form>
@@ -114,7 +114,7 @@
                 @else
                     <form action="{{ route('block-cycles.toggle-active', $cycle->id) }}" method="POST" style="margin: 0;">
                         @csrf
-                        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.75rem 1rem; font-weight: 600;" onclick="return confirm('Apakah Anda yakin ingin mengaktifkan {{ $namaPutaran }}?')">
+                        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.75rem 1rem; font-weight: 600;" data-custom-confirm="Apakah Anda yakin ingin mengaktifkan {{ $namaPutaran }}?">
                             Aktifkan {{ $namaPutaran }}
                         </button>
                     </form>
@@ -187,7 +187,7 @@
                             @else
                                 <form action="{{ route('block-cycles.toggle-active', $cycle->id) }}" method="POST" style="display:inline; margin: 0;">
                                     @csrf
-                                    <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('Aktifkan {{ $namaPutaran }}?')">
+                                    <button type="submit" class="btn btn-primary btn-sm" data-custom-confirm="Aktifkan {{ $namaPutaran }}?">
                                         Aktifkan
                                     </button>
                                 </form>

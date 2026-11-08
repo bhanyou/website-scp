@@ -112,16 +112,16 @@ class LessonHour extends Model
             // JUMAT - HANYA JAM 1 S/D 8
             'Jumat' => [
                 'default' => [
-                    1  => ['start' => '07:00', 'end' => '07:40', 'duration' => 40],
-                    2  => ['start' => '07:40', 'end' => '08:20', 'duration' => 40],
-                    3  => ['start' => '08:20', 'end' => '09:00', 'duration' => 40],
+                    1  => ['start' => '07:15', 'end' => '07:55', 'duration' => 40],
+                    2  => ['start' => '07:55', 'end' => '08:35', 'duration' => 40],
+                    3  => ['start' => '08:35', 'end' => '09:15', 'duration' => 40],
                     // Istirahat: 09:00 - 09:15 (15')
-                    4  => ['start' => '09:15', 'end' => '09:55', 'duration' => 40],
-                    5  => ['start' => '09:55', 'end' => '10:35', 'duration' => 40],
-                    6  => ['start' => '10:35', 'end' => '11:15', 'duration' => 40],
+                    4  => ['start' => '09:30', 'end' => '10:10', 'duration' => 40],
+                    5  => ['start' => '10:10', 'end' => '10:50', 'duration' => 40],
+                    6  => ['start' => '10:50', 'end' => '11:25', 'duration' => 35],
                     // Shalat Jumat & Istirahat: 11:15 - 12:55
-                    7  => ['start' => '12:55', 'end' => '13:35', 'duration' => 40],
-                    8  => ['start' => '13:35', 'end' => '14:15', 'duration' => 40],
+                    7  => ['start' => '12:40', 'end' => '13:15', 'duration' => 35],
+                    8  => ['start' => '13:15', 'end' => '13:50', 'duration' => 35],
                 ],
             ],
         ];
