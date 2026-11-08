@@ -1313,11 +1313,14 @@ class ScheduleImportService
     {
         $name = trim($raw);
 
-        // 1. Abaikan baris legenda keterangan jurusan
+        // 1. Abaikan baris legenda keterangan jurusan & tugas tambahan struktural (bukan mapel siswa)
         if (preg_match('/^Pembelajaran\s+(.*=.*|[X|V|I]+\s+[A-Z]+(\s+\d+)?)$/i', $name)) {
             return null;
         }
         if (strpos($name, '=') !== false) {
+            return null;
+        }
+        if (preg_match('/^(WAKA|KEPALA\s+LAB|KEPALA\s+BENGKEL|TUGAS\s+TAMBAHAN)/i', $name)) {
             return null;
         }
 
