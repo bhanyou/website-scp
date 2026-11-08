@@ -3,10 +3,10 @@
 @section('content')
 <style>
     /* ==========================================================================
-       MODERN COMPACT DATA TABLE WITH VISUAL TAGS (CLEAN ENTERPRISE TABLE)
-       Tampilan Jadwal Pelajaran Elegan, Rapi, & Responsif
+       ACCORDION COLLAPSE PER-HARI (MINIMALIS & INTERAKTIF)
+       Clean Enterprise Accordion dengan Tailwind styling & transisi halus
        ========================================================================== */
-    .enterprise-header {
+    .schedule-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
@@ -14,14 +14,14 @@
         gap: 1rem;
         margin-bottom: 1.5rem;
     }
-    .enterprise-title {
+    .schedule-title {
         font-size: 1.5rem;
         font-weight: 800;
         color: #0f172a;
         margin: 0 0 0.35rem 0;
         letter-spacing: -0.02em;
     }
-    .enterprise-subtitle {
+    .schedule-subtitle {
         font-size: 0.88rem;
         color: #64748b;
         margin: 0;
@@ -31,7 +31,7 @@
     .meta-summary-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-left: 5px solid #2563eb;
+        border-left: 5px solid #4f46e5;
         border-radius: 1rem;
         padding: 1.25rem 1.5rem;
         margin-bottom: 1.5rem;
@@ -62,332 +62,388 @@
         margin-top: 2px;
     }
 
-    /* Tab Filter Hari Modern */
-    .tab-nav-wrapper {
+    /* Kontrol Toolbar Accordion */
+    .accordion-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0 0.25rem;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    .accordion-toolbar-info {
+        font-size: 0.84rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+    .accordion-toggle-btns {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .btn-toggle-accordion {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.35rem 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .btn-toggle-accordion:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #0f172a;
+    }
+
+    /* Container Accordion per Hari */
+    .day-accordion-card {
+        background: #ffffff; /* bg-white */
+        border: 1px solid #e5e7eb; /* border border-gray-200 */
+        border-radius: 1rem; /* rounded-2xl */
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+        overflow: hidden; /* overflow-hidden */
+        margin-bottom: 0.85rem; /* mb-3 */
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .day-accordion-card[open] {
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Header Accordion (<summary>) */
+    .day-accordion-summary {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.1rem 1.4rem;
+        cursor: pointer;
+        user-select: none;
+        transition: background-color 0.15s ease;
+        background: #ffffff;
+    }
+    .day-accordion-summary::-webkit-details-marker {
+        display: none;
+    }
+    .day-accordion-summary:hover {
+        background-color: rgba(249, 250, 251, 0.85); /* hover:bg-gray-50/80 */
+    }
+    .day-accordion-card[open] > .day-accordion-summary {
+        border-bottom: 1px solid #f1f5f9;
+        background-color: #fafafa;
+    }
+
+    /* Header Sisi Kiri */
+    .summary-left {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+    }
+    .day-abbr-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 0.625rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        flex-shrink: 0;
+    }
+    .day-abbr-today {
+        background: #4f46e5; /* bg-indigo-600 */
+        color: #ffffff;
+        box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25);
+    }
+    .day-abbr-regular {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+    }
+    .summary-day-title {
+        font-size: 0.95rem; /* text-sm / 0.95rem */
+        font-weight: 800;  /* font-bold */
+        color: #111827;    /* text-gray-900 */
+        line-height: 1.25;
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        overflow-x: auto;
-        padding-bottom: 0.75rem;
-        margin-bottom: 1.5rem;
-        border-bottom: 1px solid #e2e8f0;
-        scrollbar-width: thin;
     }
-    .day-tab-btn {
-        white-space: nowrap;
-        font-size: 0.85rem;
-        font-weight: 600;
-        padding: 0.5rem 1.15rem;
-        border-radius: 0.625rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        border: 1px solid #cbd5e1;
-        background: #ffffff;
-        color: #475569;
-        font-family: inherit;
-        text-decoration: none;
+    .summary-day-subtitle {
+        font-size: 0.75rem; /* text-xs */
+        color: #9ca3af;     /* text-gray-400 */
+        margin-top: 3px;
+        font-weight: 500;
     }
-    .day-tab-btn:hover {
-        background: #f8fafc;
-        border-color: #94a3b8;
-        color: #1e293b;
-    }
-    .day-tab-btn.is-active {
-        background: #2563eb;
-        color: #ffffff;
-        border-color: #2563eb;
-        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
-        font-weight: 700;
-    }
-    .day-tab-btn.is-active .day-tab-count {
-        background: rgba(255, 255, 255, 0.25);
-        color: #ffffff;
-    }
-    .day-tab-count {
-        background: #f1f5f9;
-        color: #475569;
-        font-size: 0.72rem;
-        font-weight: 700;
-        padding: 2px 7px;
-        border-radius: 9999px;
-        line-height: 1.2;
-    }
-    .day-tab-today-tag {
+    .tag-today-pill {
         background: #ef4444;
         color: #ffffff;
         font-size: 0.62rem;
         font-weight: 800;
-        padding: 2px 6px;
+        padding: 0.15rem 0.45rem;
         border-radius: 4px;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        line-height: 1.2;
     }
 
-    /* Blok Header Hari */
-    .day-block-section {
-        margin-bottom: 2rem;
-    }
-    .day-block-header {
+    /* Header Sisi Kanan */
+    .summary-right {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin-bottom: 0.85rem;
-        padding: 0 0.25rem;
-        flex-wrap: wrap;
-        gap: 0.5rem;
+        gap: 1.25rem;
     }
-    .day-badge-title {
-        font-size: 0.85rem;
-        font-weight: 800;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: #1e293b;
-        background: #f1f5f9;
-        border: 1px solid #cbd5e1;
-        padding: 0.4rem 0.85rem;
+    .operating-hours-text {
+        font-size: 0.75rem; /* text-xs */
+        color: #6b7280;     /* text-gray-500 */
+        font-weight: 600;
+        white-space: nowrap;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 0.35rem 0.75rem;
         border-radius: 0.5rem;
-        display: inline-block;
     }
-    .day-today-indicator {
-        background: #ef4444;
-        color: #ffffff;
-        font-size: 0.65rem;
-        font-weight: 800;
-        padding: 0.25rem 0.55rem;
-        border-radius: 0.375rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        display: inline-block;
+    .accordion-chevron-icon {
+        color: #94a3b8;
+        transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease;
+        flex-shrink: 0;
     }
-    .day-count-label {
-        font-size: 0.82rem;
-        color: #64748b;
-        font-weight: 500;
+    .day-accordion-card[open] .accordion-chevron-icon {
+        transform: rotate(180deg);
+        color: #4f46e5;
     }
 
-    /* Container Card Tabel Enterprise (rounded-2xl, border border-gray-200/80, overflow-hidden shadow-sm) */
-    .enterprise-table-card {
+    /* Body Accordion (List Baris Horizontal divide-y divide-gray-100) */
+    .accordion-body-list {
         background: #ffffff;
-        border-radius: 1rem; /* rounded-2xl */
-        border: 1px solid rgba(229, 231, 235, 0.8); /* border border-gray-200/80 */
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04); /* shadow-sm */
-        overflow: hidden;
     }
-    .enterprise-table {
-        width: 100%;
-        border-collapse: collapse;
-        text-align: left;
-    }
-    .enterprise-table th {
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
-        padding: 0.875rem 1.5rem; /* py-3.5 px-6 */
-        font-size: 0.72rem;
-        font-weight: 800;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: #64748b;
-    }
-    .enterprise-table td {
-        padding: 0.875rem 1.5rem; /* py-3.5 px-6 */
-        border-bottom: 1px solid #f1f5f9;
-        vertical-align: middle;
-        font-size: 0.88rem;
-    }
-    .enterprise-table tbody tr {
+    .accordion-schedule-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.1rem 1.4rem;
+        border-top: 1px solid #f3f4f6; /* divide-y divide-gray-100 */
+        gap: 1.25rem;
         transition: background-color 0.15s ease;
     }
-    .enterprise-table tbody tr:hover {
-        background-color: rgba(248, 250, 252, 0.7); /* hover:bg-slate-50/70 */
+    .accordion-schedule-row:first-child {
+        border-top: none;
     }
-    .enterprise-table tbody tr:last-child td {
-        border-bottom: none;
+    .accordion-schedule-row:hover {
+        background-color: #fafafa;
     }
 
-    /* Kolom 1: Waktu & Jam */
-    .time-range-text {
+    /* Sisi Kiri: Waktu & Sesi */
+    .schedule-time-box {
+        min-width: 140px;
+        flex-shrink: 0;
+    }
+    .time-range-val {
         font-size: 0.95rem;
         font-weight: 800;
         color: #111827; /* text-gray-900 */
-        line-height: 1.25;
+        line-height: 1.2;
         letter-spacing: -0.01em;
         white-space: nowrap;
     }
-    .period-subtext {
+    .time-period-label {
         font-size: 0.75rem; /* text-xs */
-        color: #9ca3af;     /* text-gray-400 */
-        font-weight: 600;
+        font-weight: 600;  /* font-semibold */
+        color: #374151;    /* text-gray-700 */
         margin-top: 2px;
         white-space: nowrap;
     }
 
-    /* Kolom 2: Mata Pelajaran & Visual Tags */
-    .subject-title-wrap {
+    /* Sisi Tengah: Info Mapel & Pengampu */
+    .schedule-info-box {
+        flex: 1;
+        min-width: 0;
+    }
+    .subject-header-row {
         display: flex;
         align-items: center;
-        gap: 0.55rem;
+        gap: 0.5rem;
         flex-wrap: wrap;
+        margin-bottom: 0.35rem;
     }
-    .subject-title-text {
-        font-weight: 800;
-        color: #111827; /* font-bold text-gray-900 */
+    .subject-name-strong {
         font-size: 0.92rem;
+        font-weight: 800; /* font-bold */
+        color: #111827;   /* text-gray-900 */
         line-height: 1.35;
     }
 
-    /* Badge Visual Tipe Mapel */
-    .badge-type-lab {
+    /* Badge Tipe Mapel (Praktik Lab / Teori / Olahraga) */
+    .type-pill-lab {
         background-color: #dbeafe; /* bg-blue-100 */
         color: #1d4ed8;            /* text-blue-700 */
-        font-size: 0.72rem;
+        font-size: 0.7rem;
         font-weight: 700;
-        padding: 0.2rem 0.6rem;
+        padding: 0.15rem 0.55rem;
         border-radius: 9999px;
-        display: inline-flex;
-        align-items: center;
         white-space: nowrap;
     }
-    .badge-type-teori {
+    .type-pill-teori {
         background-color: #ecfdf5; /* bg-emerald-50 */
         color: #047857;            /* text-emerald-700 */
-        font-size: 0.72rem;
+        font-size: 0.7rem;
         font-weight: 700;
-        padding: 0.2rem 0.6rem;
+        padding: 0.15rem 0.55rem;
         border-radius: 9999px;
-        display: inline-flex;
-        align-items: center;
         white-space: nowrap;
     }
-    .badge-type-sport {
+    .type-pill-sport {
         background-color: #fffbeb; /* bg-amber-50 */
         color: #b45309;            /* text-amber-700 */
-        font-size: 0.72rem;
+        font-size: 0.7rem;
         font-weight: 700;
-        padding: 0.2rem 0.6rem;
+        padding: 0.15rem 0.55rem;
         border-radius: 9999px;
-        display: inline-flex;
-        align-items: center;
         white-space: nowrap;
     }
-    .badge-type-special {
+    .type-pill-special {
         background-color: #f3e8ff; /* bg-purple-100 */
         color: #7e22ce;            /* text-purple-700 */
-        font-size: 0.72rem;
+        font-size: 0.7rem;
         font-weight: 700;
-        padding: 0.2rem 0.6rem;
+        padding: 0.15rem 0.55rem;
         border-radius: 9999px;
-        display: inline-flex;
-        align-items: center;
         white-space: nowrap;
     }
-    .badge-code-pill {
-        font-size: 0.7rem;
+    .code-pill-tag {
+        font-size: 0.68rem;
         font-weight: 600;
         background: #f1f5f9;
         color: #64748b;
-        padding: 0.15rem 0.5rem;
+        padding: 0.1rem 0.45rem;
         border-radius: 4px;
         border: 1px solid #e2e8f0;
         white-space: nowrap;
     }
-    .badge-class-pill {
-        font-size: 0.7rem;
+    .class-pill-tag {
+        font-size: 0.68rem;
         font-weight: 700;
         background: #e0e7ff;
         color: #4338ca;
-        padding: 0.15rem 0.55rem;
+        padding: 0.1rem 0.5rem;
         border-radius: 4px;
         white-space: nowrap;
     }
 
-    /* Kolom 3: Guru Pengampu */
-    .teacher-name-text {
-        font-weight: 600;
-        color: #1f2937; /* font-medium text-gray-800 */
-        font-size: 0.88rem;
-        line-height: 1.3;
+    .teacher-details-text {
+        font-size: 0.78rem; /* text-xs */
+        color: #6b7280;     /* text-gray-500 */
+        line-height: 1.35;
     }
-    .teacher-nip-subtext {
-        font-size: 0.75rem; /* text-xs */
-        color: #9ca3af;     /* text-gray-400 */
-        margin-top: 2px;
+    .teacher-details-text strong {
+        color: #374151; /* text-gray-700 */
+        font-weight: 600;
     }
 
-    /* Kolom 4: Ruangan (Rata Kanan) */
-    .room-badge-wrap {
+    /* Sisi Kanan: Lokasi Ruangan */
+    .schedule-room-box {
         text-align: right;
-        white-space: nowrap;
+        flex-shrink: 0;
     }
-    .badge-room-lab {
+    .badge-room-lab-solid {
         background-color: #2563eb; /* bg-blue-600 */
         color: #ffffff;            /* text-white */
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
-        font-weight: 800;          /* font-bold */
-        font-size: 0.85rem;
-        padding: 0.35rem 0.85rem;
-        border-radius: 0.5rem;
+        font-weight: 700;          /* font-bold */
+        padding: 0.25rem 0.75rem;  /* px-3 py-1 */
+        border-radius: 0.5rem;     /* rounded-lg */
+        font-size: 0.75rem;        /* text-xs */
         display: inline-block;
+        white-space: nowrap;
         letter-spacing: 0.02em;
     }
-    .badge-room-teori {
+    .badge-room-teori-neutral {
         background-color: #f3f4f6; /* bg-gray-100 */
         color: #374151;            /* text-gray-700 */
+        font-weight: 700;          /* font-bold */
+        padding: 0.25rem 0.75rem;  /* px-3 py-1 */
+        border-radius: 0.5rem;     /* rounded-lg */
+        font-size: 0.75rem;        /* text-xs */
         border: 1px solid #e5e7eb; /* border border-gray-200 */
-        font-weight: 800;          /* font-bold */
-        font-size: 0.85rem;
-        padding: 0.35rem 0.85rem;
-        border-radius: 0.5rem;
         display: inline-block;
+        white-space: nowrap;
         letter-spacing: 0.02em;
     }
-    .badge-room-sport {
-        background-color: #ea580c; /* bg-orange-600 */
+    .badge-room-sport-solid {
+        background-color: #ea580c; /* oranye tegas */
         color: #ffffff;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        font-weight: 800;
-        font-size: 0.85rem;
-        padding: 0.35rem 0.85rem;
+        font-weight: 700;
+        padding: 0.25rem 0.75rem;
         border-radius: 0.5rem;
+        font-size: 0.75rem;
         display: inline-block;
+        white-space: nowrap;
         letter-spacing: 0.02em;
     }
-    .badge-room-special {
-        background-color: #7e22ce; /* bg-purple-700 */
+    .badge-room-special-solid {
+        background-color: #7e22ce; /* ungu tegas */
         color: #ffffff;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        font-weight: 800;
-        font-size: 0.85rem;
-        padding: 0.35rem 0.85rem;
+        font-weight: 700;
+        padding: 0.25rem 0.75rem;
         border-radius: 0.5rem;
+        font-size: 0.75rem;
         display: inline-block;
+        white-space: nowrap;
         letter-spacing: 0.02em;
     }
 
-    /* Baris Kosong Rapi */
-    .empty-schedule-row {
+    /* Panel Kosong Tanpa Jadwal */
+    .empty-day-panel {
+        padding: 2.25rem 1.5rem;
         text-align: center;
-        padding: 2.25rem 1.5rem !important;
-        color: #94a3b8;
-        font-size: 0.88rem;
+        color: #9ca3af; /* text-gray-400 */
+        font-size: 0.85rem;
         font-style: italic;
+        background: #fafafa;
     }
 
-    /* Pembungkus overflow-x-auto agar responsif */
-    .table-responsive-wrapper {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+    /* Responsivitas Layar Smartphone */
+    @media (max-width: 680px) {
+        .day-accordion-summary {
+            padding: 0.95rem 1.15rem;
+        }
+        .operating-hours-text {
+            display: none; /* Sembunyikan di mobile sangat sempit agar tetap lega */
+        }
+        .accordion-schedule-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.95rem 1.15rem;
+        }
+        .schedule-time-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            border-bottom: 1px dashed #f1f5f9;
+            padding-bottom: 0.4rem;
+        }
+        .schedule-room-box {
+            text-align: left;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px dashed #f1f5f9;
+            padding-top: 0.4rem;
+        }
     }
 </style>
 
-<div class="enterprise-header">
+<div class="schedule-header">
     <div>
-        <h1 class="enterprise-title">Jadwal Pelajaran</h1>
-        <p class="enterprise-subtitle">
+        <h1 class="schedule-title">Jadwal Pelajaran</h1>
+        <p class="schedule-subtitle">
             @if(isset($student) && $student)
                 Jadwal resmi pembelajaran mingguan untuk kelas <strong>{{ $schoolClass?->name ?? '-' }}</strong>
             @elseif(isset($teacher) && $teacher)
@@ -465,7 +521,7 @@
             <div class="meta-label">Putaran Blok & Status</div>
             <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                 @if($activeCycle)
-                    <span style="font-size: 1rem; font-weight: 800; color: #2563eb;">
+                    <span style="font-size: 1rem; font-weight: 800; color: #4f46e5;">
                         Putaran {{ $activeCycle->cycle }}
                     </span>
                     @if($activeCycle->is_locked)
@@ -488,221 +544,196 @@
     </div>
 </div>
 
-{{-- 1. TAB FILTER HARI (SENIN S/D JUMAT) --}}
+{{-- TOOLBAR KONTROL ACCORDION --}}
 @php
     $daysList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
-    // Otomatis memilih hari aktif saat ini jika hari kerja (Senin s/d Jumat), selain itu default Senin
-    $initialTab = in_array($todayName, $daysList) ? $todayName : 'Senin';
+    $dayAbbrs = [
+        'Senin' => 'SEN',
+        'Selasa' => 'SEL',
+        'Rabu' => 'RAB',
+        'Kamis' => 'KAM',
+        'Jumat' => 'JUM'
+    ];
+    $totalWeeklySchedules = $schedules->count();
 @endphp
 
-<div class="tab-nav-wrapper">
-    @foreach($daysList as $day)
-        @php
-            $count = $schedulesByDay[$day]->count();
-            $isToday = ($day === $todayName);
-            $isActive = ($day === $initialTab);
-        @endphp
-        <button
-            type="button"
-            class="day-tab-btn {{ $isActive ? 'is-active' : '' }}"
-            id="tab-btn-{{ strtolower($day) }}"
-            onclick="switchEnterpriseScheduleDay('{{ strtolower($day) }}')"
-        >
-            <span>{{ $day }}</span>
-            @if($isToday)
-                <span class="day-tab-today-tag">Hari Ini</span>
-            @endif
-            <span class="day-tab-count">{{ $count }}</span>
+<div class="accordion-toolbar">
+    <div class="accordion-toolbar-info">
+        Total <strong>{{ $totalWeeklySchedules }}</strong> sesi pembelajaran aktif dalam sepekan
+    </div>
+    <div class="accordion-toggle-btns">
+        <button type="button" class="btn-toggle-accordion" onclick="toggleAllAccordions(true)">
+            Buka Semua
         </button>
-    @endforeach
-
-    <button
-        type="button"
-        class="day-tab-btn"
-        id="tab-btn-all"
-        onclick="switchEnterpriseScheduleDay('all')"
-    >
-        <span>Tampilkan Semua (Senin - Jumat)</span>
-    </button>
+        <button type="button" class="btn-toggle-accordion" onclick="toggleAllAccordions(false)">
+            Tutup Semua
+        </button>
+    </div>
 </div>
 
-{{-- 2. KONTEN TABEL DATA MODERN PER BLOK HARI (SENIN S.D. JUMAT) --}}
+{{-- 1. STRUKTUR UTAMA LAYOUT (ACCORDION PER-HARI MENGGUNAKAN <details>) --}}
 @foreach($daysList as $day)
     @php
         $daySchedules = $schedulesByDay[$day];
         $isToday = ($day === $todayName);
+        $abbr = $dayAbbrs[$day] ?? strtoupper(substr($day, 0, 3));
+
+        // Hitung rentang waktu operasional hari tersebut
+        $operatingHours = '-';
+        if ($daySchedules->isNotEmpty()) {
+            $firstStart = substr((string)$daySchedules->first()->start_time, 0, 5);
+            $lastEnd = substr((string)$daySchedules->last()->end_time, 0, 5);
+            $operatingHours = "{$firstStart} - {$lastEnd} WIB";
+        }
     @endphp
 
-    <div
-        class="day-block-section"
-        id="pane-{{ strtolower($day) }}"
-        style="{{ $day === $initialTab ? 'display: block;' : 'display: none;' }}"
-    >
-        {{-- Header Blok Hari --}}
-        <div class="day-block-header">
-            <div style="display: flex; align-items: center; gap: 0.65rem;">
-                <span class="day-badge-title">HARI {{ strtoupper($day) }}</span>
-                @if($isToday)
-                    <span class="day-today-indicator">HARI INI</span>
+    {{-- Logika Default Open: Hari yang sama dengan hari ini otomatis terbuka (open) --}}
+    <details class="day-accordion-card" {{ $isToday ? 'open' : '' }}>
+        {{-- 2. HEADER ACCORDION (<summary>) --}}
+        <summary class="day-accordion-summary">
+            {{-- Sisi Kiri Header --}}
+            <div class="summary-left">
+                {{-- Badge singkatan hari (SEN, SEL, RAB, KAM, JUM) --}}
+                <div class="day-abbr-badge {{ $isToday ? 'day-abbr-today' : 'day-abbr-regular' }}">
+                    {{ $abbr }}
+                </div>
+                <div>
+                    <div class="summary-day-title">
+                        <span>Hari {{ $day }}</span>
+                        @if($isToday)
+                            <span class="tag-today-pill">Hari Ini</span>
+                        @endif
+                    </div>
+                    <div class="summary-day-subtitle">
+                        {{ $daySchedules->count() }} Sesi Pembelajaran
+                    </div>
+                </div>
+            </div>
+
+            {{-- Sisi Kanan Header --}}
+            <div class="summary-right">
+                @if($daySchedules->isNotEmpty())
+                    <span class="operating-hours-text">
+                        {{ $operatingHours }}
+                    </span>
                 @endif
+                {{-- Ikon panah (chevron) berotasi halus 180 derajat saat status accordion dibuka --}}
+                <svg class="accordion-chevron-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
             </div>
-            <div class="day-count-label">
-                Total: <strong>{{ $daySchedules->count() }}</strong> Mata Pelajaran Terjadwal
-            </div>
+        </summary>
+
+        {{-- 3. ISI KONTEN JADWAL (BODY ACCORDION: divide-y divide-gray-100) --}}
+        <div class="accordion-body-list">
+            @forelse($daySchedules as $sched)
+                @php
+                    $roomName = trim($sched->room?->name ?? '');
+                    $subjName = strtolower($sched->subject?->name ?? '');
+
+                    // Klasifikasi Tipe Ruangan & Visual Tags
+                    $isLab = preg_match('/^L\./i', $roomName) && strcasecmp($roomName, 'L.IPA') !== 0;
+                    $isIpa = (strcasecmp($roomName, 'L.IPA') === 0);
+                    $isSport = preg_match('/^(OR|HALL)/i', $roomName) || str_contains($subjName, 'pjok') || str_contains($subjName, 'olahraga') || str_contains($subjName, 'penjas');
+
+                    // Badge Tipe Mapel
+                    if ($isLab || str_contains($subjName, 'praktik') || str_contains($subjName, 'lab')) {
+                        $tipeLabel = 'Praktik Lab';
+                        $tipeBadgeClass = 'type-pill-lab';
+                    } elseif ($isSport) {
+                        $tipeLabel = 'Olahraga';
+                        $tipeBadgeClass = 'type-pill-sport';
+                    } elseif ($isIpa) {
+                        $tipeLabel = 'Praktik IPA';
+                        $tipeBadgeClass = 'type-pill-special';
+                    } else {
+                        $tipeLabel = 'Teori';
+                        $tipeBadgeClass = 'type-pill-teori';
+                    }
+
+                    // Badge Ruangan Sisi Kanan
+                    if ($isLab) {
+                        $roomBadgeClass = 'badge-room-lab-solid';
+                    } elseif ($isSport) {
+                        $roomBadgeClass = 'badge-room-sport-solid';
+                    } elseif ($isIpa) {
+                        $roomBadgeClass = 'badge-room-special-solid';
+                    } else {
+                        $roomBadgeClass = 'badge-room-teori-neutral';
+                    }
+
+                    // Waktu & Keterangan Jam Ke-
+                    $startClean = substr((string)$sched->start_time, 0, 5);
+                    $endClean = substr((string)$sched->end_time, 0, 5);
+
+                    $startPeriod = $sched->start_period;
+                    $endPeriod = $sched->end_period;
+                    if ($startPeriod && $endPeriod) {
+                        $periodLabel = ($startPeriod == $endPeriod) ? "Jam ke-{$startPeriod}" : "Jam ke {$startPeriod} - {$endPeriod}";
+                    } elseif ($startPeriod) {
+                        $periodLabel = "Jam ke-{$startPeriod}";
+                    } else {
+                        $periodLabel = "Sesi Terjadwal";
+                    }
+
+                    $teacherName = $sched->teacher?->name ?? 'Guru Pengajar';
+                    $teacherNip = $sched->teacher?->nip;
+                @endphp
+
+                <div class="accordion-schedule-row">
+                    {{-- Waktu & Sesi --}}
+                    <div class="schedule-time-box">
+                        <div class="time-range-val">{{ $startClean }} - {{ $endClean }}</div>
+                        <div class="time-period-label">{{ $periodLabel }}</div>
+                    </div>
+
+                    {{-- Info Mapel & Pengampu --}}
+                    <div class="schedule-info-box">
+                        <div class="subject-header-row">
+                            <span class="subject-name-strong">
+                                {{ $sched->subject?->name ?? 'Mata Pelajaran Tidak Terdaftar' }}
+                            </span>
+                            <span class="{{ $tipeBadgeClass }}">
+                                {{ $tipeLabel }}
+                            </span>
+                            @if($sched->subject?->code)
+                                <span class="code-pill-tag">
+                                    {{ $sched->subject->code }}
+                                </span>
+                            @endif
+                            @if($sched->schoolClass && (auth()->user()->role === 'guru' || auth()->user()->role === 'waka'))
+                                <span class="class-pill-tag">
+                                    Kelas {{ $sched->schoolClass->name }}
+                                </span>
+                            @endif
+                        </div>
+                        <div class="teacher-details-text">
+                            <strong>{{ $teacherName }}</strong> &bull; {{ $teacherNip ? 'NIP: ' . $teacherNip : 'NIP: -' }}
+                        </div>
+                    </div>
+
+                    {{-- Lokasi Ruangan (Kanan) --}}
+                    <div class="schedule-room-box">
+                        <span class="{{ $roomBadgeClass }}">
+                            {{ $roomName ?: 'Tanpa Ruang' }}
+                        </span>
+                    </div>
+                </div>
+            @empty
+                {{-- Teks Halus jika Hari tersebut tidak memiliki jadwal KBM --}}
+                <div class="empty-day-panel">
+                    Tidak ada jadwal KBM terjadwal untuk hari ini.
+                </div>
+            @endforelse
         </div>
-
-        {{-- Kontainer Tabel Data Modern (Enterprise Table) --}}
-        <div class="enterprise-table-card">
-            <div class="table-responsive-wrapper">
-                <table class="enterprise-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 200px;">WAKTU & JAM</th>
-                            <th>MATA PELAJARAN</th>
-                            <th style="width: 280px;">GURU PENGAMPU</th>
-                            <th style="text-align: right; width: 180px;">RUANGAN</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($daySchedules as $sched)
-                            @php
-                                $roomName = trim($sched->room?->name ?? '');
-                                $subjName = strtolower($sched->subject?->name ?? '');
-
-                                // Klasifikasi Tipe Ruangan & Visual Tags
-                                $isLab = preg_match('/^L\./i', $roomName) && strcasecmp($roomName, 'L.IPA') !== 0;
-                                $isIpa = (strcasecmp($roomName, 'L.IPA') === 0);
-                                $isSport = preg_match('/^(OR|HALL)/i', $roomName) || str_contains($subjName, 'pjok') || str_contains($subjName, 'olahraga') || str_contains($subjName, 'penjas');
-
-                                // Kolom 2: Badge Tipe Mapel
-                                if ($isLab || str_contains($subjName, 'praktik') || str_contains($subjName, 'lab')) {
-                                    $tipeLabel = 'Lab Komputer / Praktik';
-                                    $tipeBadgeClass = 'badge-type-lab';
-                                } elseif ($isSport) {
-                                    $tipeLabel = 'Olahraga';
-                                    $tipeBadgeClass = 'badge-type-sport';
-                                } elseif ($isIpa) {
-                                    $tipeLabel = 'Praktik IPA';
-                                    $tipeBadgeClass = 'badge-type-special';
-                                } else {
-                                    $tipeLabel = 'Teori';
-                                    $tipeBadgeClass = 'badge-type-teori';
-                                }
-
-                                // Kolom 4: Badge Ruangan (Rata Kanan)
-                                if ($isLab) {
-                                    $roomBadgeClass = 'badge-room-lab';
-                                } elseif ($isSport) {
-                                    $roomBadgeClass = 'badge-room-sport';
-                                } elseif ($isIpa) {
-                                    $roomBadgeClass = 'badge-room-special';
-                                } else {
-                                    $roomBadgeClass = 'badge-room-teori';
-                                }
-
-                                // Waktu & Jam Pelajaran
-                                $startClean = substr((string)$sched->start_time, 0, 5);
-                                $endClean = substr((string)$sched->end_time, 0, 5);
-
-                                $startPeriod = $sched->start_period;
-                                $endPeriod = $sched->end_period;
-                                if ($startPeriod && $endPeriod) {
-                                    $periodLabel = ($startPeriod == $endPeriod) ? "Jam ke-{$startPeriod}" : "Jam ke {$startPeriod} - {$endPeriod}";
-                                } elseif ($startPeriod) {
-                                    $periodLabel = "Jam ke-{$startPeriod}";
-                                } else {
-                                    $periodLabel = "Sesi Terjadwal";
-                                }
-
-                                $teacherName = $sched->teacher?->name ?? 'Guru Pengajar';
-                                $teacherNip = $sched->teacher?->nip;
-                            @endphp
-
-                            <tr>
-                                {{-- Kolom 1 (WAKTU & JAM) --}}
-                                <td>
-                                    <div class="time-range-text">{{ $startClean }} - {{ $endClean }}</div>
-                                    <div class="period-subtext">{{ $periodLabel }}</div>
-                                </td>
-
-                                {{-- Kolom 2 (MATA PELAJARAN) --}}
-                                <td>
-                                    <div class="subject-title-wrap">
-                                        <span class="subject-title-text">
-                                            {{ $sched->subject?->name ?? 'Mata Pelajaran Tidak Terdaftar' }}
-                                        </span>
-                                        <span class="{{ $tipeBadgeClass }}">
-                                            {{ $tipeLabel }}
-                                        </span>
-                                        @if($sched->subject?->code)
-                                            <span class="badge-code-pill">
-                                                {{ $sched->subject->code }}
-                                            </span>
-                                        @endif
-                                        @if($sched->schoolClass && (auth()->user()->role === 'guru' || auth()->user()->role === 'waka'))
-                                            <span class="badge-class-pill">
-                                                Kelas {{ $sched->schoolClass->name }}
-                                            </span>
-                                        @endif
-                                    </div>
-                                </td>
-
-                                {{-- Kolom 3 (GURU PENGAMPU) --}}
-                                <td>
-                                    <div class="teacher-name-text">{{ $teacherName }}</div>
-                                    <div class="teacher-nip-subtext">
-                                        {{ $teacherNip ? 'NIP: ' . $teacherNip : 'NIP: -' }}
-                                    </div>
-                                </td>
-
-                                {{-- Kolom 4 (RUANGAN - Rata Kanan) --}}
-                                <td style="text-align: right;">
-                                    <div class="room-badge-wrap">
-                                        <span class="{{ $roomBadgeClass }}">
-                                            {{ $roomName ?: 'Tanpa Ruang' }}
-                                        </span>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="empty-schedule-row">
-                                    Tidak ada jadwal KBM pada hari ini
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    </details>
 @endforeach
 
 <script>
-    function switchEnterpriseScheduleDay(targetDay) {
-        const days = ['senin', 'selasa', 'rabu', 'kamis', 'jumat'];
-        const allButtons = document.querySelectorAll('.day-tab-btn');
-        allButtons.forEach(btn => {
-            btn.classList.remove('is-active');
+    function toggleAllAccordions(open) {
+        document.querySelectorAll('.day-accordion-card').forEach(details => {
+            details.open = open;
         });
-
-        if (targetDay === 'all') {
-            const allBtn = document.getElementById('tab-btn-all');
-            if (allBtn) allBtn.classList.add('is-active');
-            days.forEach(d => {
-                const pane = document.getElementById('pane-' + d);
-                if (pane) pane.style.display = 'block';
-            });
-        } else {
-            const activeBtn = document.getElementById('tab-btn-' + targetDay);
-            if (activeBtn) activeBtn.classList.add('is-active');
-            days.forEach(d => {
-                const pane = document.getElementById('pane-' + d);
-                if (pane) {
-                    pane.style.display = (d === targetDay) ? 'block' : 'none';
-                }
-            });
-        }
     }
 </script>
 @endsection
