@@ -59,4 +59,4 @@ jobs:
           DEPLOY_SECRET: ${{ secrets.DEPLOY_SECRET }}
         run: |
           TOKEN="${DEPLOY_SECRET:-token_rahasia_scp_2026}"
-          curl -sS -k "https://scp-bhan.web.id/api/deploy-migrate-${TOKEN}?seed=1" || echo "Webhook executed."
+          curl -sS -k "https://scp-bhan.web.id/api/deploy-migrate-${TOKEN}" || echo "Webhook executed."
