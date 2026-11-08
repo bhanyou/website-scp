@@ -3,10 +3,10 @@
 @section('content')
 <style>
     /* ==========================================================================
-       AGENDA JADWAL PELAJARAN MODERN (TABBED TIMELINE)
-       Desain bersih, teratur, tanpa icon/emoji, aksen border warna dinamis
+       MODERN COMPACT DATA TABLE WITH VISUAL TAGS (CLEAN ENTERPRISE TABLE)
+       Tampilan Jadwal Pelajaran Elegan, Rapi, & Responsif
        ========================================================================== */
-    .agenda-page-header {
+    .enterprise-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
@@ -14,36 +14,36 @@
         gap: 1rem;
         margin-bottom: 1.5rem;
     }
-    .agenda-page-title {
+    .enterprise-title {
         font-size: 1.5rem;
         font-weight: 800;
         color: #0f172a;
         margin: 0 0 0.35rem 0;
         letter-spacing: -0.02em;
     }
-    .agenda-page-subtitle {
-        font-size: 0.9rem;
+    .enterprise-subtitle {
+        font-size: 0.88rem;
         color: #64748b;
         margin: 0;
     }
 
-    /* Kartu Informasi Metadata */
-    .agenda-info-card {
+    /* Kartu Info Metadata Akademik */
+    .meta-summary-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-left: 5px solid #4f46e5;
-        border-radius: 14px;
+        border-left: 5px solid #2563eb;
+        border-radius: 1rem;
         padding: 1.25rem 1.5rem;
         margin-bottom: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
     }
-    .agenda-info-grid {
+    .meta-summary-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 1.25rem;
         align-items: center;
     }
-    .agenda-info-label {
+    .meta-label {
         font-size: 0.72rem;
         text-transform: uppercase;
         font-weight: 700;
@@ -51,62 +51,62 @@
         color: #94a3b8;
         margin-bottom: 0.25rem;
     }
-    .agenda-info-value {
+    .meta-value {
         font-size: 1.05rem;
         font-weight: 800;
         color: #0f172a;
     }
-    .agenda-info-sub {
+    .meta-sub {
         font-size: 0.82rem;
         color: #64748b;
         margin-top: 2px;
     }
 
     /* Tab Filter Hari Modern */
-    .agenda-tabs-wrapper {
+    .tab-nav-wrapper {
         display: flex;
         align-items: center;
         gap: 0.5rem;
         overflow-x: auto;
-        padding-bottom: 0.65rem;
+        padding-bottom: 0.75rem;
         margin-bottom: 1.5rem;
         border-bottom: 1px solid #e2e8f0;
         scrollbar-width: thin;
     }
-    .agenda-tab-btn {
+    .day-tab-btn {
         white-space: nowrap;
-        font-size: 0.88rem;
+        font-size: 0.85rem;
         font-weight: 600;
-        padding: 0.55rem 1.15rem;
-        border-radius: 10px;
+        padding: 0.5rem 1.15rem;
+        border-radius: 0.625rem;
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
         cursor: pointer;
-        transition: all 0.18s ease;
+        transition: all 0.15s ease;
         border: 1px solid #cbd5e1;
         background: #ffffff;
         color: #475569;
         font-family: inherit;
         text-decoration: none;
     }
-    .agenda-tab-btn:hover {
+    .day-tab-btn:hover {
         background: #f8fafc;
         border-color: #94a3b8;
         color: #1e293b;
     }
-    .agenda-tab-btn.is-active {
-        background: #4f46e5;
+    .day-tab-btn.is-active {
+        background: #2563eb;
         color: #ffffff;
-        border-color: #4f46e5;
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        border-color: #2563eb;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
         font-weight: 700;
     }
-    .agenda-tab-btn.is-active .agenda-tab-count {
+    .day-tab-btn.is-active .day-tab-count {
         background: rgba(255, 255, 255, 0.25);
         color: #ffffff;
     }
-    .agenda-tab-count {
+    .day-tab-count {
         background: #f1f5f9;
         color: #475569;
         font-size: 0.72rem;
@@ -115,7 +115,7 @@
         border-radius: 9999px;
         line-height: 1.2;
     }
-    .agenda-tab-today {
+    .day-tab-today-tag {
         background: #ef4444;
         color: #ffffff;
         font-size: 0.62rem;
@@ -127,241 +127,267 @@
         line-height: 1.2;
     }
 
-    /* Sub-header Hari Aktif */
-    .agenda-pane-header {
+    /* Blok Header Hari */
+    .day-block-section {
+        margin-bottom: 2rem;
+    }
+    .day-block-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1rem;
+        margin-bottom: 0.85rem;
         padding: 0 0.25rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
-    .agenda-pane-title {
-        font-size: 1.05rem;
+    .day-badge-title {
+        font-size: 0.85rem;
         font-weight: 800;
-        color: #0f172a;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 0.65rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #1e293b;
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        padding: 0.4rem 0.85rem;
+        border-radius: 0.5rem;
+        display: inline-block;
     }
-    .agenda-pane-count {
+    .day-today-indicator {
+        background: #ef4444;
+        color: #ffffff;
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 0.25rem 0.55rem;
+        border-radius: 0.375rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        display: inline-block;
+    }
+    .day-count-label {
         font-size: 0.82rem;
         color: #64748b;
         font-weight: 500;
     }
 
-    /* Format Kartu Baris Horizontal (Agenda Timeline) */
-    .agenda-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.85rem;
-    }
-    .agenda-card {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1.5rem;
+    /* Container Card Tabel Enterprise (rounded-2xl, border border-gray-200/80, overflow-hidden shadow-sm) */
+    .enterprise-table-card {
         background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-left-width: 6px;
-        border-left-style: solid;
-        border-radius: 14px;
-        padding: 1.25rem 1.6rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-        transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
-        box-sizing: border-box;
+        border-radius: 1rem; /* rounded-2xl */
+        border: 1px solid rgba(229, 231, 235, 0.8); /* border border-gray-200/80 */
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04); /* shadow-sm */
+        overflow: hidden;
     }
-    .agenda-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.08);
+    .enterprise-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
     }
-
-    /* Sisi Kiri: Waktu (Jam Mulai - Selesai) & Sub-keterangan jam ke- */
-    .agenda-time-col {
-        min-width: 145px;
-        max-width: 165px;
-        flex-shrink: 0;
-        border-right: 1px dashed #e2e8f0;
-        padding-right: 1.25rem;
-    }
-    .agenda-time-range {
-        font-size: 1.15rem;
+    .enterprise-table th {
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0.875rem 1.5rem; /* py-3.5 px-6 */
+        font-size: 0.72rem;
         font-weight: 800;
-        color: #0f172a;
-        line-height: 1.2;
-        letter-spacing: -0.01em;
-    }
-    .agenda-time-period {
-        font-size: 0.78rem;
-        font-weight: 700;
-        color: #64748b;
-        margin-top: 4px;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
-        letter-spacing: 0.03em;
+        color: #64748b;
+    }
+    .enterprise-table td {
+        padding: 0.875rem 1.5rem; /* py-3.5 px-6 */
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+        font-size: 0.88rem;
+    }
+    .enterprise-table tbody tr {
+        transition: background-color 0.15s ease;
+    }
+    .enterprise-table tbody tr:hover {
+        background-color: rgba(248, 250, 252, 0.7); /* hover:bg-slate-50/70 */
+    }
+    .enterprise-table tbody tr:last-child td {
+        border-bottom: none;
     }
 
-    /* Sisi Tengah: Judul Mapel, Tipe, Avatar Guru + Nama + NIP */
-    .agenda-content-col {
-        flex: 1;
-        min-width: 0;
+    /* Kolom 1: Waktu & Jam */
+    .time-range-text {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #111827; /* text-gray-900 */
+        line-height: 1.25;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
     }
-    .agenda-subject-header {
+    .period-subtext {
+        font-size: 0.75rem; /* text-xs */
+        color: #9ca3af;     /* text-gray-400 */
+        font-weight: 600;
+        margin-top: 2px;
+        white-space: nowrap;
+    }
+
+    /* Kolom 2: Mata Pelajaran & Visual Tags */
+    .subject-title-wrap {
         display: flex;
         align-items: center;
-        gap: 0.6rem;
+        gap: 0.55rem;
         flex-wrap: wrap;
-        margin-bottom: 0.55rem;
     }
-    .agenda-subject-title {
-        font-size: 1.08rem;
+    .subject-title-text {
         font-weight: 800;
-        color: #0f172a;
-        margin: 0;
+        color: #111827; /* font-bold text-gray-900 */
+        font-size: 0.92rem;
         line-height: 1.35;
     }
-    .agenda-type-badge {
+
+    /* Badge Visual Tipe Mapel */
+    .badge-type-lab {
+        background-color: #dbeafe; /* bg-blue-100 */
+        color: #1d4ed8;            /* text-blue-700 */
         font-size: 0.72rem;
         font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 6px;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
+        padding: 0.2rem 0.6rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
         white-space: nowrap;
     }
-    .agenda-code-badge {
+    .badge-type-teori {
+        background-color: #ecfdf5; /* bg-emerald-50 */
+        color: #047857;            /* text-emerald-700 */
         font-size: 0.72rem;
+        font-weight: 700;
+        padding: 0.2rem 0.6rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap;
+    }
+    .badge-type-sport {
+        background-color: #fffbeb; /* bg-amber-50 */
+        color: #b45309;            /* text-amber-700 */
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 0.2rem 0.6rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap;
+    }
+    .badge-type-special {
+        background-color: #f3e8ff; /* bg-purple-100 */
+        color: #7e22ce;            /* text-purple-700 */
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 0.2rem 0.6rem;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap;
+    }
+    .badge-code-pill {
+        font-size: 0.7rem;
         font-weight: 600;
         background: #f1f5f9;
-        color: #475569;
-        padding: 2px 7px;
-        border-radius: 6px;
-        border: 1px solid #cbd5e1;
+        color: #64748b;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
         white-space: nowrap;
     }
-    .agenda-class-badge {
-        font-size: 0.72rem;
+    .badge-class-pill {
+        font-size: 0.7rem;
         font-weight: 700;
         background: #e0e7ff;
         color: #4338ca;
-        padding: 2px 8px;
-        border-radius: 6px;
+        padding: 0.15rem 0.55rem;
+        border-radius: 4px;
         white-space: nowrap;
     }
 
-    /* Avatar Inisial & Info Guru */
-    .agenda-teacher-row {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-    .agenda-avatar-initials {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.85rem;
-        font-weight: 800;
-        letter-spacing: 0.04em;
-        flex-shrink: 0;
-    }
-    .agenda-teacher-info {
-        min-width: 0;
-    }
-    .agenda-teacher-name {
+    /* Kolom 3: Guru Pengampu */
+    .teacher-name-text {
+        font-weight: 600;
+        color: #1f2937; /* font-medium text-gray-800 */
         font-size: 0.88rem;
-        font-weight: 700;
-        color: #1e293b;
         line-height: 1.3;
     }
-    .agenda-teacher-nip {
-        font-size: 0.74rem;
-        color: #64748b;
-        margin-top: 1px;
+    .teacher-nip-subtext {
+        font-size: 0.75rem; /* text-xs */
+        color: #9ca3af;     /* text-gray-400 */
+        margin-top: 2px;
     }
 
-    /* Sisi Kanan: Badge Nama Ruangan Menonjol */
-    .agenda-room-col {
-        flex-shrink: 0;
+    /* Kolom 4: Ruangan (Rata Kanan) */
+    .room-badge-wrap {
         text-align: right;
-        min-width: 110px;
+        white-space: nowrap;
     }
-    .agenda-room-label {
-        font-size: 0.68rem;
-        text-transform: uppercase;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        color: #94a3b8;
-        margin-bottom: 4px;
-    }
-    .agenda-room-badge {
-        font-size: 0.95rem;
-        font-weight: 800;
-        padding: 0.55rem 1.05rem;
-        border-radius: 10px;
+    .badge-room-lab {
+        background-color: #2563eb; /* bg-blue-600 */
+        color: #ffffff;            /* text-white */
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+        font-weight: 800;          /* font-bold */
+        font-size: 0.85rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 0.5rem;
         display: inline-block;
-        text-align: center;
-        min-width: 80px;
         letter-spacing: 0.02em;
-        box-sizing: border-box;
+    }
+    .badge-room-teori {
+        background-color: #f3f4f6; /* bg-gray-100 */
+        color: #374151;            /* text-gray-700 */
+        border: 1px solid #e5e7eb; /* border border-gray-200 */
+        font-weight: 800;          /* font-bold */
+        font-size: 0.85rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 0.5rem;
+        display: inline-block;
+        letter-spacing: 0.02em;
+    }
+    .badge-room-sport {
+        background-color: #ea580c; /* bg-orange-600 */
+        color: #ffffff;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        font-weight: 800;
+        font-size: 0.85rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 0.5rem;
+        display: inline-block;
+        letter-spacing: 0.02em;
+    }
+    .badge-room-special {
+        background-color: #7e22ce; /* bg-purple-700 */
+        color: #ffffff;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        font-weight: 800;
+        font-size: 0.85rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 0.5rem;
+        display: inline-block;
+        letter-spacing: 0.02em;
     }
 
-    /* Card Kosong / Tanpa Jadwal */
-    .agenda-empty-card {
-        background: #ffffff;
-        border: 1px dashed #cbd5e1;
-        border-radius: 14px;
-        padding: 3.5rem 1.5rem;
+    /* Baris Kosong Rapi */
+    .empty-schedule-row {
         text-align: center;
-    }
-    .agenda-empty-title {
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 0.35rem;
-    }
-    .agenda-empty-subtitle {
-        font-size: 0.84rem;
-        color: #64748b;
-        margin: 0;
+        padding: 2.25rem 1.5rem !important;
+        color: #94a3b8;
+        font-size: 0.88rem;
+        font-style: italic;
     }
 
-    /* Responsif Layar Kecil */
-    @media (max-width: 720px) {
-        .agenda-card {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1rem;
-            padding: 1rem 1.15rem;
-        }
-        .agenda-time-col {
-            border-right: none;
-            border-bottom: 1px dashed #e2e8f0;
-            padding-right: 0;
-            padding-bottom: 0.65rem;
-            width: 100%;
-            max-width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .agenda-room-col {
-            text-align: left;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px dashed #e2e8f0;
-            padding-top: 0.65rem;
-        }
+    /* Pembungkus overflow-x-auto agar responsif */
+    .table-responsive-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 </style>
 
-<div class="agenda-page-header">
+<div class="enterprise-header">
     <div>
-        <h1 class="agenda-page-title">Jadwal Pelajaran</h1>
-        <p class="agenda-page-subtitle">
+        <h1 class="enterprise-title">Jadwal Pelajaran</h1>
+        <p class="enterprise-subtitle">
             @if(isset($student) && $student)
                 Jadwal resmi pembelajaran mingguan untuk kelas <strong>{{ $schoolClass?->name ?? '-' }}</strong>
             @elseif(isset($teacher) && $teacher)
@@ -390,13 +416,13 @@
 </div>
 
 {{-- INFORMASI KELAS, PENGAJAR & SIKLUS BLOK AKTIF --}}
-<div class="agenda-info-card">
-    <div class="agenda-info-grid">
+<div class="meta-summary-card">
+    <div class="meta-summary-grid">
         @if(isset($student) && $student)
             <div>
-                <div class="agenda-info-label">Nama Siswa & Kelas</div>
-                <div class="agenda-info-value">{{ $student->name }}</div>
-                <div class="agenda-info-sub">
+                <div class="meta-label">Nama Siswa & Kelas</div>
+                <div class="meta-value">{{ $student->name }}</div>
+                <div class="meta-sub">
                     Kelas: <strong>{{ $schoolClass?->name ?? 'Belum ada kelas' }}</strong>
                     @if($student->nis)
                         &bull; NIS: {{ $student->nis }}
@@ -405,41 +431,41 @@
             </div>
 
             <div>
-                <div class="agenda-info-label">Wali Kelas</div>
-                <div class="agenda-info-value">
+                <div class="meta-label">Wali Kelas</div>
+                <div class="meta-value">
                     {{ $schoolClass?->homeroomTeacher?->name ?? 'Belum ditentukan' }}
                 </div>
                 @if($schoolClass?->homeroomTeacher?->nip)
-                    <div class="agenda-info-sub">
+                    <div class="meta-sub">
                         NIP: {{ $schoolClass->homeroomTeacher->nip }}
                     </div>
                 @endif
             </div>
         @else
             <div>
-                <div class="agenda-info-label">Tenaga Pengajar</div>
-                <div class="agenda-info-value">{{ $teacher?->name ?? auth()->user()->name }}</div>
-                <div class="agenda-info-sub">
+                <div class="meta-label">Tenaga Pengajar</div>
+                <div class="meta-value">{{ $teacher?->name ?? auth()->user()->name }}</div>
+                <div class="meta-sub">
                     NIP: {{ $teacher?->nip ?? '-' }}
                 </div>
             </div>
 
             <div>
-                <div class="agenda-info-label">Kelas / Rombel</div>
-                <div class="agenda-info-value">
+                <div class="meta-label">Kelas / Rombel</div>
+                <div class="meta-value">
                     {{ $schoolClass?->name ?? 'Semua Kelas Binaan' }}
                 </div>
-                <div class="agenda-info-sub">
+                <div class="meta-sub">
                     Jurusan: {{ $schoolClass?->major?->name ?? 'Reguler' }}
                 </div>
             </div>
         @endif
 
         <div>
-            <div class="agenda-info-label">Putaran Blok & Status</div>
+            <div class="meta-label">Putaran Blok & Status</div>
             <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                 @if($activeCycle)
-                    <span style="font-size: 1rem; font-weight: 800; color: #4f46e5;">
+                    <span style="font-size: 1rem; font-weight: 800; color: #2563eb;">
                         Putaran {{ $activeCycle->cycle }}
                     </span>
                     @if($activeCycle->is_locked)
@@ -455,21 +481,21 @@
                     <span style="color: #64748b; font-size: 0.85rem;">Belum ada putaran blok aktif</span>
                 @endif
             </div>
-            <div class="agenda-info-sub" style="margin-top: 4px;">
+            <div class="meta-sub" style="margin-top: 4px;">
                 Hari ini: <strong>{{ $todayName }}</strong> ({{ now()->translatedFormat('d F Y') }})
             </div>
         </div>
     </div>
 </div>
 
-{{-- 1. TAB FILTER HARI (SENIN S/D JUMAT) MODERN --}}
+{{-- 1. TAB FILTER HARI (SENIN S/D JUMAT) --}}
 @php
     $daysList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
     // Otomatis memilih hari aktif saat ini jika hari kerja (Senin s/d Jumat), selain itu default Senin
     $initialTab = in_array($todayName, $daysList) ? $todayName : 'Senin';
 @endphp
 
-<div class="agenda-tabs-wrapper">
+<div class="tab-nav-wrapper">
     @foreach($daysList as $day)
         @php
             $count = $schedulesByDay[$day]->count();
@@ -478,185 +504,184 @@
         @endphp
         <button
             type="button"
-            class="agenda-tab-btn {{ $isActive ? 'is-active' : '' }}"
+            class="day-tab-btn {{ $isActive ? 'is-active' : '' }}"
             id="tab-btn-{{ strtolower($day) }}"
-            onclick="switchScheduleDay('{{ strtolower($day) }}')"
+            onclick="switchEnterpriseScheduleDay('{{ strtolower($day) }}')"
         >
             <span>{{ $day }}</span>
             @if($isToday)
-                <span class="agenda-tab-today">Hari Ini</span>
+                <span class="day-tab-today-tag">Hari Ini</span>
             @endif
-            <span class="agenda-tab-count">{{ $count }}</span>
+            <span class="day-tab-count">{{ $count }}</span>
         </button>
     @endforeach
 
     <button
         type="button"
-        class="agenda-tab-btn"
+        class="day-tab-btn"
         id="tab-btn-all"
-        onclick="switchScheduleDay('all')"
+        onclick="switchEnterpriseScheduleDay('all')"
     >
         <span>Tampilkan Semua (Senin - Jumat)</span>
     </button>
 </div>
 
-{{-- 2. KONTEN AGENDA TIMELINE PER HARI (FORMAT KARTU BARIS HORIZONTAL) --}}
+{{-- 2. KONTEN TABEL DATA MODERN PER BLOK HARI (SENIN S.D. JUMAT) --}}
 @foreach($daysList as $day)
     @php
         $daySchedules = $schedulesByDay[$day];
         $isToday = ($day === $todayName);
     @endphp
+
     <div
-        class="agenda-day-pane"
+        class="day-block-section"
         id="pane-{{ strtolower($day) }}"
         style="{{ $day === $initialTab ? 'display: block;' : 'display: none;' }}"
     >
-        <div class="agenda-pane-header">
-            <h3 class="agenda-pane-title">
-                <span>Jadwal Hari {{ $day }}</span>
+        {{-- Header Blok Hari --}}
+        <div class="day-block-header">
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <span class="day-badge-title">HARI {{ strtoupper($day) }}</span>
                 @if($isToday)
-                    <span class="badge badge-danger" style="font-size: 0.72rem; font-weight: 700;">
-                        Sedang Berlangsung Hari Ini
-                    </span>
+                    <span class="day-today-indicator">HARI INI</span>
                 @endif
-            </h3>
-            <span class="agenda-pane-count">
-                Total: <strong>{{ $daySchedules->count() }}</strong> mata pelajaran
-            </span>
+            </div>
+            <div class="day-count-label">
+                Total: <strong>{{ $daySchedules->count() }}</strong> Mata Pelajaran Terjadwal
+            </div>
         </div>
 
-        @if($daySchedules->isEmpty())
-            <div class="agenda-empty-card">
-                <h4 class="agenda-empty-title">Tidak Ada Jadwal Pelajaran</h4>
-                <p class="agenda-empty-subtitle">
-                    Tidak ada kegiatan belajar mengajar atau jadwal khusus pada hari {{ $day }}.
-                </p>
+        {{-- Kontainer Tabel Data Modern (Enterprise Table) --}}
+        <div class="enterprise-table-card">
+            <div class="table-responsive-wrapper">
+                <table class="enterprise-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 200px;">WAKTU & JAM</th>
+                            <th>MATA PELAJARAN</th>
+                            <th style="width: 280px;">GURU PENGAMPU</th>
+                            <th style="text-align: right; width: 180px;">RUANGAN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($daySchedules as $sched)
+                            @php
+                                $roomName = trim($sched->room?->name ?? '');
+                                $subjName = strtolower($sched->subject?->name ?? '');
+
+                                // Klasifikasi Tipe Ruangan & Visual Tags
+                                $isLab = preg_match('/^L\./i', $roomName) && strcasecmp($roomName, 'L.IPA') !== 0;
+                                $isIpa = (strcasecmp($roomName, 'L.IPA') === 0);
+                                $isSport = preg_match('/^(OR|HALL)/i', $roomName) || str_contains($subjName, 'pjok') || str_contains($subjName, 'olahraga') || str_contains($subjName, 'penjas');
+
+                                // Kolom 2: Badge Tipe Mapel
+                                if ($isLab || str_contains($subjName, 'praktik') || str_contains($subjName, 'lab')) {
+                                    $tipeLabel = 'Lab Komputer / Praktik';
+                                    $tipeBadgeClass = 'badge-type-lab';
+                                } elseif ($isSport) {
+                                    $tipeLabel = 'Olahraga';
+                                    $tipeBadgeClass = 'badge-type-sport';
+                                } elseif ($isIpa) {
+                                    $tipeLabel = 'Praktik IPA';
+                                    $tipeBadgeClass = 'badge-type-special';
+                                } else {
+                                    $tipeLabel = 'Teori';
+                                    $tipeBadgeClass = 'badge-type-teori';
+                                }
+
+                                // Kolom 4: Badge Ruangan (Rata Kanan)
+                                if ($isLab) {
+                                    $roomBadgeClass = 'badge-room-lab';
+                                } elseif ($isSport) {
+                                    $roomBadgeClass = 'badge-room-sport';
+                                } elseif ($isIpa) {
+                                    $roomBadgeClass = 'badge-room-special';
+                                } else {
+                                    $roomBadgeClass = 'badge-room-teori';
+                                }
+
+                                // Waktu & Jam Pelajaran
+                                $startClean = substr((string)$sched->start_time, 0, 5);
+                                $endClean = substr((string)$sched->end_time, 0, 5);
+
+                                $startPeriod = $sched->start_period;
+                                $endPeriod = $sched->end_period;
+                                if ($startPeriod && $endPeriod) {
+                                    $periodLabel = ($startPeriod == $endPeriod) ? "Jam ke-{$startPeriod}" : "Jam ke {$startPeriod} - {$endPeriod}";
+                                } elseif ($startPeriod) {
+                                    $periodLabel = "Jam ke-{$startPeriod}";
+                                } else {
+                                    $periodLabel = "Sesi Terjadwal";
+                                }
+
+                                $teacherName = $sched->teacher?->name ?? 'Guru Pengajar';
+                                $teacherNip = $sched->teacher?->nip;
+                            @endphp
+
+                            <tr>
+                                {{-- Kolom 1 (WAKTU & JAM) --}}
+                                <td>
+                                    <div class="time-range-text">{{ $startClean }} - {{ $endClean }}</div>
+                                    <div class="period-subtext">{{ $periodLabel }}</div>
+                                </td>
+
+                                {{-- Kolom 2 (MATA PELAJARAN) --}}
+                                <td>
+                                    <div class="subject-title-wrap">
+                                        <span class="subject-title-text">
+                                            {{ $sched->subject?->name ?? 'Mata Pelajaran Tidak Terdaftar' }}
+                                        </span>
+                                        <span class="{{ $tipeBadgeClass }}">
+                                            {{ $tipeLabel }}
+                                        </span>
+                                        @if($sched->subject?->code)
+                                            <span class="badge-code-pill">
+                                                {{ $sched->subject->code }}
+                                            </span>
+                                        @endif
+                                        @if($sched->schoolClass && (auth()->user()->role === 'guru' || auth()->user()->role === 'waka'))
+                                            <span class="badge-class-pill">
+                                                Kelas {{ $sched->schoolClass->name }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </td>
+
+                                {{-- Kolom 3 (GURU PENGAMPU) --}}
+                                <td>
+                                    <div class="teacher-name-text">{{ $teacherName }}</div>
+                                    <div class="teacher-nip-subtext">
+                                        {{ $teacherNip ? 'NIP: ' . $teacherNip : 'NIP: -' }}
+                                    </div>
+                                </td>
+
+                                {{-- Kolom 4 (RUANGAN - Rata Kanan) --}}
+                                <td style="text-align: right;">
+                                    <div class="room-badge-wrap">
+                                        <span class="{{ $roomBadgeClass }}">
+                                            {{ $roomName ?: 'Tanpa Ruang' }}
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="empty-schedule-row">
+                                    Tidak ada jadwal KBM pada hari ini
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-        @else
-            <div class="agenda-list">
-                @foreach($daySchedules as $sched)
-                    @php
-                        $roomName = trim($sched->room?->name ?? '');
-                        $subjName = strtolower($sched->subject?->name ?? '');
-
-                        // Tentukan tipe ruangan & aksen warna border kiri
-                        $isLab = preg_match('/^L\./i', $roomName) || str_contains($subjName, 'praktik') || str_contains($subjName, 'lab');
-                        $isSport = preg_match('/^(OR|HALL)/i', $roomName) || str_contains($subjName, 'pjok') || str_contains($subjName, 'olahraga') || str_contains($subjName, 'penjas');
-
-                        if ($isLab) {
-                            $tipeLabel = 'Praktik Lab';
-                            $accentColor = '#2563eb'; // Biru solid untuk Lab
-                            $tipeBadgeStyle = 'background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;';
-                            $roomBadgeStyle = 'background: #2563eb; color: #ffffff; font-weight: 800; border: none; box-shadow: 0 4px 10px rgba(37,99,235,0.25);';
-                            $avatarBg = '#eff6ff';
-                            $avatarColor = '#1d4ed8';
-                        } elseif ($isSport) {
-                            $tipeLabel = 'Olahraga';
-                            $accentColor = '#f97316'; // Oranye untuk Olahraga
-                            $tipeBadgeStyle = 'background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa;';
-                            $roomBadgeStyle = 'background: #ea580c; color: #ffffff; font-weight: 800; border: none; box-shadow: 0 4px 10px rgba(234,88,12,0.25);';
-                            $avatarBg = '#fff7ed';
-                            $avatarColor = '#c2410c';
-                        } else {
-                            $tipeLabel = 'Teori';
-                            $accentColor = '#10b981'; // Hijau untuk Teori
-                            $tipeBadgeStyle = 'background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;';
-                            $roomBadgeStyle = 'background: #f8fafc; color: #0f172a; border: 1.5px solid #cbd5e1; font-weight: 800;';
-                            $avatarBg = '#f1f5f9';
-                            $avatarColor = '#334155';
-                        }
-
-                        $startClean = substr((string)$sched->start_time, 0, 5);
-                        $endClean = substr((string)$sched->end_time, 0, 5);
-
-                        $startPeriod = $sched->start_period;
-                        $endPeriod = $sched->end_period;
-                        if ($startPeriod && $endPeriod) {
-                            $periodLabel = ($startPeriod == $endPeriod) ? "Jam ke-{$startPeriod}" : "Jam ke-{$startPeriod} s.d. {$endPeriod}";
-                        } elseif ($startPeriod) {
-                            $periodLabel = "Jam ke-{$startPeriod}";
-                        } else {
-                            $periodLabel = "Sesi Terjadwal";
-                        }
-
-                        $teacherName = $sched->teacher?->name ?? 'Guru Pengajar';
-
-                        // Inisial avatar: 1 - 2 huruf kapital bersih tanpa gelar akademik
-                        $words = preg_split('/[\s,\.]+/', trim($teacherName));
-                        $initials = '';
-                        $ignoredTitles = ['spd', 'spdsi', 'skom', 'st', 'mpd', 'mkom', 'dra', 'dr', 'drs', 'ir', 'se', 'sh', 'ssos'];
-                        foreach ($words as $w) {
-                            $w = trim($w);
-                            if ($w !== '' && !in_array(strtolower($w), $ignoredTitles)) {
-                                $initials .= strtoupper($w[0]);
-                                if (strlen($initials) >= 2) break;
-                            }
-                        }
-                        if (empty($initials)) {
-                            $initials = strtoupper(substr($teacherName, 0, 2));
-                        }
-                    @endphp
-
-                    {{-- Format Kartu Baris Horizontal (Agenda Timeline) --}}
-                    <div class="agenda-card" style="border-left-color: {{ $accentColor }};">
-                        {{-- Sisi Kiri: Waktu (Jam Mulai - Selesai) & Sub-keterangan jam ke- --}}
-                        <div class="agenda-time-col">
-                            <div class="agenda-time-range">{{ $startClean }} - {{ $endClean }}</div>
-                            <div class="agenda-time-period">{{ $periodLabel }}</div>
-                        </div>
-
-                        {{-- Sisi Tengah: Judul Mapel, Badge Tipe, Guru Avatar + Nama + NIP --}}
-                        <div class="agenda-content-col">
-                            <div class="agenda-subject-header">
-                                <h4 class="agenda-subject-title">
-                                    {{ $sched->subject?->name ?? 'Mata Pelajaran Tidak Terdaftar' }}
-                                </h4>
-                                <span class="agenda-type-badge" style="{{ $tipeBadgeStyle }}">
-                                    {{ $tipeLabel }}
-                                </span>
-                                @if($sched->subject?->code)
-                                    <span class="agenda-code-badge">
-                                        Kode: {{ $sched->subject->code }}
-                                    </span>
-                                @endif
-                                @if($sched->schoolClass && (auth()->user()->role === 'guru' || auth()->user()->role === 'waka'))
-                                    <span class="agenda-class-badge">
-                                        Kelas: {{ $sched->schoolClass->name }}
-                                    </span>
-                                @endif
-                            </div>
-
-                            <div class="agenda-teacher-row">
-                                <div class="agenda-avatar-initials" style="background: {{ $avatarBg }}; color: {{ $avatarColor }};">
-                                    {{ $initials }}
-                                </div>
-                                <div class="agenda-teacher-info">
-                                    <div class="agenda-teacher-name">{{ $teacherName }}</div>
-                                    @if($sched->teacher?->nip)
-                                        <div class="agenda-teacher-nip">NIP: {{ $sched->teacher->nip }}</div>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Sisi Kanan: Badge Nama Ruangan yang Menonjol --}}
-                        <div class="agenda-room-col">
-                            <div class="agenda-room-label">Ruangan</div>
-                            <div class="agenda-room-badge" style="{{ $roomBadgeStyle }}">
-                                {{ $roomName ?: 'Tanpa Ruang' }}
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        @endif
+        </div>
     </div>
 @endforeach
 
 <script>
-    function switchScheduleDay(targetDay) {
+    function switchEnterpriseScheduleDay(targetDay) {
         const days = ['senin', 'selasa', 'rabu', 'kamis', 'jumat'];
-        const allButtons = document.querySelectorAll('.agenda-tab-btn');
+        const allButtons = document.querySelectorAll('.day-tab-btn');
         allButtons.forEach(btn => {
             btn.classList.remove('is-active');
         });
