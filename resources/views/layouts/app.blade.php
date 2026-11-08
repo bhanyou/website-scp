@@ -567,6 +567,7 @@
                 if (e.key === 'Escape') hideTooltip();
             });
         })();
+    </script>
 
     <!-- Modal Popup Konfirmasi Custom (Di Tengah Layar & CSS Elegan) -->
     <div class="custom-confirm-overlay" id="customConfirmOverlay" role="dialog" aria-modal="true" aria-hidden="true">
@@ -826,6 +827,7 @@
                 });
             }
         }, true);
+    </script>
     @stack('scripts')
 </body>
 </html>
