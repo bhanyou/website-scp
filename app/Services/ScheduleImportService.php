@@ -1303,17 +1303,135 @@ class ScheduleImportService
     }
 
     /**
+     * Normalisasi nama mata pelajaran dari ekstraksi PDF:
+     * - Menghilangkan spasi pecah akibat kerning font PDF (misal: "Projek IP AS", "W ebsite", "T eknologi")
+     * - Membuang teks guru / tanda petik yang bocor ke nama mapel
+     * - Menghilangkan angka jam / kode baris di ujung nama mapel
+     * - Menghilangkan baris legenda keterangan jurusan
+     */
+    public function normalizeSubjectName(string $raw): ?string
+    {
+        $name = trim($raw);
+
+        // 1. Abaikan baris legenda keterangan jurusan
+        if (preg_match('/^Pembelajaran\s+(.*=.*|[X|V|I]+\s+[A-Z]+(\s+\d+)?)$/i', $name)) {
+            return null;
+        }
+        if (strpos($name, '=') !== false) {
+            return null;
+        }
+
+        // 2. Anomali khusus ekstraksi PDF
+        if (stripos($name, 'Konseling DDPK 1 TKJ K3LH') !== false) {
+            return 'DDPK 1 TKJ K3LH & Budaya Kerja';
+        }
+
+        // 3. Buang teks nama/gelar guru yang bocor
+        $name = preg_replace('/\s*"\d+\..*$/', '', $name);
+        $name = preg_replace('/\s+O,\s*[A-Za-z\.]+["\']?$/i', '', $name);
+        $name = trim($name, " \t\n\r\0\x0B\"'");
+
+        // 4. Buang frasa duplikat berulang
+        if (preg_match('/^(Mapel Pilihan [^()]+ \([^()]+\))\s+\1/i', $name, $m)) {
+            $name = $m[1];
+        }
+
+        // 5. Buang bocoran kode lab di ujung
+        $name = preg_replace('/\s+LAB\s+[A-Z\s]+$/i', '', $name);
+
+        // 6. Buang angka periode/jam mengajar di ujung nama mapel
+        $name = preg_replace('/(\b[A-Za-z\/\)]+)\s+(\d{1,2})$/', '$1', $name);
+
+        // Buang tanda baca berantakan di ujung nama
+        $name = preg_replace('/[\s\.,\'"\]]+$/', '', $name);
+
+        // Rapikan tanda kurung
+        $name = preg_replace('/\(([^)]+)\)\]/', '($1)', $name);
+        $name = preg_replace('/\(\s+/', '(', $name);
+        $name = preg_replace('/\s+\)/', ')', $name);
+
+        // 7. Buang awalan huruf bocor seperti "O ", "T ", "eb ", "TI, "
+        $name = preg_replace('/^O\s+(KK|Projek)/i', '$1', $name);
+        $name = preg_replace('/^T\s+(Informatika|Pendidikan)/i', '$1', $name);
+        $name = preg_replace('/^eb\s+(DDPK)/i', '$1', $name);
+        $name = preg_replace('/^TI,\s*(Kreatifitas)/i', '$1', $name);
+        $name = str_replace('Pendidikan Jasmani, Olahraga TI dan Kesehatan', 'Pendidikan Jasmani, Olahraga dan Kesehatan', $name);
+        $name = str_replace('DDPK 3 TKJ Perkembangan O, T eknologi', 'DDPK 3 TKJ Perkembangan Teknologi', $name);
+        $name = str_replace('KK AK (Praktikum akuntansi, jasa, O dagang dan manufaktur)', 'KK AK (Praktikum akuntansi, jasa, dagang dan manufaktur)', $name);
+        $name = str_replace('eb DDPK 2 RPL AN, Analisa Perancangan Sistem', 'DDPK 2 RPL Analisa Perancangan Sistem', $name);
+        $name = str_replace('DDPK 2 RPL AN, Analisa Perancangan Sistem', 'DDPK 2 RPL Analisa Perancangan Sistem', $name);
+
+        // 8. Normalisasi kata pecah akibat spasi font PDF
+        $replacements = [
+            'Projek IP AS' => 'Projek IPAS',
+            'IP AS' => 'IPAS',
+            'T eknologi' => 'Teknologi',
+            'T elekomunikasi' => 'Telekomunikasi',
+            'W ebsite' => 'Website',
+            'V ideografi' => 'Videografi',
+            'V ideo' => 'Video',
+            'T eknik' => 'Teknik',
+            'ber gerak' => 'bergerak',
+            'UI/ UX' => 'UI/UX',
+            'Bisnid' => 'Bisnis',
+            'Retail' => 'Ritel',
+            'Phyton' => 'Python',
+            'Internet Of Thinks' => 'Internet of Things',
+            'kewirausahaan' => 'Kewirausahaan',
+            'DDPK 4 RPL Dasar W dan' => 'DDPK 4 RPL Dasar Web dan',
+            'Mapil AK' => 'Mapel Pilihan AK',
+        ];
+
+        foreach ($replacements as $search => $replace) {
+            $name = str_ireplace($search, $replace, $name);
+        }
+
+        $name = preg_replace('/\s+/', ' ', $name);
+        $name = trim($name);
+
+        // Standarisasi nama baku
+        $canonicalMap = [
+            'bimbingan konseling' => 'Bimbingan dan Konseling',
+            'bimbingan dan konseling' => 'Bimbingan dan Konseling',
+            'konseling' => 'Bimbingan dan Konseling',
+            'bk' => 'Bimbingan dan Konseling',
+            'pjok' => 'Pendidikan Jasmani, Olahraga dan Kesehatan',
+            'pendidikan jasmani, olahraga dan kesehatan' => 'Pendidikan Jasmani, Olahraga dan Kesehatan',
+            'pend. ag. islam' => 'Pendidikan Agama Islam',
+            'pai' => 'Pendidikan Agama Islam',
+            'pend. ag. katholik' => 'Pendidikan Agama Katolik',
+            'pak' => 'Pendidikan Agama Katolik',
+            'mulok bahasa jawa' => 'Bahasa Jawa',
+            'rekayasa perangkat lunak' => 'Produktif Rekayasa Perangkat Lunak',
+            'rpl' => 'Produktif Rekayasa Perangkat Lunak',
+            'waka humas dan sdm' => 'Waka Humas dan SDM',
+        ];
+
+        $lower = strtolower($name);
+        if (isset($canonicalMap[$lower])) {
+            $name = $canonicalMap[$lower];
+        }
+
+        return $name !== '' ? $name : null;
+    }
+
+    /**
      * Cari atau buat Mata Pelajaran dengan kode unik anti-duplicate.
      */
     protected function findOrCreateSubject(string $subjectRaw, &$subjects, &$subjectByName, int &$newSubjectsCount): Subject
     {
-        $clean = strtolower(trim(preg_replace('/\s+/', ' ', $subjectRaw)));
-        if (isset($subjectByName[$clean])) {
-            return $subjectByName[$clean];
+        $normalized = $this->normalizeSubjectName($subjectRaw);
+        $cleanName = $normalized ?? trim($subjectRaw);
+        if ($cleanName === '') {
+            $cleanName = 'Mata Pelajaran';
+        }
+
+        $cleanKey = strtolower($cleanName);
+        if (isset($subjectByName[$cleanKey])) {
+            return $subjectByName[$cleanKey];
         }
 
         // Buat kode unik aman
-        $cleanName = trim($subjectRaw);
         $baseCode = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $cleanName), 0, 6));
         if (strlen($baseCode) < 2) {
             $baseCode = 'MAPEL';
@@ -1331,7 +1449,7 @@ class ScheduleImportService
         ]);
 
         $subjects->push($newSubject);
-        $subjectByName->put($clean, $newSubject);
+        $subjectByName->put($cleanKey, $newSubject);
         $newSubjectsCount++;
 
         return $newSubject;
