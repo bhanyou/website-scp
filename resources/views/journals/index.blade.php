@@ -148,6 +148,9 @@
                                 </span>
                             </td>
                             <td style="text-align: right; white-space: nowrap;">
+                                <a href="{{ route('journals.edit', $journal->id) }}" class="btn btn-warning btn-sm" style="margin-right: 0.35rem;">
+                                    Edit Jurnal
+                                </a>
                                 <a href="{{ route('journals.show', $journal->id) }}" class="btn btn-secondary btn-sm">
                                     Lihat Jurnal
                                 </a>

@@ -372,19 +372,142 @@ class JournalController extends Controller
 
 
     /**
-     * Menampilkan formulir edit hanya untuk jurnal pada siklus aktif.
+     * Menampilkan formulir edit jurnal & presensi untuk guru (khusus hari ini).
      */
     public function edit(string $id)
     {
-        return redirect()->route('journals.show', $id)->with('info', 'Jurnal bersifat Read-Only dan tidak dapat diubah kembali.');
+        $teacher = Auth::user()->teacher;
+
+        if (!$teacher) {
+            abort(403, 'Akun Guru belum memiliki data guru.');
+        }
+
+        $journal = Journal::with([
+            'schedule.subject',
+            'schedule.schoolClass',
+            'schedule.room',
+            'schedule.blockCycle',
+        ])->findOrFail($id);
+
+        if ($journal->teacher_id !== $teacher->id && Auth::user()->role !== 'waka') {
+            abort(403, 'Anda hanya dapat mengedit jurnal milik Anda sendiri.');
+        }
+
+        // Batasan: Hanya jurnal hari ini yang dapat diedit guru (mencegah manipulasi data hari sebelumnya)
+        if ($journal->journal_date && !$journal->journal_date->isToday() && Auth::user()->role !== 'waka') {
+            return redirect()
+                ->route('journals.show', $id)
+                ->with('error', 'Jurnal dari hari sebelumnya sudah terkunci permanen dan tidak dapat diubah.');
+        }
+
+        $schedule = $journal->schedule;
+        if (!$schedule || !$schedule->schoolClass) {
+            abort(404, 'Data jadwal atau rombel kelas tidak ditemukan.');
+        }
+
+        $students = $schedule->schoolClass->students()->orderBy('name')->get();
+
+        // Ambil data presensi yang sudah tersimpan untuk jadwal dan tanggal ini
+        $attendances = Attendance::where('schedule_id', $schedule->id)
+            ->whereDate('date', $journal->journal_date)
+            ->get()
+            ->keyBy('student_id');
+
+        $todayDate = $journal->journal_date ? $journal->journal_date->toDateString() : now()->toDateString();
+        $approvedPermissions = PermissionRequest::whereIn('student_id', $students->pluck('id'))
+            ->where('status', 'Approved')
+            ->whereDate('permission_date', '<=', $todayDate)
+            ->where(function ($q) use ($todayDate) {
+                $q->whereDate('end_date', '>=', $todayDate)
+                  ->orWhereNull('end_date');
+            })
+            ->get()
+            ->keyBy('student_id');
+
+        return view('journals.edit', compact('journal', 'schedule', 'students', 'attendances', 'approvedPermissions'));
     }
 
     /**
-     * Memperbarui jurnal dan presensi siswa.
+     * Memperbarui rincian jurnal dan presensi siswa kelas.
      */
     public function update(Request $request, string $id)
     {
-        return redirect()->route('journals.show', $id)->with('error', 'Jurnal bersifat Read-Only dan tidak dapat diubah.');
+        $teacher = Auth::user()->teacher;
+
+        if (!$teacher) {
+            abort(403, 'Akun Guru belum memiliki data guru.');
+        }
+
+        $journal = Journal::with('schedule.schoolClass')->findOrFail($id);
+
+        if ($journal->teacher_id !== $teacher->id && Auth::user()->role !== 'waka') {
+            abort(403, 'Anda hanya dapat mengedit jurnal milik Anda sendiri.');
+        }
+
+        if ($journal->journal_date && !$journal->journal_date->isToday() && Auth::user()->role !== 'waka') {
+            return redirect()
+                ->route('journals.show', $id)
+                ->with('error', 'Jurnal dari hari sebelumnya sudah terkunci permanen dan tidak dapat diubah.');
+        }
+
+        $validated = $request->validate([
+            'material' => ['required', 'string'],
+            'activity' => ['required', 'string'],
+            'notes' => ['nullable', 'string'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'attendance' => ['required', 'array'],
+            'attendance.*' => ['required', 'in:Hadir,Sakit,Izin,Alpa'],
+            'attendance_notes' => ['nullable', 'array'],
+        ]);
+
+        $schedule = $journal->schedule;
+        $students = $schedule->schoolClass->students()->get();
+
+        $photoPath = $journal->photo_path;
+        if ($request->hasFile('photo')) {
+            if ($photoPath) {
+                Storage::disk('public')->delete($photoPath);
+            }
+            $photoPath = $request->file('photo')->store('journals', 'public');
+        }
+
+        try {
+            DB::transaction(function () use ($journal, $validated, $schedule, $students, $photoPath) {
+                $journal->update([
+                    'material' => $validated['material'],
+                    'activity' => $validated['activity'],
+                    'notes' => $validated['notes'] ?? null,
+                    'photo_path' => $photoPath,
+                ]);
+
+                $journalDateStr = $journal->journal_date ? $journal->journal_date->toDateString() : now()->toDateString();
+
+                foreach ($students as $student) {
+                    $status = $validated['attendance'][$student->id] ?? 'Alpa';
+                    $note = $validated['attendance_notes'][$student->id] ?? null;
+
+                    Attendance::updateOrCreate(
+                        [
+                            'student_id' => $student->id,
+                            'schedule_id' => $schedule->id,
+                            'date' => $journalDateStr,
+                        ],
+                        [
+                            'status' => $status,
+                            'note' => $note,
+                        ]
+                    );
+                }
+            });
+        } catch (\Throwable $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Gagal memperbarui jurnal: ' . $e->getMessage());
+        }
+
+        return redirect()
+            ->route('journals.show', $journal->id)
+            ->with('success', 'Jurnal mengajar dan presensi siswa berhasil diperbarui.');
     }
 
     /**

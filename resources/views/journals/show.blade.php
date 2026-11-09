@@ -6,9 +6,14 @@
         <h1 class="page-title">Detail Jurnal & Presensi</h1>
         <p class="page-subtitle">Informasi materi ajar dan daftar kehadiran siswa kelas</p>
     </div>
-    <div>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+        @if($journal->journal_date && $journal->journal_date->isToday())
+            <a href="{{ route('journals.edit', $journal->id) }}" class="btn btn-warning">
+                Edit Jurnal dan Presensi
+            </a>
+        @endif
         <a href="{{ route('journals.index') }}" class="btn btn-secondary">
-            ← Kembali ke Jurnal Mengajar
+            Kembali ke Jurnal Mengajar
         </a>
     </div>
 </div>
@@ -165,9 +170,14 @@
         </table>
     </div>
 
-    <div style="margin-top: 1.5rem;">
+    <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem; align-items: center;">
+        @if($journal->journal_date && $journal->journal_date->isToday())
+            <a href="{{ route('journals.edit', $journal->id) }}" class="btn btn-warning">
+                Edit Jurnal dan Presensi
+            </a>
+        @endif
         <a href="{{ route('journals.index') }}" class="btn btn-secondary">
-            ← Kembali ke Jurnal Mengajar
+            Kembali ke Jurnal Mengajar
         </a>
     </div>
 </div>
