@@ -442,7 +442,7 @@
 
 <div class="schedule-header">
     <div>
-        <h1 class="schedule-title">{{ auth()->user()->role === 'guru' ? 'Agenda Pelajaran' : 'Jadwal Pelajaran' }}</h1>
+        <h1 class="schedule-title">{{ auth()->user()->role === 'guru' ? 'Jadwal Mengajar' : 'Jadwal Pelajaran' }}</h1>
         <p class="schedule-subtitle">
             @if(isset($student) && $student)
                 Jadwal resmi pembelajaran mingguan untuk kelas <strong>{{ $schoolClass?->name ?? '-' }}</strong>
