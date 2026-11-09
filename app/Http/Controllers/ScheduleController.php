@@ -53,13 +53,11 @@ class ScheduleController extends Controller
         $isBk = $user->role === 'bk' || ($user->teacher && $user->teacher->isBkTeacher());
 
         if ($user->role === 'guru' && !$isBk) {
-            $teacher = $user->teacher ?? Teacher::where('user_id', $user->id)->first();
-
-            if (!$teacher) {
-                abort(403, 'Akun ini belum memiliki data profil guru.');
-            }
-
-            $scheduleQuery->where('teacher_id', $teacher->id);
+            return redirect()->route('journals.index', [
+                'tab' => 'weekly',
+                'cycle' => $selectedCycle,
+                'day' => $request->day,
+            ]);
         } elseif ($user->role === 'waka' || $isBk) {
             // Waka dan Guru BK dapat memantau jadwal semua kelas pada putaran yang dipilih
         } else {
