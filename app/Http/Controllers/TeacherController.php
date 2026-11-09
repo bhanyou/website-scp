@@ -590,20 +590,48 @@ class TeacherController extends Controller
     public function destroy(string $id)
     {
         $teacher = Teacher::with('user')->findOrFail($id);
-        DB::transaction(function () use ($teacher) {
-            $user = $teacher->user;
-            $teacher->delete();
-            if ($user) {
-                $user->delete();
-            }
-        });
-        return redirect()
-            ->route('teachers.index')
-            ->with('success', 'Data guru berhasil dihapus.');
+        $currentUser = Auth::user();
+
+        if ($teacher->user_id && $teacher->user_id == $currentUser->id) {
+            return redirect()
+                ->route('teachers.index')
+                ->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+        }
+
+        try {
+            DB::transaction(function () use ($teacher) {
+                // 1. Lepaskan penugasan Wali Kelas & Guru BK di tabel classes
+                SchoolClass::where('homeroom_teacher_id', $teacher->id)->update(['homeroom_teacher_id' => null]);
+                SchoolClass::where('bk_teacher_id', $teacher->id)->update(['bk_teacher_id' => null]);
+
+                // 2. Hapus jadwal, absensi, dan jurnal terkait guru ini
+                $scheduleIds = \App\Models\Schedule::where('teacher_id', $teacher->id)->pluck('id');
+                if ($scheduleIds->isNotEmpty()) {
+                    \App\Models\Attendance::whereIn('schedule_id', $scheduleIds)->delete();
+                    \App\Models\Journal::whereIn('schedule_id', $scheduleIds)->delete();
+                    \App\Models\Schedule::whereIn('id', $scheduleIds)->delete();
+                }
+                \App\Models\Journal::where('teacher_id', $teacher->id)->delete();
+
+                $user = $teacher->user;
+                $teacher->delete();
+
+                if ($user && $user->role === 'guru') {
+                    $user->delete();
+                }
+            });
+
+            return redirect()
+                ->route('teachers.index')
+                ->with('success', 'Data guru berhasil dihapus.');
+        } catch (\Throwable $e) {
+            \Log::error('Error destroy Teacher: ' . $e->getMessage());
+            return redirect()
+                ->route('teachers.index')
+                ->with('error', 'Gagal menghapus data guru: ' . $e->getMessage());
+        }
     }
-    /**
-     * Download format template CSV/Excel untuk import guru.
-     */
+
     /**
      * Menghapus beberapa data guru yang dipilih sekaligus (Bulk Delete).
      */
@@ -624,29 +652,49 @@ class TeacherController extends Controller
 
         $teacherIds = $validated['teacher_ids'];
 
-        DB::transaction(function () use ($teacherIds, $currentUser) {
-            $teachers = Teacher::with('user')->whereIn('id', $teacherIds)->get();
-            $userIdsToDelete = [];
+        try {
+            DB::transaction(function () use ($teacherIds, $currentUser) {
+                // 1. Lepaskan penugasan Wali Kelas & Guru BK di tabel classes
+                SchoolClass::whereIn('homeroom_teacher_id', $teacherIds)->update(['homeroom_teacher_id' => null]);
+                SchoolClass::whereIn('bk_teacher_id', $teacherIds)->update(['bk_teacher_id' => null]);
 
-            foreach ($teachers as $teacher) {
-                if ($teacher->user_id && $teacher->user_id != $currentUser->id) {
-                    $userIdsToDelete[] = $teacher->user_id;
+                // 2. Hapus jadwal, absensi, dan jurnal terkait guru terpilih
+                $scheduleIds = \App\Models\Schedule::whereIn('teacher_id', $teacherIds)->pluck('id');
+                if ($scheduleIds->isNotEmpty()) {
+                    \App\Models\Attendance::whereIn('schedule_id', $scheduleIds)->delete();
+                    \App\Models\Journal::whereIn('schedule_id', $scheduleIds)->delete();
+                    \App\Models\Schedule::whereIn('id', $scheduleIds)->delete();
                 }
-                $teacher->delete();
-            }
+                \App\Models\Journal::whereIn('teacher_id', $teacherIds)->delete();
 
-            if (!empty($userIdsToDelete)) {
-                \App\Models\User::whereIn('id', $userIdsToDelete)
-                    ->where('role', 'guru')
-                    ->delete();
-            }
-        });
+                $teachers = Teacher::with('user')->whereIn('id', $teacherIds)->get();
+                $userIdsToDelete = [];
 
-        $count = count($teacherIds);
+                foreach ($teachers as $teacher) {
+                    if ($teacher->user_id && $teacher->user_id != $currentUser->id) {
+                        $userIdsToDelete[] = $teacher->user_id;
+                    }
+                    $teacher->delete();
+                }
 
-        return redirect()
-            ->route('teachers.index')
-            ->with('success', "{$count} data guru terpilih dan akun pengguna terkait berhasil dihapus.");
+                if (!empty($userIdsToDelete)) {
+                    User::whereIn('id', $userIdsToDelete)
+                        ->where('role', 'guru')
+                        ->delete();
+                }
+            });
+
+            $count = count($teacherIds);
+
+            return redirect()
+                ->route('teachers.index')
+                ->with('success', "{$count} data guru terpilih dan akun pengguna terkait berhasil dihapus.");
+        } catch (\Throwable $e) {
+            \Log::error('Error bulkDestroy Teacher: ' . $e->getMessage());
+            return redirect()
+                ->route('teachers.index')
+                ->with('error', 'Gagal menghapus data guru terpilih: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -658,26 +706,63 @@ class TeacherController extends Controller
         if ($currentUser->role !== 'waka') {
             abort(403, 'Hanya Waka Kurikulum yang dapat menghapus seluruh data guru.');
         }
-        DB::transaction(function () use ($currentUser) {
-            $teachers = Teacher::with('user')
-                ->where('user_id', '!=', $currentUser->id)
-                ->get();
-            $userIdsToDelete = [];
-            foreach ($teachers as $teacher) {
-                if ($teacher->user_id && $teacher->user_id != $currentUser->id) {
-                    $userIdsToDelete[] = $teacher->user_id;
+
+        try {
+            DB::transaction(function () use ($currentUser) {
+                // 1. Lepaskan relasi wali kelas & BK di tabel classes agar tidak ada foreign key constraint
+                SchoolClass::query()->update([
+                    'homeroom_teacher_id' => null,
+                    'bk_teacher_id' => null,
+                ]);
+
+                // 2. Ambil semua guru (termasuk yang user_id null), KECUALI akun Waka sendiri
+                $teachers = Teacher::with('user')
+                    ->where(function ($query) use ($currentUser) {
+                        $query->whereNull('user_id')
+                              ->orWhere('user_id', '!=', $currentUser->id);
+                    })
+                    ->get();
+
+                $teacherIds = $teachers->pluck('id')->toArray();
+                $userIdsToDelete = [];
+
+                foreach ($teachers as $teacher) {
+                    if ($teacher->user_id && $teacher->user_id != $currentUser->id) {
+                        $userIdsToDelete[] = $teacher->user_id;
+                    }
                 }
-                $teacher->delete();
-            }
-            if (!empty($userIdsToDelete)) {
-                \App\Models\User::whereIn('id', $userIdsToDelete)
-                    ->where('role', 'guru')
-                    ->delete();
-            }
-        });
-        return redirect()
-            ->route('teachers.index')
-            ->with('success', 'Seluruh data guru berhasil dihapus.');
+
+                if (!empty($teacherIds)) {
+                    // 3. Bersihkan jadwal, jurnal, dan absensi terkait guru ini secara berurutan
+                    $scheduleIds = \App\Models\Schedule::whereIn('teacher_id', $teacherIds)->pluck('id');
+                    if ($scheduleIds->isNotEmpty()) {
+                        \App\Models\Attendance::whereIn('schedule_id', $scheduleIds)->delete();
+                        \App\Models\Journal::whereIn('schedule_id', $scheduleIds)->delete();
+                        \App\Models\Schedule::whereIn('id', $scheduleIds)->delete();
+                    }
+                    \App\Models\Journal::whereIn('teacher_id', $teacherIds)->delete();
+
+                    // 4. Hapus data guru
+                    Teacher::whereIn('id', $teacherIds)->delete();
+                }
+
+                // 5. Hapus akun pengguna (User) dengan role guru yang terkait
+                if (!empty($userIdsToDelete)) {
+                    User::whereIn('id', $userIdsToDelete)
+                        ->where('role', 'guru')
+                        ->delete();
+                }
+            });
+
+            return redirect()
+                ->route('teachers.index')
+                ->with('success', 'Seluruh data guru berhasil dihapus.');
+        } catch (\Throwable $e) {
+            \Log::error('Error destroyAll Teacher: ' . $e->getMessage());
+            return redirect()
+                ->route('teachers.index')
+                ->with('error', 'Gagal menghapus seluruh data guru: ' . $e->getMessage());
+        }
     }
     public function downloadTemplate()
     {
