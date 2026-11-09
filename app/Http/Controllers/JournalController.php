@@ -18,12 +18,9 @@ use Carbon\Carbon;
 class JournalController extends Controller
 {
     /**
-     * Menampilkan jadwal dan agenda/jurnal mengajar terpadu untuk Guru:
-     * - Tab 1: Jadwal Hari Ini (Antrean isi jurnal & riwayat selesai hari ini)
-     * - Tab 2: Jadwal Lengkap Mingguan (Putaran 1 & Putaran 2)
-     * - Tab 3: Riwayat Seluruh Jurnal Mengajar
+     * Menampilkan jadwal mengajar milik Guru pada siklus aktif untuk pengisian jurnal hari ini.
      */
-    public function index(Request $request)
+    public function index()
     {
         $teacher = Auth::user()->teacher;
 
@@ -57,7 +54,6 @@ class JournalController extends Controller
         $activeCycle = BlockCycle::where('is_active', true)->first();
         $activeCycleNumber = (int) ($activeCycle?->cycle ?? 1);
 
-        // 1. Jadwal pada siklus yang sedang aktif untuk pengisian hari ini
         $schedules = Schedule::with([
             'blockCycle',
             'subject',
@@ -103,43 +99,14 @@ class JournalController extends Controller
             return $sshedule->day === $todayName && !in_array($sshedule->id, $filledScheduleIds);
         });
 
-        // Jika ada request tab=weekly, alihkan langsung ke Jadwal Mengajar resmi
-        if ($request->get('tab') === 'weekly') {
-            return redirect()->route('student.schedule');
-        }
-
-        // 2. Data untuk Tab "Riwayat Seluruh Jurnal" (History)
-        $historyQuery = Journal::with(['schedule.subject', 'schedule.schoolClass', 'schedule.room'])
-            ->where('teacher_id', $teacher->id);
-
-        if ($request->filled('start_date')) {
-            $historyQuery->whereDate('journal_date', '>=', $request->start_date);
-        }
-        if ($request->filled('end_date')) {
-            $historyQuery->whereDate('journal_date', '<=', $request->end_date);
-        }
-
-        $allJournals = $historyQuery
-            ->latest('journal_date')
-            ->latest('id')
-            ->paginate(15)
-            ->withQueryString();
-
-        $activeTab = $request->get('tab', 'today');
-
         return view('journals.index', compact(
             'schedules',
             'todayPendingSchedules',
             'todayJournals',
-            'filledScheduleIds',
             'todayName',
             'todayDayIndex',
             'dayOrder',
-            'today',
-            'activeCycle',
-            'activeCycleNumber',
-            'allJournals',
-            'activeTab'
+            'today'
         ));
     }
 
