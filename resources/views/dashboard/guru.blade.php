@@ -7,7 +7,7 @@
         <p class="page-subtitle">Selamat datang, <strong>{{ $teacher->name ?? auth()->user()->name }}</strong> &bull; {{ $todayName }}, {{ $today->format('d M Y') }}</p>
     </div>
     <div style="display: flex; gap: 0.5rem; align-items: center;">
-        <a href="{{ route('student.schedule') }}" class="btn btn-secondary btn-sm">
+        <a href="{{ route('schedules.index') }}" class="btn btn-secondary btn-sm">
             Jadwal Saya
         </a>
         <a href="{{ route('journals.create') }}" class="btn btn-primary btn-sm">
@@ -129,7 +129,7 @@
             Akses cepat fitur pendukung kegiatan pembelajaran kelas Anda:
         </p>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <a href="{{ route('student.schedule') }}" class="btn btn-secondary btn-sm">Jadwal Mengajar Lengkap</a>
+            <a href="{{ route('schedules.index') }}" class="btn btn-secondary btn-sm">Jadwal Mengajar Lengkap</a>
             <a href="{{ route('journals.index') }}" class="btn btn-secondary btn-sm">Daftar Riwayat Jurnal</a>
             <a href="{{ route('attendances.index') }}" class="btn btn-secondary btn-sm">Presensi Siswa</a>
             <a href="{{ route('journals.create') }}" class="btn btn-primary btn-sm">Input Jurnal Sekarang</a>
