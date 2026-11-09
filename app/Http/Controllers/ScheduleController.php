@@ -53,11 +53,7 @@ class ScheduleController extends Controller
         $isBk = $user->role === 'bk' || ($user->teacher && $user->teacher->isBkTeacher());
 
         if ($user->role === 'guru' && !$isBk) {
-            return redirect()->route('journals.index', [
-                'tab' => 'weekly',
-                'cycle' => $selectedCycle,
-                'day' => $request->day,
-            ]);
+            return redirect()->route('student.schedule');
         } elseif ($user->role === 'waka' || $isBk) {
             // Waka dan Guru BK dapat memantau jadwal semua kelas pada putaran yang dipilih
         } else {

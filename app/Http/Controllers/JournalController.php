@@ -103,41 +103,12 @@ class JournalController extends Controller
             return $sshedule->day === $todayName && !in_array($sshedule->id, $filledScheduleIds);
         });
 
-        // 2. Data untuk Tab "Jadwal Lengkap Mingguan"
-        $selectedCycle = (int) $request->get('cycle', $activeCycleNumber);
-        if (!in_array($selectedCycle, [1, 2])) {
-            $selectedCycle = $activeCycleNumber;
+        // Jika ada request tab=weekly, alihkan langsung ke Jadwal Mengajar resmi
+        if ($request->get('tab') === 'weekly') {
+            return redirect()->route('student.schedule');
         }
 
-        $weeklySchedulesQuery = Schedule::with([
-            'blockCycle',
-            'subject',
-            'schoolClass',
-            'room',
-        ])
-            ->where('teacher_id', $teacher->id)
-            ->where('block_cycle', $selectedCycle);
-
-        if ($request->filled('day')) {
-            $weeklySchedulesQuery->where('day', $request->day);
-        }
-
-        $weeklySchedules = $weeklySchedulesQuery
-            ->orderByRaw("
-                CASE day
-                    WHEN 'Senin' THEN 1
-                    WHEN 'Selasa' THEN 2
-                    WHEN 'Rabu' THEN 3
-                    WHEN 'Kamis' THEN 4
-                    WHEN 'Jumat' THEN 5
-                    WHEN 'Sabtu' THEN 6
-                    ELSE 7
-                END
-            ")
-            ->orderBy('start_time')
-            ->get();
-
-        // 3. Data untuk Tab "Riwayat Seluruh Jurnal"
+        // 2. Data untuk Tab "Riwayat Seluruh Jurnal" (History)
         $historyQuery = Journal::with(['schedule.subject', 'schedule.schoolClass', 'schedule.room'])
             ->where('teacher_id', $teacher->id);
 
@@ -167,8 +138,6 @@ class JournalController extends Controller
             'today',
             'activeCycle',
             'activeCycleNumber',
-            'selectedCycle',
-            'weeklySchedules',
             'allJournals',
             'activeTab'
         ));
