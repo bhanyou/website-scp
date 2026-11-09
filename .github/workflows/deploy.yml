@@ -24,6 +24,7 @@ jobs:
         run: |
           npm install --legacy-peer-deps || true
           npm run build || true
+          rm -rf node_modules ukk_mobile docs scratch extracted_imgs postman-files __pycache__ tests
 
       - name: 🚀 Sync Files via FTP to DomaiNesia
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
