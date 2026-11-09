@@ -36,7 +36,7 @@ jobs:
           protocol: ftp
           security: loose
           timeout: 60000
-          server-dir: ${{ secrets.FTP_SERVER_DIR || '/' }}
+          server-dir: /
           log-level: standard
           exclude: |
             **/.git*
