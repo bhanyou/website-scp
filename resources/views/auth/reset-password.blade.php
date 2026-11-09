@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kata Sandi Baru - School Class Progress</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <style>
         input[type="password"]::-ms-reveal,
@@ -16,9 +17,7 @@
 
     <div class="login-card">
         <div class="login-header">
-            <div class="brand-logo" style="margin: 0 auto; width: 48px; height: 48px; font-size: 1.4rem;">
-                S
-            </div>
+            <img src="{{ asset('images/logo-emblem.png') }}" alt="School Class Progress" style="width: 72px; height: 72px; object-fit: contain; margin: 0 auto 0.85rem auto; display: block;">
             <h1>Buat Kata Sandi Baru</h1>
             <p>Masukkan kata sandi baru untuk akun SCP Anda</p>
         </div>

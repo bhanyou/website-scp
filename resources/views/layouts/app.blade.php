@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'School Class Progress' }}</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <!-- Stylesheet Global untuk Semua Role -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
@@ -27,10 +28,10 @@
         <!-- ================= SIDEBAR DINAMIS PER ROLE ================= -->
         <aside class="sidebar {{ $role === 'waka' ? 'sidebar-waka' : '' }}" id="appSidebar">
             <!-- Header Brand -->
-            <div class="sidebar-header">
-                <div class="brand-logo">S</div>
-                <div style="display: flex; flex-direction: column;">
-                    <span class="brand-title" style="font-size: 0.95rem; line-height: 1.2;">School Class Progress</span>
+            <div class="sidebar-header" style="display: flex; align-items: center; gap: 0.65rem;">
+                <img src="{{ asset('images/logo-emblem.png') }}" alt="School Class Progress" class="brand-logo" style="width: 36px; height: 36px; object-fit: contain; background: transparent; box-shadow: none; padding: 0; flex-shrink: 0;">
+                <div style="display: flex; flex-direction: column; min-width: 0;">
+                    <span class="brand-title" style="font-size: 0.95rem; line-height: 1.2; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">School Class Progress</span>
                     <span style="font-size: 0.675rem; color: var(--accent); font-weight: 700; text-transform: uppercase;">{{ $roleLabel }}</span>
                 </div>
             </div>

@@ -280,6 +280,12 @@ ul {
 
 }
 
+img.brand-logo {
+    background: transparent !important;
+    box-shadow: none !important;
+    object-fit: contain;
+}
+
 
 
 .brand-title {

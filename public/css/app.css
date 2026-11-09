@@ -2540,3 +2540,5 @@ textarea {
     box-shadow: 0 6px 12px -1px rgba(245, 158, 11, 0.4);
     transform: translateY(-1px);
 }
+
+img.brand-logo { background: transparent !important; box-shadow: none !important; object-fit: contain; }
