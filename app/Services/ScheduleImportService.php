@@ -1935,12 +1935,18 @@ class ScheduleImportService
             }
         }
 
-        // Langkah 2B: WHERE LIKE / Substring pencocokan
+        // Langkah 2B: Pencocokan kata utuh (Word boundary matching dengan batas kata \b)
         foreach ($normalizedTeachers as $data) {
-            if (strlen($data['clean']) >= 4 && (str_contains($data['clean'], $cleanName) || str_contains($cleanName, $data['clean']))) {
-                return $data['teacher'];
-            }
-            if (str_contains($data['raw_lower'], $cleanName)) {
+            if (empty($data['clean'])) continue;
+            // Pastikan bukan substring parsial (misal 'wati' TIDAK boleh cocok dengan 'herawati' atau 'kadarwati')
+            if (preg_match('/\b' . preg_quote($data['clean'], '/') . '\b/i', $cleanName) ||
+                preg_match('/\b' . preg_quote($cleanName, '/') . '\b/i', $data['clean'])) {
+                // Jika cleanName memiliki beberapa kata, hindari mencocokkan ke nama 1 kata jika ada kecocokan yang lebih spesifik
+                $cleanWords = count(explode(' ', $cleanName));
+                $dataWords = count(explode(' ', $data['clean']));
+                if ($cleanWords > 1 && $dataWords === 1) {
+                    continue; // Lewati pencocokan 1 kata generik jika nama pencarian memiliki > 1 kata
+                }
                 return $data['teacher'];
             }
         }
