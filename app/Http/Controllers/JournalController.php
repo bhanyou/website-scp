@@ -185,6 +185,9 @@ class JournalController extends Controller
                   ->orWhereNull('end_date');
             })
             ->get()
+            ->filter(function ($perm) use ($schedule) {
+                return $perm->appliesToSchedule($schedule);
+            })
             ->keyBy('student_id');
 
         return view('journals.create', compact('schedule', 'students', 'approvedPermissions'));
@@ -307,6 +310,8 @@ class JournalController extends Controller
                               ->orWhereNull('end_date');
                         })
                         ->latest('id')
+                        ->get()
+                        ->filter(fn($perm) => $perm->appliesToSchedule($schedule))
                         ->first();
 
                     if ($approvedPermission) {
@@ -411,6 +416,9 @@ class JournalController extends Controller
         $attendances = Attendance::where('schedule_id', $schedule->id)
             ->whereDate('date', $journal->journal_date)
             ->get()
+            ->filter(function ($perm) use ($schedule) {
+                return $perm->appliesToSchedule($schedule);
+            })
             ->keyBy('student_id');
 
         $todayDate = $journal->journal_date ? $journal->journal_date->toDateString() : now()->toDateString();
@@ -422,6 +430,9 @@ class JournalController extends Controller
                   ->orWhereNull('end_date');
             })
             ->get()
+            ->filter(function ($perm) use ($schedule) {
+                return $perm->appliesToSchedule($schedule);
+            })
             ->keyBy('student_id');
 
         return view('journals.edit', compact('journal', 'schedule', 'students', 'attendances', 'approvedPermissions'));

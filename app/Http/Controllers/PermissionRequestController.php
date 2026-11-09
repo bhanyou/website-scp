@@ -101,9 +101,26 @@ class PermissionRequestController extends Controller
                 'date',
             ],
             'end_date' => [
-                'required',
+                'nullable',
                 'date',
                 'after_or_equal:permission_date',
+            ],
+            'time_scope' => [
+                'nullable',
+                'in:full_day,partial_day',
+            ],
+            'start_hour' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:12',
+            ],
+            'end_hour' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:12',
+                'gte:start_hour',
             ],
             'type' => [
                 'required',
@@ -118,8 +135,8 @@ class PermissionRequestController extends Controller
                 'file',
             ],
         ], [
-            'end_date.required' => 'Tanggal selesai izin wajib diisi.',
             'end_date.after_or_equal' => 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai izin.',
+            'end_hour.gte' => 'Jam selesai tidak boleh lebih awal dari jam mulai izin.',
         ]);
 
         /*
@@ -161,11 +178,33 @@ class PermissionRequestController extends Controller
             ? $request->file('document')->store('permission-requests', 'public')
             : null;
 
+        $timeScope = $validated['time_scope'] ?? 'full_day';
+        $startHour = $timeScope === 'partial_day' ? ($validated['start_hour'] ?? null) : null;
+        $endHour = $timeScope === 'partial_day' ? ($validated['end_hour'] ?? null) : null;
+        $startTime = null;
+        $endTime = null;
+
+        if ($timeScope === 'partial_day' && $startHour && $endHour) {
+            $endDate = $validated['permission_date'];
+            $startPeriod = \App\Models\LessonHour::where('period_number', $startHour)->first();
+            $endPeriod = \App\Models\LessonHour::where('period_number', $endHour)->first();
+
+            $startTime = $startPeriod ? $startPeriod->start_time : null;
+            $endTime = $endPeriod ? $endPeriod->end_time : null;
+        } else {
+            $endDate = $validated['end_date'] ?? $validated['permission_date'];
+        }
+
         PermissionRequest::create([
             'student_id' => $validated['student_id'],
             'parent_id' => $parentId,
             'permission_date' => $validated['permission_date'],
-            'end_date' => $validated['end_date'] ?? $validated['permission_date'],
+            'end_date' => $endDate,
+            'time_scope' => $timeScope,
+            'start_hour' => $startHour,
+            'end_hour' => $endHour,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
             'type' => $validated['type'],
             'reason' => $validated['reason'],
             'document_path' => $documentPath,
@@ -439,22 +478,16 @@ class PermissionRequestController extends Controller
         $currentDate = $startDate->copy();
         while ($currentDate->lte($endDate)) {
             $permDate = $currentDate->toDateString();
+            $dayName = $days[$currentDate->dayOfWeek] ?? null;
 
-            // 1. Update presensi yang sudah ada pada tanggal tersebut
-            $updatedCount = Attendance::where('student_id', $permissionRequest->student_id)
-                ->whereDate('date', $permDate)
-                ->update(['status' => $statusType]);
-
-            // 2. Jika belum ada catatan presensi pada tanggal tersebut, buatkan presensi otomatis
-            if ($updatedCount === 0 && $student) {
-                $dayName = $days[$currentDate->dayOfWeek] ?? null;
-
-                $schedules = ($student->class_id && $dayName)
+            if ($permissionRequest->isPartialDay()) {
+                // Izin memotong jam pelajaran (hanya untuk jadwal yang beririsan dengan rentang jam izin)
+                $schedules = ($student && $student->class_id && $dayName)
                     ? Schedule::where('class_id', $student->class_id)->where('day', $dayName)->get()
                     : collect();
 
-                if ($schedules->isNotEmpty()) {
-                    foreach ($schedules as $sched) {
+                foreach ($schedules as $sched) {
+                    if ($permissionRequest->appliesToSchedule($sched)) {
                         Attendance::updateOrCreate(
                             [
                                 'student_id'  => $student->id,
@@ -464,21 +497,50 @@ class PermissionRequestController extends Controller
                             [
                                 'status'   => $statusType,
                                 'check_in' => null,
+                                'note'     => "Izin Jam ke-{$permissionRequest->start_hour} - {$permissionRequest->end_hour}: {$permissionRequest->reason}",
                             ]
                         );
                     }
-                } else {
-                    Attendance::updateOrCreate(
-                        [
-                            'student_id'  => $student->id,
-                            'schedule_id' => null,
-                            'date'        => $permDate,
-                        ],
-                        [
-                            'status'   => $statusType,
-                            'check_in' => null,
-                        ]
-                    );
+                }
+            } else {
+                // 1. Update presensi yang sudah ada pada tanggal tersebut
+                $updatedCount = Attendance::where('student_id', $permissionRequest->student_id)
+                    ->whereDate('date', $permDate)
+                    ->update(['status' => $statusType]);
+
+                // 2. Jika belum ada catatan presensi pada tanggal tersebut, buatkan presensi otomatis
+                if ($updatedCount === 0 && $student) {
+                    $schedules = ($student->class_id && $dayName)
+                        ? Schedule::where('class_id', $student->class_id)->where('day', $dayName)->get()
+                        : collect();
+
+                    if ($schedules->isNotEmpty()) {
+                        foreach ($schedules as $sched) {
+                            Attendance::updateOrCreate(
+                                [
+                                    'student_id'  => $student->id,
+                                    'schedule_id' => $sched->id,
+                                    'date'        => $permDate,
+                                ],
+                                [
+                                    'status'   => $statusType,
+                                    'check_in' => null,
+                                ]
+                            );
+                        }
+                    } else {
+                        Attendance::updateOrCreate(
+                            [
+                                'student_id'  => $student->id,
+                                'schedule_id' => null,
+                                'date'        => $permDate,
+                            ],
+                            [
+                                'status'   => $statusType,
+                                'check_in' => null,
+                            ]
+                        );
+                    }
                 }
             }
 
@@ -560,20 +622,15 @@ class PermissionRequestController extends Controller
         $currentDate = $startDate->copy();
         while ($currentDate->lte($endDate)) {
             $permDate = $currentDate->toDateString();
+            $dayName = $days[$currentDate->dayOfWeek] ?? null;
 
-            $updatedCount = Attendance::where('student_id', $permissionRequest->student_id)
-                ->whereDate('date', $permDate)
-                ->update(['status' => 'Alpa']);
-
-            if ($updatedCount === 0 && $student) {
-                $dayName = $days[$currentDate->dayOfWeek] ?? null;
-
-                $schedules = ($student->class_id && $dayName)
+            if ($permissionRequest->isPartialDay()) {
+                $schedules = ($student && $student->class_id && $dayName)
                     ? Schedule::where('class_id', $student->class_id)->where('day', $dayName)->get()
                     : collect();
 
-                if ($schedules->isNotEmpty()) {
-                    foreach ($schedules as $sched) {
+                foreach ($schedules as $sched) {
+                    if ($permissionRequest->appliesToSchedule($sched)) {
                         Attendance::updateOrCreate(
                             [
                                 'student_id'  => $student->id,
@@ -583,21 +640,48 @@ class PermissionRequestController extends Controller
                             [
                                 'status'   => 'Alpa',
                                 'check_in' => null,
+                                'note'     => "Ditolak - Alpa Jam ke-{$permissionRequest->start_hour} - {$permissionRequest->end_hour}",
                             ]
                         );
                     }
-                } else {
-                    Attendance::updateOrCreate(
-                        [
-                            'student_id'  => $student->id,
-                            'schedule_id' => null,
-                            'date'        => $permDate,
-                        ],
-                        [
-                            'status'   => 'Alpa',
-                            'check_in' => null,
-                        ]
-                    );
+                }
+            } else {
+                $updatedCount = Attendance::where('student_id', $permissionRequest->student_id)
+                    ->whereDate('date', $permDate)
+                    ->update(['status' => 'Alpa']);
+
+                if ($updatedCount === 0 && $student) {
+                    $schedules = ($student->class_id && $dayName)
+                        ? Schedule::where('class_id', $student->class_id)->where('day', $dayName)->get()
+                        : collect();
+
+                    if ($schedules->isNotEmpty()) {
+                        foreach ($schedules as $sched) {
+                            Attendance::updateOrCreate(
+                                [
+                                    'student_id'  => $student->id,
+                                    'schedule_id' => $sched->id,
+                                    'date'        => $permDate,
+                                ],
+                                [
+                                    'status'   => 'Alpa',
+                                    'check_in' => null,
+                                ]
+                            );
+                        }
+                    } else {
+                        Attendance::updateOrCreate(
+                            [
+                                'student_id'  => $student->id,
+                                'schedule_id' => null,
+                                'date'        => $permDate,
+                            ],
+                            [
+                                'status'   => 'Alpa',
+                                'check_in' => null,
+                            ]
+                        );
+                    }
                 }
             }
 

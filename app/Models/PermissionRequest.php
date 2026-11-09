@@ -13,6 +13,11 @@ class PermissionRequest extends Model
         'parent_id',
         'permission_date',
         'end_date',
+        'time_scope',
+        'start_hour',
+        'end_hour',
+        'start_time',
+        'end_time',
         'type',
         'reason',
         'document_path',
@@ -45,7 +50,7 @@ class PermissionRequest extends Model
 
     /**
      * Label representasi rentang tanggal dan durasi
-     * Contoh: "21/10/2026 s.d. 23/10/2026 (3 Hari)" atau "21/10/2026 (1 Hari)"
+     * Contoh: "21/10/2026 s.d. 23/10/2026 (3 Hari)", "21/10/2026 (1 Hari)", atau "21/10/2026 (Jam ke 1 - 5)"
      */
     public function getDateRangeLabelAttribute(): string
     {
@@ -54,6 +59,11 @@ class PermissionRequest extends Model
         }
 
         $startStr = $this->permission_date->format('d/m/Y');
+
+        if ($this->time_scope === 'partial_day' && $this->start_hour && $this->end_hour) {
+            return "{$startStr} (Jam ke {$this->start_hour} - {$this->end_hour})";
+        }
+
         $endDate = $this->end_date ?? $this->permission_date;
         $endStr = $endDate->format('d/m/Y');
         $days = $this->duration_days;
@@ -63,6 +73,29 @@ class PermissionRequest extends Model
         }
 
         return "{$startStr} s.d. {$endStr} ({$days} Hari)";
+    }
+
+    public function isPartialDay(): bool
+    {
+        return $this->time_scope === 'partial_day';
+    }
+
+    public function appliesToSchedule($schedule): bool
+    {
+        if ($this->time_scope !== 'partial_day') {
+            return true;
+        }
+
+        if ($this->start_time && $this->end_time && $schedule->start_time && $schedule->end_time) {
+            $schedStart = substr($schedule->start_time, 0, 5);
+            $schedEnd = substr($schedule->end_time, 0, 5);
+            $permStart = substr($this->start_time, 0, 5);
+            $permEnd = substr($this->end_time, 0, 5);
+
+            return !($schedEnd <= $permStart || $schedStart >= $permEnd);
+        }
+
+        return true;
     }
 
     public function student(): BelongsTo

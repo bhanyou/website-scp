@@ -27,14 +27,22 @@
     <div class="detail-item">
         <strong>Rentang Tanggal Izin</strong>
         <p>
-            @if($permissionRequest->end_date && $permissionRequest->end_date->ne($permissionRequest->permission_date))
+            @if($permissionRequest->isPartialDay())
+                {{ $permissionRequest->permission_date->format('d-m-Y') }}
+                <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #6366f1; font-weight: 600; margin-left: 0.5rem;">
+                    Jam ke-{{ $permissionRequest->start_hour }} s.d. {{ $permissionRequest->end_hour }} (Memotong Jam)
+                </span>
+            @elseif($permissionRequest->end_date && $permissionRequest->end_date->ne($permissionRequest->permission_date))
                 {{ $permissionRequest->permission_date->format('d-m-Y') }} s.d. {{ $permissionRequest->end_date->format('d-m-Y') }}
+                <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #6366f1; font-weight: 600; margin-left: 0.5rem;">
+                    {{ $permissionRequest->duration_days }} Hari
+                </span>
             @else
                 {{ $permissionRequest->permission_date->format('d-m-Y') }}
+                <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #6366f1; font-weight: 600; margin-left: 0.5rem;">
+                    1 Hari
+                </span>
             @endif
-            <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #6366f1; font-weight: 600; margin-left: 0.5rem;">
-                {{ $permissionRequest->duration_days }} Hari
-            </span>
         </p>
     </div>
 

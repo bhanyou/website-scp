@@ -36,9 +36,15 @@
                             @endif
                         </td>
                         <td>
-                            <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #6366f1; font-weight: 600;">
-                                {{ $request->duration_days }} Hari
-                            </span>
+                            @if($request->isPartialDay())
+                                <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #6366f1; font-weight: 600;">
+                                    Jam ke-{{ $request->start_hour }} - {{ $request->end_hour }}
+                                </span>
+                            @else
+                                <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #6366f1; font-weight: 600;">
+                                    {{ $request->duration_days }} Hari
+                                </span>
+                            @endif
                         </td>
                         <td>
                             @if($request->type === 'Sakit')

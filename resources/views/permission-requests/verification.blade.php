@@ -160,9 +160,15 @@
                                         {{ $request->permission_date ? $request->permission_date->format('d/m/Y') : '-' }}
                                     @endif
                                 </div>
-                                <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #6366f1; font-weight: 600; font-size: 0.72rem; padding: 0.15rem 0.45rem; border-radius: 4px; display: inline-block; margin-top: 0.2rem;">
-                                    {{ $request->duration_days }} Hari
-                                </span>
+                                @if($request->isPartialDay())
+                                    <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #6366f1; font-weight: 600; font-size: 0.72rem; padding: 0.15rem 0.45rem; border-radius: 4px; display: inline-block; margin-top: 0.2rem;">
+                                        Jam ke-{{ $request->start_hour }} s.d. {{ $request->end_hour }}
+                                    </span>
+                                @else
+                                    <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #6366f1; font-weight: 600; font-size: 0.72rem; padding: 0.15rem 0.45rem; border-radius: 4px; display: inline-block; margin-top: 0.2rem;">
+                                        {{ $request->duration_days }} Hari
+                                    </span>
+                                @endif
                             </td>
                             <td>
                                 @if($request->type === 'Sakit')
