@@ -352,89 +352,6 @@
                 </div>
 
                 <div class="navbar-right" style="display: flex; align-items: center; gap: 0.75rem;">
-                    @if($role === 'waka')
-                        @php
-                            $todayDayName = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][\Carbon\Carbon::today()->dayOfWeek];
-                            $activeBcForNotif = \App\Models\BlockCycle::where('is_active', true)->first();
-                            $unfilledNotifSchedules = collect();
-                            if ($activeBcForNotif) {
-                                $unfilledNotifSchedules = \App\Models\Schedule::with(['teacher', 'subject', 'schoolClass', 'room'])
-                                    ->where(function($q) use ($activeBcForNotif) {
-                                        $q->where('block_cycle_id', $activeBcForNotif->id)
-                                          ->orWhere('block_cycle', $activeBcForNotif->cycle);
-                                    })
-                                    ->where('day', $todayDayName)
-                                    ->whereDoesntHave('journals', function($q) {
-                                        $q->whereDate('journal_date', \Carbon\Carbon::today());
-                                    })
-                                    ->orderBy('start_time')
-                                    ->get();
-                            }
-                            $unfilledCount = $unfilledNotifSchedules->count();
-                        @endphp
-                        {{-- Bell Icon Notifikasi Keterlambatan / Belum Mengisi Jurnal --}}
-                        <div class="notification-dropdown-wrapper" style="position: relative;">
-                            <button type="button" 
-                                    id="notifBellBtn" 
-                                    onclick="toggleNotifDropdown(event)" 
-                                    style="background: var(--bg-surface-hover, #f1f5f9); border: 1px solid var(--border-color); cursor: pointer; position: relative; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text-primary); transition: all 0.2s ease;"
-                                    title="Notifikasi Guru Belum Mengisi Jurnal Hari Ini">
-                                <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                                </svg>
-                                @if($unfilledCount > 0)
-                                    <span style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; border-radius: 9999px; font-size: 0.68rem; font-weight: 800; min-width: 19px; height: 19px; display: flex; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4); border: 2px solid var(--bg-surface, #ffffff);">
-                                        {{ $unfilledCount > 99 ? '99+' : $unfilledCount }}
-                                    </span>
-                                @endif
-                            </button>
-
-                            {{-- Dropdown Menu --}}
-                            <div id="notifDropdownMenu" style="display: none; position: absolute; right: 0; top: calc(100% + 8px); width: 360px; max-width: 90vw; background: var(--bg-surface, #ffffff); border: 1px solid var(--border-color); border-radius: var(--radius-md, 12px); box-shadow: 0 12px 30px rgba(0,0,0,0.15); z-index: 1000; overflow: hidden;">
-                                <div style="padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface-hover, #f8fafc);">
-                                    <div>
-                                        <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary);">Belum Mengisi Jurnal</div>
-                                        <div style="font-size: 0.72rem; color: var(--text-muted);">{{ \Carbon\Carbon::today()->locale('id')->isoFormat('dddd, D MMMM Y') }}</div>
-                                    </div>
-                                    @if($unfilledCount > 0)
-                                        <span class="badge badge-danger" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">{{ $unfilledCount }} Sesi</span>
-                                    @else
-                                        <span class="badge badge-success" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">Tertib 100%</span>
-                                    @endif
-                                </div>
-
-                                <div style="max-height: 320px; overflow-y: auto;">
-                                    @forelse($unfilledNotifSchedules->take(8) as $unf)
-                                        <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.25rem;">
-                                            <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                                                <strong style="font-size: 0.84rem; color: var(--text-primary);">{{ $unf->teacher->name ?? 'Guru Pengajar' }}</strong>
-                                                <span style="font-size: 0.72rem; color: #ef4444; font-weight: 700; background: #fee2e2; padding: 0.1rem 0.4rem; border-radius: 4px;">{{ substr($unf->start_time, 0, 5) }} - {{ substr($unf->end_time, 0, 5) }}</span>
-                                            </div>
-                                            <div style="font-size: 0.76rem; color: var(--text-secondary);">
-                                                {{ $unf->subject->name ?? '-' }} &bull; <span class="badge badge-info" style="font-size: 0.68rem; padding: 0.1rem 0.35rem;">{{ $unf->schoolClass->name ?? '-' }}</span> ({{ $unf->room->name ?? 'Ruang -' }})
-                                            </div>
-                                        </div>
-                                    @empty
-                                        <div style="padding: 1.75rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
-                                            <svg style="width: 32px; height: 32px; color: #10b981; margin: 0 auto 0.5rem auto; display: block;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            <strong>Kondisi Tertib:</strong> Seluruh guru telah mengisi jurnal hari ini.
-                                        </div>
-                                    @endforelse
-                                </div>
-
-                                @if($unfilledCount > 0)
-                                    <div style="padding: 0.7rem 1rem; background: var(--bg-surface-hover, #f8fafc); text-align: center; border-top: 1px solid var(--border-color);">
-                                        <a href="{{ route('waka.journals.index', ['status' => 'belum']) }}" style="font-size: 0.8rem; font-weight: 700; color: var(--accent); text-decoration: none;">
-                                            Lihat Seluruhnya di Monitoring Jurnal ({{ $unfilledCount }}) &rarr;
-                                        </a>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    @endif
-
                     <a href="{{ route('profile.edit') }}" class="user-profile" title="Buka Profil">
                         <div class="user-avatar">
                             {{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}
@@ -920,25 +837,6 @@
                 }, confirmOpts);
             }
         }, true);
-
-        // Handler dropdown notifikasi pengisian jurnal waka
-        function toggleNotifDropdown(e) {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            const menu = document.getElementById('notifDropdownMenu');
-            if (menu) {
-                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-            }
-        }
-        document.addEventListener('click', function(e) {
-            const wrap = document.querySelector('.notification-dropdown-wrapper');
-            const menu = document.getElementById('notifDropdownMenu');
-            if (wrap && menu && !wrap.contains(e.target)) {
-                menu.style.display = 'none';
-            }
-        });
     </script>
     @stack('scripts')
 </body>
