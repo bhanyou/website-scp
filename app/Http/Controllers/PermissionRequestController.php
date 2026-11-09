@@ -195,18 +195,21 @@ class PermissionRequestController extends Controller
             return view('permission-requests.show', compact('permissionRequest', 'canVerify'));
         }
 
-        // Jika akun Guru BK
-        if ($user->role === 'bk' || ($user->teacher && $user->teacher->isBkTeacher())) {
+        // Jika akun Guru BK / Kesiswaan
+        if (in_array($user->role, ['bk', 'kesiswaan'], true) || ($user->teacher && $user->teacher->isBkTeacher())) {
             $teacher = $user->teacher;
             $managedClassIds = $teacher ? $teacher->bkClasses->pluck('id') : collect();
+            if ($teacher && $teacher->homeroomClasses->isNotEmpty()) {
+                $managedClassIds = $managedClassIds->merge($teacher->homeroomClasses->pluck('id'))->unique();
+            }
             $isMyClassStudent = $permissionRequest->student && $managedClassIds->contains($permissionRequest->student->class_id);
 
             if ($isMyClassStudent) {
-                $canVerify = false; // BK hanya memonitor
+                $canVerify = true; // Kesiswaan / BK dapat memverifikasi permohonan izin untuk kelas binaannya
                 return view('permission-requests.show', compact('permissionRequest', 'canVerify'));
             }
 
-            abort(403, 'Akses Ditolak: Bukan kelas binaan Anda');
+            abort(403, 'Akses Ditolak: Bukan kelas binaan/ampuan Anda.');
         }
 
         // Jika akun Guru / Wali Kelas
@@ -272,10 +275,10 @@ class PermissionRequestController extends Controller
     {
         $user = Auth::user();
         $teacher = $user->teacher;
-        $isBk = $user->role === 'bk' || ($teacher && $teacher->isBkTeacher());
+        $isBkOrKesiswaan = in_array($user->role, ['bk', 'kesiswaan'], true) || ($teacher && $teacher->isBkTeacher());
 
-        if (!in_array($user->role, ['waka'], true) && !$isBk) {
-            abort(403, 'Hanya Waka Kurikulum atau Guru BK yang memiliki akses ke halaman monitoring izin ini.');
+        if (!in_array($user->role, ['waka'], true) && !$isBkOrKesiswaan) {
+            abort(403, 'Hanya Waka Kurikulum atau Guru BK / Kesiswaan yang memiliki akses ke halaman monitoring izin ini.');
         }
 
         $selectedGrade = $request->query('grade');
@@ -290,15 +293,25 @@ class PermissionRequestController extends Controller
             'verifiedBy',
         ]);
 
-        // Scope kelas binaan khusus Guru BK (bukan waka)
-        $bkClassIds = ($teacher && $isBk && $user->role !== 'waka')
-            ? $teacher->bkClasses()->pluck('id')
-            : collect();
+        // Scope kelas binaan khusus Guru BK / Kesiswaan (bukan waka)
+        if ($user->role !== 'waka') {
+            $managedClassIds = collect();
+            if ($teacher) {
+                if ($teacher->bkClasses->isNotEmpty()) {
+                    $managedClassIds = $managedClassIds->merge($teacher->bkClasses->pluck('id'));
+                }
+                if ($teacher->homeroomClasses->isNotEmpty()) {
+                    $managedClassIds = $managedClassIds->merge($teacher->homeroomClasses->pluck('id'));
+                }
+            }
 
-        if ($bkClassIds->isNotEmpty()) {
-            $query->whereHas('student', function ($s) use ($bkClassIds) {
-                $s->whereIn('class_id', $bkClassIds);
-            });
+            if ($managedClassIds->isEmpty()) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->whereHas('student', function ($s) use ($managedClassIds) {
+                    $s->whereIn('class_id', $managedClassIds);
+                });
+            }
         }
 
         if ($selectedStatus) {
@@ -360,27 +373,37 @@ class PermissionRequestController extends Controller
     }
 
     /**
-     * Menyetujui permohonan izin siswa (Wali Kelas atau Waka Kurikulum).
+     * Menyetujui permohonan izin siswa (Wali Kelas, Kesiswaan / Guru BK, atau Waka Kurikulum).
      */
     public function approve(string $id)
     {
         $user = Auth::user();
+        $teacher = $user->teacher;
+        $isBkOrKesiswaan = in_array($user->role, ['bk', 'kesiswaan'], true) || ($teacher && $teacher->isBkTeacher());
 
-        if (!in_array($user->role, ['guru', 'waka'])) {
+        if (!in_array($user->role, ['guru', 'waka', 'bk', 'kesiswaan'], true) && !$isBkOrKesiswaan) {
             abort(403, 'Anda tidak memiliki hak untuk memverifikasi izin siswa.');
         }
 
         $permissionRequest = PermissionRequest::with('student')->findOrFail($id);
 
-        if ($user->role === 'guru') {
-            $teacher = $user->teacher;
-            $homeroomClassIds = $teacher ? $teacher->homeroomClasses->pluck('id') : collect();
-            if (!$permissionRequest->student || !$homeroomClassIds->contains($permissionRequest->student->class_id)) {
-                abort(403, 'Anda hanya dapat memverifikasi permohonan izin untuk siswa di kelas binaan Anda.');
+        if ($user->role !== 'waka') {
+            $allowedClassIds = collect();
+            if ($teacher) {
+                if ($teacher->homeroomClasses->isNotEmpty()) {
+                    $allowedClassIds = $allowedClassIds->merge($teacher->homeroomClasses->pluck('id'));
+                }
+                if ($teacher->bkClasses->isNotEmpty()) {
+                    $allowedClassIds = $allowedClassIds->merge($teacher->bkClasses->pluck('id'));
+                }
+            }
+
+            if (!$permissionRequest->student || !$allowedClassIds->contains($permissionRequest->student->class_id)) {
+                abort(403, 'Anda hanya dapat memverifikasi permohonan izin untuk siswa di kelas binaan/ampuan Anda.');
             }
         }
 
-        $fallbackRoute = ($user->role === 'waka')
+        $fallbackRoute = ($user->role === 'waka' || $isBkOrKesiswaan)
             ? route('permission-requests.verification')
             : route('homeroom.permissions.index');
 
@@ -468,27 +491,37 @@ class PermissionRequestController extends Controller
     }
 
     /**
-     * Menolak permohonan izin siswa (Wali Kelas atau Waka Kurikulum).
+     * Menolak permohonan izin siswa (Wali Kelas, Kesiswaan / Guru BK, atau Waka Kurikulum).
      */
     public function reject(Request $request, string $id)
     {
         $user = Auth::user();
+        $teacher = $user->teacher;
+        $isBkOrKesiswaan = in_array($user->role, ['bk', 'kesiswaan'], true) || ($teacher && $teacher->isBkTeacher());
 
-        if (!in_array($user->role, ['guru', 'waka'])) {
+        if (!in_array($user->role, ['guru', 'waka', 'bk', 'kesiswaan'], true) && !$isBkOrKesiswaan) {
             abort(403, 'Anda tidak memiliki hak untuk menolak izin siswa.');
         }
 
         $permissionRequest = PermissionRequest::with('student')->findOrFail($id);
 
-        if ($user->role === 'guru') {
-            $teacher = $user->teacher;
-            $homeroomClassIds = $teacher ? $teacher->homeroomClasses->pluck('id') : collect();
-            if (!$permissionRequest->student || !$homeroomClassIds->contains($permissionRequest->student->class_id)) {
-                abort(403, 'Anda hanya dapat menolak permohonan izin untuk siswa di kelas binaan Anda.');
+        if ($user->role !== 'waka') {
+            $allowedClassIds = collect();
+            if ($teacher) {
+                if ($teacher->homeroomClasses->isNotEmpty()) {
+                    $allowedClassIds = $allowedClassIds->merge($teacher->homeroomClasses->pluck('id'));
+                }
+                if ($teacher->bkClasses->isNotEmpty()) {
+                    $allowedClassIds = $allowedClassIds->merge($teacher->bkClasses->pluck('id'));
+                }
+            }
+
+            if (!$permissionRequest->student || !$allowedClassIds->contains($permissionRequest->student->class_id)) {
+                abort(403, 'Anda hanya dapat menolak permohonan izin untuk siswa di kelas binaan/ampuan Anda.');
             }
         }
 
-        $fallbackRoute = ($user->role === 'waka')
+        $fallbackRoute = ($user->role === 'waka' || $isBkOrKesiswaan)
             ? route('permission-requests.verification')
             : route('homeroom.permissions.index');
 
@@ -585,6 +618,9 @@ class PermissionRequestController extends Controller
         $teacher = $user->teacher;
 
         if (!$teacher || $teacher->homeroomClasses->isEmpty()) {
+            if (in_array($user->role, ['bk', 'kesiswaan'], true) || ($teacher && $teacher->isBkTeacher())) {
+                return redirect()->route('permission-requests.verification');
+            }
             abort(403, 'Anda belum ditugaskan sebagai wali kelas.');
         }
 

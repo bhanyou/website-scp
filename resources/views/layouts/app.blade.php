@@ -231,10 +231,10 @@
                             </li>
                         @endif
 
-                        {{-- Menu Tambahan Khusus Guru BK (Bimbingan Konseling) --}}
-                        @if($role === 'bk' || (auth()->user()->teacher && auth()->user()->teacher->isBkTeacher()))
+                        {{-- Menu Tambahan Khusus Guru BK & Tim Kesiswaan --}}
+                        @if(in_array($role, ['bk', 'kesiswaan'], true) || (auth()->user()->teacher && auth()->user()->teacher->isBkTeacher()))
                             <div class="nav-category" style="margin-top: 1rem; color: #4f46e5; font-weight: 600;">
-                                Bimbingan & Konseling (BK)
+                                Kesiswaan & Bimbingan Konseling (BK)
                             </div>
 
                             <li class="nav-item {{ request()->routeIs('students.*') ? 'active' : '' }}">

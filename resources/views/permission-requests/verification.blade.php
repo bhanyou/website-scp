@@ -4,7 +4,7 @@
 <div class="page-header">
     <div>
         <h1 class="page-title">Monitoring Izin & Sakit Siswa</h1>
-        <p class="page-subtitle">Pantau seluruh permohonan izin siswa sekolah yang diverifikasi oleh masing-masing Wali Kelas</p>
+        <p class="page-subtitle">Pantau dan verifikasi permohonan izin & sakit siswa sekolah (Wali Kelas & Tim Kesiswaan/BK)</p>
     </div>
     <div>
         <a href="{{ auth()->user()->role === 'waka' ? route('dashboard.waka') : route('dashboard.guru') }}" class="btn-back">
@@ -201,7 +201,7 @@
                             <td>
                                 @if($request->status === 'Pending')
                                     <span style="font-size: 0.78rem; color: #d97706; font-style: italic;">
-                                        Menunggu Wali Kelas
+                                        Menunggu Verifikasi
                                     </span>
                                 @else
                                     <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary);">

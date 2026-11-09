@@ -354,25 +354,25 @@ Route::middleware('auth')->group(function () {
     Route::post('/homeroom/permission-requests/{id}/approve', [
         PermissionRequestController::class,
         'approve'
-    ])->middleware('role:guru,waka')
+    ])->middleware('role:guru,waka,bk,kesiswaan')
       ->name('homeroom.permissions.approve');
 
     Route::post('/homeroom/permission-requests/{id}/reject', [
         PermissionRequestController::class,
         'reject'
-    ])->middleware('role:guru,waka')
+    ])->middleware('role:guru,waka,bk,kesiswaan')
       ->name('homeroom.permissions.reject');
 
     Route::get('/permission-requests/{id}', [
         PermissionRequestController::class,
         'show'
-    ])->middleware('role:siswa,ortu,waka,guru,bk')
+    ])->middleware('role:siswa,ortu,waka,guru,bk,kesiswaan')
       ->name('permission-requests.show');
 
-    // Monitoring Izin Siswa - Waka Kurikulum & Guru BK
+    // Monitoring Izin Siswa - Waka Kurikulum & Guru BK / Kesiswaan
     Route::get('/monitoring/permission-requests', [
         PermissionRequestController::class,
         'verificationIndex'
-    ])->middleware('role:waka,bk')
+    ])->middleware('role:waka,bk,kesiswaan')
       ->name('permission-requests.verification');
 });

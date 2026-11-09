@@ -19,13 +19,20 @@ class RoleMiddleware
 
         $userRole = auth()->user()->role;
 
-        // Izinkan role 'bk' jika role yang diminta adalah 'guru' (guru BK merupakan bagian dari dewan guru)
-        if (in_array('guru', $roles, true) && $userRole === 'bk') {
+        // Izinkan role 'bk' dan 'kesiswaan' secara saling menggantikan (alias) serta akses dewan guru
+        if (in_array($userRole, ['bk', 'kesiswaan'], true)) {
+            if (in_array('bk', $roles, true) || in_array('kesiswaan', $roles, true) || in_array('guru', $roles, true)) {
+                return $next($request);
+            }
+        }
+
+        // Izinkan dewan guru jika ia adalah guru BK/Kesiswaan dan role yang diminta adalah 'bk' atau 'kesiswaan'
+        if ((in_array('bk', $roles, true) || in_array('kesiswaan', $roles, true)) && ($userRole === 'bk' || $userRole === 'kesiswaan' || (auth()->user()->teacher && auth()->user()->teacher->isBkTeacher()))) {
             return $next($request);
         }
 
-        // Izinkan role 'guru' jika ia adalah guru BK dan role yang diminta adalah 'bk'
-        if (in_array('bk', $roles, true) && ($userRole === 'bk' || (auth()->user()->teacher && auth()->user()->teacher->isBkTeacher()))) {
+        // Izinkan dewan guru umum
+        if (in_array('guru', $roles, true) && in_array($userRole, ['bk', 'kesiswaan'], true)) {
             return $next($request);
         }
 

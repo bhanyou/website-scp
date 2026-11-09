@@ -122,7 +122,7 @@
     @endif
 
     <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; align-items: center;">
-        @if(in_array(auth()->user()->role, ['waka', 'bk']))
+        @if(in_array(auth()->user()->role, ['waka', 'bk', 'kesiswaan'], true))
             <a href="{{ route('permission-requests.verification') }}" class="btn btn-secondary">
                 &larr; Kembali ke Monitoring Izin
             </a>
