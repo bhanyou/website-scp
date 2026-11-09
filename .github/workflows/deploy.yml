@@ -14,17 +14,6 @@ jobs:
       - name: ⬇️ Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 🐘 Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, bcmath, fileinfo, gd, zip, curl
-          coverage: none
-
-      - name: 📦 Install Composer Dependencies
-        run: |
-          composer install --no-dev --prefer-dist --optimize-autoloader --no-progress --no-interaction --ignore-platform-reqs
-
       - name: 🟢 Setup Node.js & Compile Assets
         uses: actions/setup-node@v4
         with:
@@ -45,13 +34,17 @@ jobs:
           port: ${{ secrets.FTP_PORT || 21 }}
           protocol: ftps
           security: loose
+          timeout: 60000
           server-dir: ${{ secrets.FTP_SERVER_DIR || '/' }}
           log-level: standard
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
+            node_modules/**
             **/vendor/**
+            vendor/**
+            **/ukk_mobile/**
             ukk_mobile/**
             docs/**
             scratch/**
