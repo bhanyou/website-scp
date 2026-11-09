@@ -1149,6 +1149,11 @@ class ScheduleImportService
                 'room_id'        => $selectedRoom ? $selectedRoom->id : null,
             ]);
 
+            // Sinkronkan mapel guru jika kolom mapel guru masih kosong
+            if ($selectedTeacher && empty($selectedTeacher->mapel) && !empty($selectedSubject?->name)) {
+                $selectedTeacher->update(['mapel' => $selectedSubject->name]);
+            }
+
             $schedulesCount++;
         }
 

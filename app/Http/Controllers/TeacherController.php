@@ -19,7 +19,7 @@ class TeacherController extends Controller
         $search = $request->query('search');
         $homeroomStatus = $request->query('homeroom_status');
         $classId = $request->query('class_id');
-        $query = Teacher::with(['user', 'homeroomClasses']);
+        $query = Teacher::with(['user', 'homeroomClasses', 'schedules.subject']);
         // Filter Pencarian (Nama / NIP / Email)
         if ($search) {
             $query->where(function ($q) use ($search) {

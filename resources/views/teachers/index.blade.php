@@ -298,9 +298,16 @@
                             </code>
                         </td>
                         <td>
+                            @php
+                                $schedSubjects = $teacher->schedules ? $teacher->schedules->pluck('subject.name')->unique()->filter()->values() : collect();
+                            @endphp
                             @if(!empty($teacher->mapel))
                                 <span class="badge badge-info" style="font-size: 0.78rem; font-weight: 600; padding: 0.3rem 0.6rem; display: inline-block; line-height: 1.3;">
                                     {{ $teacher->mapel }}
+                                </span>
+                            @elseif($schedSubjects->isNotEmpty())
+                                <span class="badge badge-info" style="font-size: 0.78rem; font-weight: 600; padding: 0.3rem 0.6rem; display: inline-block; line-height: 1.3;" title="{{ $schedSubjects->implode(', ') }}">
+                                    {{ $schedSubjects->take(2)->implode(', ') }}{{ $schedSubjects->count() > 2 ? ' (+' . ($schedSubjects->count() - 2) . ')' : '' }}
                                 </span>
                             @else
                                 <span style="color: var(--text-muted); font-size: 0.82rem;">-</span>
