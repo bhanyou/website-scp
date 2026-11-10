@@ -1,7 +1,17 @@
 
+{{-- 
+    ==========================================================================
+    HALAMAN: TAMBAH JADWAL MENGAJAR (CREATE SCHEDULE)
+    FUNGSI: Form input untuk mendaftarkan jadwal pelajaran baru bagi guru,
+            dilengkapi pemilihan siklus/putaran blok, jam pelajaran dinamis,
+            serta preview rentang waktu otomatis secara real-time.
+    ==========================================================================
+--}}
+
 @extends('layouts.app')
 
 @section('content')
+{{-- 1. HEADER HALAMAN: Menampilkan judul dan periode siklus blok yang sedang aktif --}}
 <div class="page-header">
     <div>
         <h1 class="page-title">Tambah Jadwal Mengajar</h1>
@@ -13,11 +23,13 @@
     </div>
 </div>
 
+{{-- 2. KARTU FORMULIR UTAMA --}}
 <div class="card" style="max-width: 640px;">
+    {{-- Form mengarah ke route 'schedules.store' dengan method POST untuk menyimpan data ke database --}}
     <form action="{{ route('schedules.store') }}" method="POST">
-        @csrf
+        @csrf {{-- Token keamanan CSRF Laravel untuk mencegah serangan pemalsuan permintaan --}}
 
-        {{-- Pilihan Putaran --}}
+        {{-- FIELD 1: PILIHAN PUTARAN BLOK (Putaran 1 atau Putaran 2) --}}
         <div class="form-group">
             <label for="block_cycle_id">Pilih Putaran Blok <span style="color: var(--danger);">*</span></label>
             <select name="block_cycle_id" id="block_cycle_id" required>
@@ -32,8 +44,9 @@
             @enderror
         </div>
 
+        {{-- FIELD 2: PILIHAN GURU PENGAJAR --}}
         <div class="form-group">
-            <label for="teacher_id">Guru Pengajar</label>
+            <label for="teacher_id">Guru Pengajar <span style="color: var(--danger);">*</span></label>
             <select name="teacher_id" id="teacher_id" required>
                 <option value="">-- Pilih Guru Pengajar --</option>
                 @foreach($teachers as $teacher)
@@ -48,8 +61,9 @@
             @enderror
         </div>
 
+        {{-- FIELD 3: PILIHAN MATA PELAJARAN --}}
         <div class="form-group">
-            <label for="subject_id">Mata Pelajaran</label>
+            <label for="subject_id">Mata Pelajaran <span style="color: var(--danger);">*</span></label>
             <select name="subject_id" id="subject_id" required>
                 <option value="">-- Pilih Mata Pelajaran --</option>
                 @foreach($subjects as $subject)
@@ -64,8 +78,9 @@
             @enderror
         </div>
 
+        {{-- FIELD 4: PILIHAN KELAS TARGET PEMBELAJARAN --}}
         <div class="form-group">
-            <label for="class_id">Kelas</label>
+            <label for="class_id">Kelas <span style="color: var(--danger);">*</span></label>
             <select name="class_id" id="class_id" required>
                 <option value="">-- Pilih Kelas --</option>
                 @foreach($classes as $class)
@@ -80,8 +95,9 @@
             @enderror
         </div>
 
+        {{-- FIELD 5: PILIHAN RUANGAN / LAB / BENGKEL --}}
         <div class="form-group">
-            <label for="room_id">Ruangan</label>
+            <label for="room_id">Ruangan <span style="color: var(--danger);">*</span></label>
             <select name="room_id" id="room_id" required>
                 <option value="">-- Pilih Ruangan --</option>
                 @foreach($rooms as $room)
@@ -96,8 +112,9 @@
             @enderror
         </div>
 
+        {{-- FIELD 6: PILIHAN HARI PELAJARAN (Senin s.d. Jumat) --}}
         <div class="form-group">
-            <label for="day">Hari</label>
+            <label for="day">Hari <span style="color: var(--danger);">*</span></label>
             <select name="day" id="day" required>
                 <option value="">-- Pilih Hari --</option>
                 @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
@@ -112,7 +129,9 @@
             @enderror
         </div>
 
+        {{-- FIELD 7: RENTANG JAM PELAJARAN (JAM MULAI & JAM SELESAI) --}}
         <div class="grid-2">
+            {{-- Jam Mulai: Pilihan awal jam ke berapa sesi dimulai --}}
             <div class="form-group">
                 <label for="start_period">Mulai dari Jam Pelajaran <span style="color: var(--danger);">*</span></label>
                 <select name="start_period" id="start_period" required>
@@ -129,6 +148,7 @@
                 @enderror
             </div>
 
+            {{-- Jam Selesai: Pilihan akhir jam ke berapa sesi selesai --}}
             <div class="form-group">
                 <label for="end_period">Sampai Jam Pelajaran <span style="color: var(--danger);">*</span></label>
                 <select name="end_period" id="end_period" required>
@@ -146,7 +166,7 @@
             </div>
         </div>
 
-        {{-- Preview Jam Sesi Pelajaran --}}
+        {{-- 3. KOTAK PREVIEW INTERAKTIF: Menghitung total jam pelajaran & konversi waktu WIB secara dinamis --}}
         <div id="period-preview" style="background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.2); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1.25rem;">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
                 <div>
@@ -161,12 +181,14 @@
             </div>
         </div>
 
+        {{-- Pesan error jika jadwal bentrok (guru/ruangan/kelas sudah terpakai di jam yang sama) --}}
         @error('schedule')
             <div class="alert alert-danger">
                 {{ $message }}
             </div>
         @enderror
 
+        {{-- 4. TOMBOL AKSI: Simpan Data ke Database atau Batal kembali ke daftar --}}
         <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 1rem;">
             <button type="submit" class="btn btn-primary">
                 Simpan Jadwal
@@ -179,9 +201,21 @@
     </form>
 </div>
 
+{{-- 
+    ==========================================================================
+    LOGIKA JAVASCRIPT: Menangani sinkronisasi jam pelajaran antar hari,
+                       memperbarui opsi jam saat hari dipilih, serta
+                       memperbarui kotak estimasi waktu secara interaktif.
+    ==========================================================================
+--}}
 <script>
+// Mengambil master konfigurasi jam pelajaran (Senin-Kamis vs Jumat) dari backend
 window.allLessonPeriods = @json($allLessonPeriods);
 
+/**
+ * Mengisi ulang opsi dropdown jam pelajaran sesuai hari yang dipilih
+ * (Misalnya: hari Jumat memiliki alokasi jam istirahat sholat Jumat yang berbeda).
+ */
 function populatePeriods(day, defaultStart, defaultEnd) {
     const periods = window.allLessonPeriods[day] || window.allLessonPeriods['Senin'] || {};
     const startSelect = document.getElementById('start_period');
@@ -199,6 +233,7 @@ function populatePeriods(day, defaultStart, defaultEnd) {
 
     keys.forEach(num => {
         const p = periods[num];
+        // Buat opsi jam mulai
         const optStart = document.createElement('option');
         optStart.value = num;
         optStart.setAttribute('data-start', p.start);
@@ -209,6 +244,7 @@ function populatePeriods(day, defaultStart, defaultEnd) {
         }
         startSelect.appendChild(optStart);
 
+        // Buat opsi jam selesai
         const optEnd = document.createElement('option');
         optEnd.value = num;
         optEnd.setAttribute('data-start', p.start);
@@ -221,6 +257,7 @@ function populatePeriods(day, defaultStart, defaultEnd) {
     });
 }
 
+// Inisialisasi event listener setelah seluruh DOM halaman selesai dimuat
 document.addEventListener('DOMContentLoaded', function () {
     const daySelect = document.getElementById('day');
     const startSelect = document.getElementById('start_period');
@@ -229,10 +266,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const previewBadge = document.getElementById('preview-badge');
     const previewBox = document.getElementById('period-preview');
 
+    /**
+     * Memperbarui kotak preview: Menghitung total jam pelajaran dan format jam WIB
+     */
     function updatePreview() {
         const startOpt = startSelect.options[startSelect.selectedIndex];
         const endOpt = endSelect.options[endSelect.selectedIndex];
 
+        // Validasi jika jam belum dipilih
         if (!startOpt || !endOpt || !startOpt.value || !endOpt.value) {
             previewText.textContent = 'Silakan pilih jam mulai dan jam selesai.';
             previewBadge.textContent = '-';
@@ -244,6 +285,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const startTime = startOpt.getAttribute('data-start');
         const endTime = endOpt.getAttribute('data-end');
 
+        // Validasi: Jam selesai tidak boleh lebih awal dari jam mulai
         if (endPeriod < startPeriod) {
             previewBox.style.background = 'rgba(239, 68, 68, 0.08)';
             previewBox.style.borderColor = 'rgba(239, 68, 68, 0.25)';
@@ -253,6 +295,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        // Tampilan normal jika valid
         previewBox.style.background = 'rgba(37, 99, 235, 0.08)';
         previewBox.style.borderColor = 'rgba(37, 99, 235, 0.2)';
         previewBadge.className = 'badge badge-info';
@@ -267,6 +310,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Event listener: Saat pilihan hari berubah, perbarui jam yang tersedia (Jumat vs Senin-Kamis)
     if (daySelect) {
         daySelect.addEventListener('change', function() {
             const day = this.value || 'Senin';
@@ -278,6 +322,7 @@ document.addEventListener('DOMContentLoaded', function () {
         populatePeriods(initDay, {{ old('start_period', 1) }}, {{ old('end_period', 2) }});
     }
 
+    // Event listener: Jika jam mulai digeser melampaui jam selesai, otomatis sesuaikan jam selesai
     startSelect.addEventListener('change', function () {
         if (parseInt(endSelect.value, 10) < parseInt(startSelect.value, 10)) {
             endSelect.value = startSelect.value;
@@ -285,6 +330,7 @@ document.addEventListener('DOMContentLoaded', function () {
         updatePreview();
     });
 
+    // Event listener: Perbarui preview saat jam selesai diganti
     endSelect.addEventListener('change', updatePreview);
     updatePreview();
 });
