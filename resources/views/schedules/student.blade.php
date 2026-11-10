@@ -465,9 +465,6 @@
                 </select>
             </form>
         @endif
-        <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()" style="font-weight: 600;">
-            Cetak Jadwal
-        </button>
     </div>
 </div>
 
