@@ -13,7 +13,7 @@
     </div>
 </div>
 
-{{-- 6 Stat Cards --}}
+{{-- 5 Stat Cards Data Master --}}
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
     <div class="stat-card">
         <div>
@@ -26,13 +26,6 @@
         <div>
             <div class="stat-value">{{ $totalStudents }}</div>
             <div class="stat-label">Siswa Terdaftar</div>
-        </div>
-    </div>
-
-    <div class="stat-card">
-        <div>
-            <div class="stat-value" style="color: #10b981;">{{ $todayHadir }}</div>
-            <div class="stat-label">Siswa Hadir Hari Ini</div>
         </div>
     </div>
 
