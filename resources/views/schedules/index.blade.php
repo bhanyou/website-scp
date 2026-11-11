@@ -92,20 +92,45 @@
 {{-- Switcher Tab Putaran 1 & Putaran 2 --}}
 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
     <div style="display: inline-flex; background: #e2e8f0; padding: 0.35rem; border-radius: 12px; gap: 0.35rem;">
-        <a href="{{ route('schedules.index', array_merge(request()->except(['cycle', 'page']), ['cycle' => 1])) }}"
-           style="padding: 0.65rem 1.6rem; border-radius: 9px; font-weight: 700; font-size: 0.92rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.55rem; transition: all 0.2s; {{ $selectedCycle == 1 ? 'background: #2563eb; color: #ffffff; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.3);' : 'background: transparent; color: #475569;' }}">
-            <span>Putaran 1</span>
-            @if($activeCycleNumber == 1)
-                <span class="badge" style="font-size: 0.68rem; background: rgba(255,255,255,0.25); color: #fff; padding: 0.2rem 0.5rem; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em;">Aktif</span>
-            @endif
-        </a>
-        <a href="{{ route('schedules.index', array_merge(request()->except(['cycle', 'page']), ['cycle' => 2])) }}"
-           style="padding: 0.65rem 1.6rem; border-radius: 9px; font-weight: 700; font-size: 0.92rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.55rem; transition: all 0.2s; {{ $selectedCycle == 2 ? 'background: #2563eb; color: #ffffff; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.3);' : 'background: transparent; color: #475569;' }}">
-            <span>Putaran 2</span>
-            @if($activeCycleNumber == 2)
-                <span class="badge" style="font-size: 0.68rem; background: rgba(255,255,255,0.25); color: #fff; padding: 0.2rem 0.5rem; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em;">Aktif</span>
-            @endif
-        </a>
+        @php
+            $isCycleLocked = $activeCycle && $activeCycle->is_locked;
+        @endphp
+
+        {{-- Tab Putaran 1 --}}
+        @if($isCycleLocked && $activeCycleNumber != 1)
+            <span style="padding: 0.65rem 1.6rem; border-radius: 9px; font-weight: 700; font-size: 0.92rem; display: inline-flex; align-items: center; gap: 0.55rem; background: transparent; color: #94a3b8; opacity: 0.55; cursor: not-allowed; user-select: none;" title="Siklus blok sedang dikunci Waka. Putaran 1 tidak dapat diakses saat Putaran {{ $activeCycleNumber }} dikunci.">
+                <span>Putaran 1</span>
+                <span class="badge" style="font-size: 0.68rem; background: #cbd5e1; color: #64748b; padding: 0.2rem 0.5rem; border-radius: 9999px;">🔒 Terkunci</span>
+            </span>
+        @else
+            <a href="{{ route('schedules.index', array_merge(request()->except(['cycle', 'page']), ['cycle' => 1])) }}"
+               style="padding: 0.65rem 1.6rem; border-radius: 9px; font-weight: 700; font-size: 0.92rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.55rem; transition: all 0.2s; {{ $selectedCycle == 1 ? 'background: #2563eb; color: #ffffff; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.3);' : 'background: transparent; color: #475569;' }}">
+                <span>Putaran 1</span>
+                @if($activeCycleNumber == 1)
+                    <span class="badge" style="font-size: 0.68rem; background: rgba(255,255,255,0.25); color: #fff; padding: 0.2rem 0.5rem; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em;">
+                        {{ $isCycleLocked ? '🔒 Aktif & Terkunci' : 'Aktif' }}
+                    </span>
+                @endif
+            </a>
+        @endif
+
+        {{-- Tab Putaran 2 --}}
+        @if($isCycleLocked && $activeCycleNumber != 2)
+            <span style="padding: 0.65rem 1.6rem; border-radius: 9px; font-weight: 700; font-size: 0.92rem; display: inline-flex; align-items: center; gap: 0.55rem; background: transparent; color: #94a3b8; opacity: 0.55; cursor: not-allowed; user-select: none;" title="Siklus blok sedang dikunci Waka. Putaran 2 tidak dapat diakses saat Putaran {{ $activeCycleNumber }} dikunci.">
+                <span>Putaran 2</span>
+                <span class="badge" style="font-size: 0.68rem; background: #cbd5e1; color: #64748b; padding: 0.2rem 0.5rem; border-radius: 9999px;">🔒 Terkunci</span>
+            </span>
+        @else
+            <a href="{{ route('schedules.index', array_merge(request()->except(['cycle', 'page']), ['cycle' => 2])) }}"
+               style="padding: 0.65rem 1.6rem; border-radius: 9px; font-weight: 700; font-size: 0.92rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.55rem; transition: all 0.2s; {{ $selectedCycle == 2 ? 'background: #2563eb; color: #ffffff; box-shadow: 0 4px 6px -1px rgba(37,99,235,0.3);' : 'background: transparent; color: #475569;' }}">
+                <span>Putaran 2</span>
+                @if($activeCycleNumber == 2)
+                    <span class="badge" style="font-size: 0.68rem; background: rgba(255,255,255,0.25); color: #fff; padding: 0.2rem 0.5rem; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em;">
+                        {{ $isCycleLocked ? '🔒 Aktif & Terkunci' : 'Aktif' }}
+                    </span>
+                @endif
+            </a>
+        @endif
     </div>
 
     {{-- Penanda Putaran Aktif Sistem & Shortcut Agenda --}}
