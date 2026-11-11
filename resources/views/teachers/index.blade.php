@@ -529,7 +529,15 @@
 
                     <div class="form-group">
                         <label for="create_teacher_mapel">Mata Pelajaran (Mapel)</label>
-                        <input type="text" name="mapel" id="create_teacher_mapel" placeholder="Contoh: Pemrograman Web / Matematika">
+                        <select name="mapel" id="create_teacher_mapel" class="form-control" style="width: 100%;">
+                            <option value="">-- Pilih Mata Pelajaran (Opsional) --</option>
+                            @foreach($subjects as $subject)
+                                <option value="{{ $subject->name }}">
+                                    {{ $subject->name }} ({{ $subject->code }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <small style="color: var(--text-muted); font-size: 0.72rem;">Diambil langsung dari master data Mapel.</small>
                     </div>
 
                     <div class="form-group">
@@ -619,7 +627,15 @@
 
                     <div class="form-group">
                         <label for="edit_teacher_mapel">Mata Pelajaran (Mapel)</label>
-                        <input type="text" name="mapel" id="edit_teacher_mapel" placeholder="Contoh: Pemrograman Web / Matematika">
+                        <select name="mapel" id="edit_teacher_mapel" class="form-control" style="width: 100%;">
+                            <option value="">-- Pilih Mata Pelajaran (Opsional) --</option>
+                            @foreach($subjects as $subject)
+                                <option value="{{ $subject->name }}">
+                                    {{ $subject->name }} ({{ $subject->code }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <small style="color: var(--text-muted); font-size: 0.72rem;">Diambil langsung dari master data Mapel.</small>
                     </div>
 
                     <div class="form-group">

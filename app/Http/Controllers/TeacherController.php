@@ -51,9 +51,11 @@ class TeacherController extends Controller
 
         $teachers = $query->orderBy('name')->paginate($perPage)->withQueryString();
         $classes = SchoolClass::orderBy('name')->get();
+        $subjects = Subject::orderBy('name')->get();
         return view('teachers.index', compact(
             'teachers',
             'classes',
+            'subjects',
             'search',
             'homeroomStatus',
             'classId'
@@ -436,7 +438,9 @@ class TeacherController extends Controller
      */
     public function create()
     {
-        return view('teachers.create');
+        $subjects = Subject::orderBy('name')->get();
+        $classes = SchoolClass::orderBy('name')->get();
+        return view('teachers.create', compact('subjects', 'classes'));
     }
     /**
      * Menyimpan guru baru.
@@ -448,6 +452,7 @@ class TeacherController extends Controller
             'nip' => ['required', 'string', 'regex:/^[0-9]+$/', 'min:8', 'max:18', 'unique:teachers,nip'],
             'username' => ['nullable', 'string', 'max:50', 'unique:teachers,username', 'unique:users,username'],
             'mapel' => ['nullable', 'string', 'max:255'],
+            'subject_id' => ['nullable', 'exists:subjects,id'],
             'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string'],
@@ -461,7 +466,16 @@ class TeacherController extends Controller
             'nip.max' => 'NIP maksimal 18 digit angka.',
             'nip.unique' => 'NIP sudah terdaftar untuk guru lain.',
         ]);
-        DB::transaction(function () use ($validated) {
+
+        $mapelName = null;
+        if (!empty($validated['mapel'])) {
+            $mapelName = trim($validated['mapel']);
+        } elseif (!empty($request->subject_id)) {
+            $sub = Subject::find($request->subject_id);
+            $mapelName = $sub?->name;
+        }
+
+        DB::transaction(function () use ($validated, $mapelName) {
             // Resolusi username
             $username = !empty($validated['username']) ? trim($validated['username']) : null;
             if (empty($username)) {
@@ -486,7 +500,7 @@ class TeacherController extends Controller
                 'nip' => $validated['nip'],
                 'username' => $username,
                 'name' => $validated['name'],
-                'mapel' => !empty($validated['mapel']) ? trim($validated['mapel']) : null,
+                'mapel' => $mapelName,
                 'phone' => $validated['phone'] ?? null,
                 'address' => $validated['address'] ?? null,
             ]);
@@ -517,7 +531,8 @@ class TeacherController extends Controller
     {
         $teacher = Teacher::with(['user', 'homeroomClasses'])->findOrFail($id);
         $classes = SchoolClass::orderBy('name')->get();
-        return view('teachers.edit', compact('teacher', 'classes'));
+        $subjects = Subject::orderBy('name')->get();
+        return view('teachers.edit', compact('teacher', 'classes', 'subjects'));
     }
     /**
      * Memperbarui data guru.
@@ -543,6 +558,7 @@ class TeacherController extends Controller
                 Rule::unique('users', 'username')->ignore($teacher->user_id),
             ],
             'mapel' => ['nullable', 'string', 'max:255'],
+            'subject_id' => ['nullable', 'exists:subjects,id'],
             'email' => [
                 'nullable',
                 'email',
@@ -561,14 +577,23 @@ class TeacherController extends Controller
             'nip.max' => 'NIP maksimal 18 digit angka.',
             'nip.unique' => 'NIP sudah terdaftar untuk guru lain.',
         ]);
-        DB::transaction(function () use ($teacher, $validated) {
+
+        $mapelName = null;
+        if (!empty($validated['mapel'])) {
+            $mapelName = trim($validated['mapel']);
+        } elseif (!empty($request->subject_id)) {
+            $sub = Subject::find($request->subject_id);
+            $mapelName = $sub?->name;
+        }
+
+        DB::transaction(function () use ($teacher, $validated, $mapelName) {
             $username = !empty($validated['username']) ? trim($validated['username']) : $teacher->username;
             $email = !empty($validated['email']) ? trim($validated['email']) : null;
             $teacher->update([
                 'name' => $validated['name'],
                 'nip' => $validated['nip'],
                 'username' => $username,
-                'mapel' => !empty($validated['mapel']) ? trim($validated['mapel']) : null,
+                'mapel' => $mapelName,
                 'phone' => $validated['phone'] ?? null,
                 'address' => $validated['address'] ?? null,
             ]);

@@ -34,7 +34,15 @@
 
         <div class="form-group">
             <label for="mapel">Mata Pelajaran yang Diampu (Mapel)</label>
-            <input type="text" id="mapel" name="mapel" value="{{ old('mapel', $teacher->mapel) }}" placeholder="Contoh: Pemrograman Web / Matematika">
+            <select name="mapel" id="mapel" class="form-control" style="width: 100%;">
+                <option value="">-- Pilih Mata Pelajaran (Opsional) --</option>
+                @foreach($subjects as $subject)
+                    <option value="{{ $subject->name }}" {{ old('mapel', $teacher->mapel) == $subject->name ? 'selected' : '' }}>
+                        {{ $subject->name }} ({{ $subject->code }})
+                    </option>
+                @endforeach
+            </select>
+            <small style="color: var(--text-muted); font-size: 0.75rem;">Mata pelajaran diambil langsung dari master data Mapel.</small>
         </div>
 
         <div class="form-group">

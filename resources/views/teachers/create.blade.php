@@ -33,18 +33,19 @@
         </div>
 
         <div class="form-group">
-           <label for="subject_id">Mata Pelajaran <span style="color: var(--danger);">*</span></label>
-            <select name="subject_id" id="subject_id" required>
+            <label for="mapel">Mata Pelajaran (Mapel) <span style="color: var(--danger);">*</span></label>
+            <select name="mapel" id="mapel" required>
                 <option value="">-- Pilih Mata Pelajaran --</option>
                 @foreach($subjects as $subject)
-                    <option value="{{ $subject->id }}"
-                        {{ old('subject_id') == $subject->id ? 'selected' : '' }}>
-                        {{ $subject->name }}
+                    <option value="{{ $subject->name }}"
+                        {{ old('mapel') == $subject->name ? 'selected' : '' }}>
+                        {{ $subject->name }} ({{ $subject->code }})
                     </option>
                 @endforeach
             </select>
-            @error('subject_id')
-                <small class="text-danger">{{ $message }}</small>
+            <small style="color: var(--text-muted); font-size: 0.75rem;">Mata pelajaran diambil langsung dari master data Mapel.</small>
+            @error('mapel')
+                <small class="text-danger" style="display: block; color: var(--danger);">{{ $message }}</small>
             @enderror
         </div>
 
