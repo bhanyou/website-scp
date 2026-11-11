@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\LessonHour;
+use App\Models\Schedule;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -106,12 +107,15 @@ class LessonHourController extends Controller
             );
         }
 
+        // Otomatis sinkronkan seluruh jadwal pelajaran di hari ini agar jam mulai & selesai langsung ikut berubah
+        $this->syncSchedulesWithLessonHours($validated['day']);
+
         return redirect()
             ->route('lesson-hours.index', [
                 'day' => $validated['day'],
                 'day_type' => $validated['day_type']
             ])
-            ->with('success', "Alokasi jam pelajaran hari {$validated['day']} berhasil diperbarui.");
+            ->with('success', "Alokasi jam pelajaran hari {$validated['day']} berhasil diperbarui dan jadwal pelajaran telah disinkronkan otomatis.");
     }
 
     /**
@@ -132,12 +136,15 @@ class LessonHourController extends Controller
 
         $labelMode = $validated['mode'] === 'upacara' ? 'Upacara (Durasi 35 Menit)' : 'Normal / Tanpa Upacara (Durasi 40 Menit)';
 
+        // Sinkronkan jadwal hari Senin sesuai mode baru
+        $this->syncSchedulesWithLessonHours('Senin');
+
         return redirect()
             ->route('lesson-hours.index', [
                 'day' => 'Senin',
                 'day_type' => $validated['mode']
             ])
-            ->with('success', "Mode Hari Senin aktif berhasil diubah menjadi: {$labelMode}.");
+            ->with('success', "Mode Hari Senin aktif berhasil diubah menjadi: {$labelMode} dan seluruh jadwal hari Senin telah disinkronkan.");
     }
 
     /**
@@ -150,9 +157,42 @@ class LessonHourController extends Controller
         $day = $request->input('day');
         LessonHour::seedDefaults();
 
+        // Sinkronkan kembali jadwal setelah reset
+        $this->syncSchedulesWithLessonHours($day ?: null);
+
         return redirect()
             ->route('lesson-hours.index', ['day' => $day ?: 'Senin'])
-            ->with('success', 'Alokasi waktu kegiatan pembelajaran berhasil direset ke standar baku.');
+            ->with('success', 'Alokasi waktu kegiatan pembelajaran berhasil direset dan jadwal telah disinkronkan kembali.');
+    }
+
+    /**
+     * Otomatis sinkronkan start_time dan end_time seluruh jadwal pelajaran yang terikat sesi jam ini.
+     */
+    private function syncSchedulesWithLessonHours(?string $day = null): void
+    {
+        $days = $day ? [$day] : ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+        foreach ($days as $d) {
+            $dayPeriods = LessonHour::getPeriodsForDay($d);
+            if (empty($dayPeriods)) continue;
+
+            $schedules = Schedule::where('day', $d)
+                ->whereNotNull('start_period')
+                ->whereNotNull('end_period')
+                ->get();
+
+            foreach ($schedules as $sched) {
+                if (isset($dayPeriods[$sched->start_period]) && isset($dayPeriods[$sched->end_period])) {
+                    $newStart = $dayPeriods[$sched->start_period]['start'];
+                    $newEnd = $dayPeriods[$sched->end_period]['end'];
+                    if ($sched->start_time !== $newStart || $sched->end_time !== $newEnd) {
+                        $sched->update([
+                            'start_time' => $newStart,
+                            'end_time'   => $newEnd,
+                        ]);
+                    }
+                }
+            }
+        }
     }
 
     /**
