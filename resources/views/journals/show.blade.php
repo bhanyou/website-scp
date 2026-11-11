@@ -8,7 +8,7 @@
     </div>
     <div style="display: flex; gap: 0.5rem; align-items: center;">
         @if($journal->journal_date && $journal->journal_date->isToday())
-            <a href="{{ route('journals.edit', $journal->id) }}" class="btn btn-warning">
+            <a href="{{ route('journals.edit', $journal->id) }}" class="btn btn-primary">
                 Edit Jurnal dan Presensi
             </a>
         @endif
@@ -172,7 +172,7 @@
 
     <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem; align-items: center;">
         @if($journal->journal_date && $journal->journal_date->isToday())
-            <a href="{{ route('journals.edit', $journal->id) }}" class="btn btn-warning">
+            <a href="{{ route('journals.edit', $journal->id) }}" class="btn btn-primary">
                 Edit Jurnal dan Presensi
             </a>
         @endif
