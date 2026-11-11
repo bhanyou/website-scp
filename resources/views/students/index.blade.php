@@ -552,7 +552,8 @@
                 <div class="grid-2">
                     <div class="form-group">
                         <label for="create_student_nis">Nomor Induk Siswa (NIS) <span style="color: var(--danger);">*</span></label>
-                        <input type="text" name="nis" id="create_student_nis" placeholder="Contoh: 20241001" required>
+                        <input type="text" name="nis" id="create_student_nis" placeholder="Contoh: 18044" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                        <small style="color: var(--text-muted); font-size: 0.72rem;">Hanya angka, 4-10 digit.</small>
                     </div>
 
                     <div class="form-group">
@@ -639,7 +640,8 @@
                 <div class="grid-2">
                     <div class="form-group">
                         <label for="edit_student_nis">Nomor Induk Siswa (NIS) <span style="color: var(--danger);">*</span></label>
-                        <input type="text" name="nis" id="edit_student_nis" required>
+                        <input type="text" name="nis" id="edit_student_nis" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                        <small style="color: var(--text-muted); font-size: 0.72rem;">Hanya angka, 4-10 digit.</small>
                     </div>
 
                     <div class="form-group">

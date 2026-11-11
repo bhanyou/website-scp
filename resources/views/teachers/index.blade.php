@@ -512,7 +512,8 @@
                 <div class="grid-2">
                     <div class="form-group">
                         <label for="create_teacher_nip">NIP Guru <span style="color: var(--danger);">*</span></label>
-                        <input type="text" name="nip" id="create_teacher_nip" placeholder="Contoh: 198501152010011002" required>
+                        <input type="text" name="nip" id="create_teacher_nip" placeholder="Contoh: 198501152010011002" maxlength="18" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                        <small style="color: var(--text-muted); font-size: 0.72rem;">Hanya angka, 8-18 digit.</small>
                     </div>
 
                     <div class="form-group">
@@ -602,7 +603,8 @@
                 <div class="grid-2">
                     <div class="form-group">
                         <label for="edit_teacher_nip">NIP Guru <span style="color: var(--danger);">*</span></label>
-                        <input type="text" name="nip" id="edit_teacher_nip" required>
+                        <input type="text" name="nip" id="edit_teacher_nip" maxlength="18" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                        <small style="color: var(--text-muted); font-size: 0.72rem;">Hanya angka, 8-18 digit.</small>
                     </div>
 
                     <div class="form-group">

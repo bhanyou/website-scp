@@ -445,7 +445,7 @@ class TeacherController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'nip' => ['required', 'string', 'max:50', 'unique:teachers,nip'],
+            'nip' => ['required', 'string', 'regex:/^[0-9]+$/', 'min:8', 'max:18', 'unique:teachers,nip'],
             'username' => ['nullable', 'string', 'max:50', 'unique:teachers,username', 'unique:users,username'],
             'mapel' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
@@ -453,6 +453,13 @@ class TeacherController extends Controller
             'address' => ['nullable', 'string'],
             'password' => ['nullable', 'string', 'min:6'],
             'homeroom_class_id' => ['nullable', 'exists:classes,id'],
+        ], [
+            'name.required' => 'Nama lengkap guru wajib diisi.',
+            'nip.required' => 'NIP wajib diisi.',
+            'nip.regex' => 'NIP hanya boleh berisi angka.',
+            'nip.min' => 'NIP minimal 8 digit angka.',
+            'nip.max' => 'NIP maksimal 18 digit angka.',
+            'nip.unique' => 'NIP sudah terdaftar untuk guru lain.',
         ]);
         DB::transaction(function () use ($validated) {
             // Resolusi username
@@ -523,7 +530,9 @@ class TeacherController extends Controller
             'nip' => [
                 'required',
                 'string',
-                'max:50',
+                'regex:/^[0-9]+$/',
+                'min:8',
+                'max:18',
                 Rule::unique('teachers', 'nip')->ignore($teacher->id),
             ],
             'username' => [
@@ -544,6 +553,13 @@ class TeacherController extends Controller
             'address' => ['nullable', 'string'],
             'password' => ['nullable', 'string', 'min:8'],
             'homeroom_class_id' => ['nullable', 'exists:classes,id'],
+        ], [
+            'name.required' => 'Nama lengkap guru wajib diisi.',
+            'nip.required' => 'NIP wajib diisi.',
+            'nip.regex' => 'NIP hanya boleh berisi angka.',
+            'nip.min' => 'NIP minimal 8 digit angka.',
+            'nip.max' => 'NIP maksimal 18 digit angka.',
+            'nip.unique' => 'NIP sudah terdaftar untuk guru lain.',
         ]);
         DB::transaction(function () use ($teacher, $validated) {
             $username = !empty($validated['username']) ? trim($validated['username']) : $teacher->username;

@@ -19,8 +19,12 @@
         </div>
 
         <div class="form-group">
-            <label for="nip">NIP</label>
-            <input type="text" id="nip" name="nip" value="{{ old('nip', $teacher->nip) }}" required>
+            <label for="nip">NIP <span style="color: var(--danger);">*</span></label>
+            <input type="text" id="nip" name="nip" value="{{ old('nip', $teacher->nip) }}" maxlength="18" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+            <small style="color: var(--text-muted); font-size: 0.75rem;">Hanya angka, minimal 8 digit dan maksimal 18 digit.</small>
+            @error('nip')
+                <small class="text-danger" style="display: block; color: var(--danger);">{{ $message }}</small>
+            @enderror
         </div>
 
         <div class="form-group">

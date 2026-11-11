@@ -38,8 +38,12 @@
 
         <div class="grid-2">
             <div class="form-group">
-                <label for="nis">NIS</label>
-                <input type="text" name="nis" id="nis" value="{{ old('nis', $student->nis) }}" required>
+                <label for="nis">NIS <span style="color: var(--danger);">*</span></label>
+                <input type="text" name="nis" id="nis" value="{{ old('nis', $student->nis) }}" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                <small style="color: var(--text-muted); font-size: 0.75rem;">Hanya angka, minimal 4 digit dan maksimal 10 digit.</small>
+                @error('nis')
+                    <small class="text-danger" style="display: block; color: var(--danger);">{{ $message }}</small>
+                @enderror
             </div>
 
             <div class="form-group">

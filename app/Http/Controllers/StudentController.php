@@ -208,7 +208,9 @@ class StudentController extends Controller
             'nis' => [
                 'required',
                 'string',
-                'max:50',
+                'regex:/^[0-9]+$/',
+                'min:4',
+                'max:10',
                 'unique:students,nis',
             ],
             'username' => [
@@ -260,6 +262,9 @@ class StudentController extends Controller
             'class_id.required' => 'Kelas wajib dipilih.',
             'class_id.exists' => 'Kelas yang dipilih tidak valid.',
             'nis.required' => 'Nomor Induk Siswa (NIS) wajib diisi.',
+            'nis.regex' => 'NIS hanya boleh berisi angka.',
+            'nis.min' => 'NIS minimal 4 digit angka.',
+            'nis.max' => 'NIS maksimal 10 digit angka.',
             'nis.unique' => 'NIS sudah terdaftar untuk siswa lain.',
             'name.required' => 'Nama lengkap siswa wajib diisi.',
             'email.email' => 'Format email tidak valid.',
@@ -419,7 +424,9 @@ class StudentController extends Controller
             'nis' => [
                 'required',
                 'string',
-                'max:50',
+                'regex:/^[0-9]+$/',
+                'min:4',
+                'max:10',
                 Rule::unique('students', 'nis')
                     ->ignore($student->id),
             ],
@@ -467,6 +474,9 @@ class StudentController extends Controller
         $validated = $request->validate($rules, [
             'class_id.required' => 'Kelas wajib dipilih.',
             'nis.required' => 'NIS wajib diisi.',
+            'nis.regex' => 'NIS hanya boleh berisi angka.',
+            'nis.min' => 'NIS minimal 4 digit angka.',
+            'nis.max' => 'NIS maksimal 10 digit angka.',
             'nis.unique' => 'NIS sudah digunakan siswa lain.',
             'name.required' => 'Nama siswa wajib diisi.',
             'email.email' => 'Format email tidak valid.',

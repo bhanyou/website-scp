@@ -18,8 +18,12 @@
         </div>
 
         <div class="form-group">
-            <label for="nip">NIP</label>
-            <input type="text" id="nip" name="nip" value="{{ old('nip') }}" placeholder="Nomor Induk Pegawai" required>
+            <label for="nip">NIP <span style="color: var(--danger);">*</span></label>
+            <input type="text" id="nip" name="nip" value="{{ old('nip') }}" placeholder="Contoh: 198501152010011002 (Maksimal 18 digit)" maxlength="18" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+            <small style="color: var(--text-muted); font-size: 0.75rem;">Hanya angka, minimal 8 digit dan maksimal 18 digit.</small>
+            @error('nip')
+                <small class="text-danger" style="display: block; color: var(--danger);">{{ $message }}</small>
+            @enderror
         </div>
 
         <div class="form-group">
@@ -29,8 +33,19 @@
         </div>
 
         <div class="form-group">
-            <label for="mapel">Mata Pelajaran yang Diampu (Mapel)</label>
-            <input type="text" id="mapel" name="mapel" value="{{ old('mapel') }}" placeholder="Contoh: Pemrograman Web / Matematika">
+           <label for="subject_id">Mata Pelajaran <span style="color: var(--danger);">*</span></label>
+            <select name="subject_id" id="subject_id" required>
+                <option value="">-- Pilih Mata Pelajaran --</option>
+                @foreach($subjects as $subject)
+                    <option value="{{ $subject->id }}"
+                        {{ old('subject_id') == $subject->id ? 'selected' : '' }}>
+                        {{ $subject->name }}
+                    </option>
+                @endforeach
+            </select>
+            @error('subject_id')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
         </div>
 
         <div class="form-group">
