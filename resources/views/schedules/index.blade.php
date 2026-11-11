@@ -105,15 +105,15 @@
             <span>Putaran 1</span>
             @if($activeCycleNumber == 1)
                 <span class="badge" style="font-size: 0.68rem; background: {{ $selectedCycle == 1 ? 'rgba(255,255,255,0.25)' : '#10b981' }}; color: #fff; padding: 0.2rem 0.5rem; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em;">
-                    {{ $cycle1Locked ? '🔒 Aktif & Terkunci' : 'Aktif' }}
+                    {{ $cycle1Locked ? 'Aktif & Terkunci' : 'Aktif' }}
                 </span>
             @elseif($cycle1Locked)
                 <span class="badge" style="font-size: 0.68rem; background: #ef4444; color: #fff; padding: 0.2rem 0.5rem; border-radius: 9999px;">
-                    🔒 Terkunci
+                    Terkunci
                 </span>
             @else
                 <span class="badge" style="font-size: 0.68rem; background: {{ $selectedCycle == 1 ? 'rgba(255,255,255,0.25)' : '#cbd5e1' }}; color: {{ $selectedCycle == 1 ? '#fff' : '#475569' }}; padding: 0.2rem 0.5rem; border-radius: 9999px;">
-                    Input Jadwal ✏️
+                    Input Jadwal
                 </span>
             @endif
         </a>
@@ -124,15 +124,15 @@
             <span>Putaran 2</span>
             @if($activeCycleNumber == 2)
                 <span class="badge" style="font-size: 0.68rem; background: {{ $selectedCycle == 2 ? 'rgba(255,255,255,0.25)' : '#10b981' }}; color: #fff; padding: 0.2rem 0.5rem; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em;">
-                    {{ $cycle2Locked ? '🔒 Aktif & Terkunci' : 'Aktif' }}
+                    {{ $cycle2Locked ? 'Aktif & Terkunci' : 'Aktif' }}
                 </span>
             @elseif($cycle2Locked)
                 <span class="badge" style="font-size: 0.68rem; background: #ef4444; color: #fff; padding: 0.2rem 0.5rem; border-radius: 9999px;">
-                    🔒 Terkunci
+                    Terkunci
                 </span>
             @else
                 <span class="badge" style="font-size: 0.68rem; background: {{ $selectedCycle == 2 ? 'rgba(255,255,255,0.25)' : '#cbd5e1' }}; color: {{ $selectedCycle == 2 ? '#fff' : '#475569' }}; padding: 0.2rem 0.5rem; border-radius: 9999px;">
-                    Input Jadwal ✏️
+                    Input Jadwal
                 </span>
             @endif
         </a>
