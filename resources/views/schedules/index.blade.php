@@ -138,11 +138,8 @@
         </a>
     </div>
 
-    {{-- Penanda Putaran Aktif Sistem & Shortcut Agenda --}}
+    {{-- Penanda Putaran Aktif Sistem --}}
     <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
-        <a href="{{ route('student.schedule') }}" class="btn btn-secondary btn-sm" style="font-weight: 700; text-decoration: none;">
-            Lihat Agenda Mingguan
-        </a>
         <div style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 0.55rem 1rem; border-radius: 10px; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
             <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);"></span>
             <span>Putaran Aktif: <strong>Putaran {{ $activeCycleNumber }}</strong></span>
