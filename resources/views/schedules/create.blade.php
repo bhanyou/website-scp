@@ -34,8 +34,10 @@
             <label for="block_cycle_id">Pilih Putaran Blok <span style="color: var(--danger);">*</span></label>
             <select name="block_cycle_id" id="block_cycle_id" required>
                 @foreach($blockCycles as $cycle)
-                    <option value="{{ $cycle->id }}" {{ old('block_cycle_id') == $cycle->id ? 'selected' : '' }}>
-                        Putaran {{ $cycle->cycle }}
+                    <option value="{{ $cycle->id }}" 
+                        {{ $cycle->is_locked ? 'disabled' : '' }}
+                        {{ (old('block_cycle_id', request('cycle_id', request('cycle'))) == $cycle->id || (!$cycle->is_locked && !old('block_cycle_id') && !request('cycle_id'))) ? 'selected' : '' }}>
+                        Putaran {{ $cycle->cycle }} {{ $cycle->is_locked ? '(🔒 Terkunci)' : '(Tersedia Diinput)' }}
                     </option>
                 @endforeach
             </select>

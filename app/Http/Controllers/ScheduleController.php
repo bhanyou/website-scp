@@ -34,11 +34,6 @@ class ScheduleController extends Controller
             $selectedCycle = 1;
         }
 
-        // Jika siklus blok sedang dikunci Waka, paksa tampilan hanya pada putaran yang aktif (tidak dapat dialihkan ke putaran lain)
-        if ($activeCycle && $activeCycle->is_locked) {
-            $selectedCycle = $activeCycleNumber;
-        }
-
         $currentViewCycle = $blockCycles->firstWhere('cycle', (string) $selectedCycle)
             ?? $blockCycles->firstWhere('id', $selectedCycle)
             ?? BlockCycle::find($selectedCycle);
