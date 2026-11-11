@@ -187,42 +187,71 @@
                         <th>Rombel / Kelas</th>
                         <th>Mata Pelajaran</th>
                         <th>Guru Pengajar</th>
-                        <th style="text-align: center; width: 90px;">Hadir</th>
-                        <th style="text-align: center; width: 80px;">Sakit</th>
-                        <th style="text-align: center; width: 80px;">Izin</th>
-                        <th style="text-align: center; width: 80px;">Alpa</th>
-                        <th style="text-align: center; width: 110px;">% Hadir</th>
+                        <th style="text-align: center; width: 85px;">Hadir</th>
+                        <th style="text-align: center; width: 75px;">Sakit</th>
+                        <th style="text-align: center; width: 75px;">Izin</th>
+                        <th style="text-align: center; width: 75px;">Alpa</th>
+                        <th style="text-align: center; width: 95px;">% Hadir</th>
+                        <th style="text-align: right; width: 120px;">Daftar Siswa</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($todayClassAttendances as $classAtt)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
-                            <td><strong>{{ $classAtt->class_name }}</strong></td>
+                            <td>
+                                <strong>{{ $classAtt->class_name }}</strong>
+                            </td>
                             <td>{{ $classAtt->subject_name }}</td>
                             <td><span style="font-size: 0.85rem; color: var(--text-secondary);">{{ $classAtt->teacher_name }}</span></td>
                             <td style="text-align: center;">
-                                <span class="badge" style="background: #ecfdf5; color: #065f46; font-weight: 700; font-size: 0.85rem;">{{ $classAtt->hadir }}</span>
+                                <button type="button" 
+                                    class="badge" 
+                                    style="background: #ecfdf5; color: #065f46; font-weight: 700; font-size: 0.82rem; border: 1px solid #a7f3d0; cursor: pointer; padding: 0.25rem 0.6rem; border-radius: 9999px; transition: transform 0.15s ease;"
+                                    title="Klik untuk lihat daftar siswa Hadir"
+                                    onclick="openAttendanceModal({{ $loop->index }}, 'Hadir')">
+                                    {{ $classAtt->hadir }}
+                                </button>
                             </td>
                             <td style="text-align: center;">
-                                <span class="badge" style="background: {{ $classAtt->sakit > 0 ? '#fffbeb' : 'transparent' }}; color: {{ $classAtt->sakit > 0 ? '#b45309' : 'var(--text-muted)' }}; font-size: 0.85rem;">
+                                <button type="button" 
+                                    class="badge" 
+                                    style="background: {{ $classAtt->sakit > 0 ? '#fffbeb' : '#f8fafc' }}; color: {{ $classAtt->sakit > 0 ? '#b45309' : 'var(--text-muted)' }}; font-size: 0.82rem; border: 1px solid {{ $classAtt->sakit > 0 ? '#fde68a' : '#e2e8f0' }}; cursor: {{ $classAtt->sakit > 0 ? 'pointer' : 'default' }}; padding: 0.25rem 0.6rem; border-radius: 9999px; transition: transform 0.15s ease;"
+                                    title="{{ $classAtt->sakit > 0 ? 'Klik untuk lihat daftar siswa Sakit' : 'Tidak ada siswa sakit' }}"
+                                    onclick="{{ $classAtt->sakit > 0 ? 'openAttendanceModal(' . $loop->index . ', \'Sakit\')' : '' }}">
                                     {{ $classAtt->sakit }}
-                                </span>
+                                </button>
                             </td>
                             <td style="text-align: center;">
-                                <span class="badge" style="background: {{ $classAtt->izin > 0 ? '#ecfeff' : 'transparent' }}; color: {{ $classAtt->izin > 0 ? '#0e7490' : 'var(--text-muted)' }}; font-size: 0.85rem;">
+                                <button type="button" 
+                                    class="badge" 
+                                    style="background: {{ $classAtt->izin > 0 ? '#ecfeff' : '#f8fafc' }}; color: {{ $classAtt->izin > 0 ? '#0e7490' : 'var(--text-muted)' }}; font-size: 0.82rem; border: 1px solid {{ $classAtt->izin > 0 ? '#a5f3fc' : '#e2e8f0' }}; cursor: {{ $classAtt->izin > 0 ? 'pointer' : 'default' }}; padding: 0.25rem 0.6rem; border-radius: 9999px; transition: transform 0.15s ease;"
+                                    title="{{ $classAtt->izin > 0 ? 'Klik untuk lihat daftar siswa Izin' : 'Tidak ada siswa izin' }}"
+                                    onclick="{{ $classAtt->izin > 0 ? 'openAttendanceModal(' . $loop->index . ', \'Izin\')' : '' }}">
                                     {{ $classAtt->izin }}
-                                </span>
+                                </button>
                             </td>
                             <td style="text-align: center;">
-                                <span class="badge" style="background: {{ $classAtt->alpa > 0 ? '#fef2f2' : 'transparent' }}; color: {{ $classAtt->alpa > 0 ? '#b91c1c' : 'var(--text-muted)' }}; font-size: 0.85rem;">
+                                <button type="button" 
+                                    class="badge" 
+                                    style="background: {{ $classAtt->alpa > 0 ? '#fef2f2' : '#f8fafc' }}; color: {{ $classAtt->alpa > 0 ? '#b91c1c' : 'var(--text-muted)' }}; font-size: 0.82rem; border: 1px solid {{ $classAtt->alpa > 0 ? '#fecaca' : '#e2e8f0' }}; cursor: {{ $classAtt->alpa > 0 ? 'pointer' : 'default' }}; padding: 0.25rem 0.6rem; border-radius: 9999px; transition: transform 0.15s ease;"
+                                    title="{{ $classAtt->alpa > 0 ? 'Klik untuk lihat daftar siswa Alpa' : 'Tidak ada siswa alpa' }}"
+                                    onclick="{{ $classAtt->alpa > 0 ? 'openAttendanceModal(' . $loop->index . ', \'Alpa\')' : '' }}">
                                     {{ $classAtt->alpa }}
-                                </span>
+                                </button>
                             </td>
                             <td style="text-align: center;">
                                 <span style="font-weight: 800; font-size: 0.88rem; color: {{ $classAtt->rate >= 90 ? '#059669' : ($classAtt->rate >= 75 ? '#d97706' : '#dc2626') }};">
                                     {{ $classAtt->rate }}%
                                 </span>
+                            </td>
+                            <td style="text-align: right; white-space: nowrap;">
+                                <button type="button" 
+                                    class="btn btn-primary btn-sm" 
+                                    style="padding: 0.35rem 0.75rem; font-size: 0.78rem; font-weight: 600;" 
+                                    onclick="openAttendanceModal({{ $loop->index }}, 'all')">
+                                    Lihat Siswa
+                                </button>
                             </td>
                         </tr>
                     @endforeach
@@ -426,6 +455,106 @@
         </p>
     @endif
 </div>
+
+{{-- ========================================================= --}}
+{{-- MODAL IN-PAGE: DETAIL KEHADIRAN SISWA KELAS HARI INI     --}}
+{{-- ========================================================= --}}
+<div class="modal-overlay" id="modalClassAttendance" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 1rem;">
+    <div class="modal-card" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 820px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden;">
+        
+        {{-- Modal Header --}}
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+            <div>
+                <h3 class="modal-title" id="attModalTitle" style="font-size: 1.2rem; font-weight: 800; color: #0f172a; margin: 0;">
+                    Detail Kehadiran Siswa
+                </h3>
+                <p class="modal-subtitle" id="attModalSubtitle" style="font-size: 0.82rem; color: #64748b; margin: 0.3rem 0 0 0;">
+                    Memuat rincian siswa...
+                </p>
+            </div>
+            <button type="button" class="modal-close-btn" onclick="closeAttendanceModal()" style="background: transparent; border: none; font-size: 1.5rem; color: #94a3b8; cursor: pointer; line-height: 1; padding: 0.25rem;">&times;</button>
+        </div>
+
+        {{-- Filter Tabs & Pencarian Siswa --}}
+        <div style="padding: 0.85rem 1.5rem; background: #ffffff; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;" id="attFilterTabs">
+                <button type="button" class="btn-filter-status active" data-filter="all" onclick="filterModalStudents('all', this)">
+                    Semua (<span id="countAll">0</span>)
+                </button>
+                <button type="button" class="btn-filter-status" data-filter="Hadir" onclick="filterModalStudents('Hadir', this)" style="--active-bg: #10b981;">
+                    Hadir (<span id="countHadir">0</span>)
+                </button>
+                <button type="button" class="btn-filter-status" data-filter="Sakit" onclick="filterModalStudents('Sakit', this)" style="--active-bg: #f59e0b;">
+                    Sakit (<span id="countSakit">0</span>)
+                </button>
+                <button type="button" class="btn-filter-status" data-filter="Izin" onclick="filterModalStudents('Izin', this)" style="--active-bg: #06b6d4;">
+                    Izin (<span id="countIzin">0</span>)
+                </button>
+                <button type="button" class="btn-filter-status" data-filter="Alpa" onclick="filterModalStudents('Alpa', this)" style="--active-bg: #ef4444;">
+                    Alpa (<span id="countAlpa">0</span>)
+                </button>
+            </div>
+
+            <div style="min-width: 220px; flex: 0.6;">
+                <input type="text" id="attSearchInput" placeholder="Cari nama atau NIS siswa..." oninput="searchModalStudents(this.value)" style="padding: 0.45rem 0.75rem; font-size: 0.82rem; border: 1px solid #cbd5e1; border-radius: 8px; width: 100%;">
+            </div>
+        </div>
+
+        {{-- Modal Body: Tabel Siswa --}}
+        <div style="padding: 0 1.5rem; overflow-y: auto; flex: 1; max-height: 52vh;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 0.75rem 0;">
+                <thead style="position: sticky; top: 0; background: #ffffff; z-index: 5;">
+                    <tr style="border-bottom: 2px solid #e2e8f0; text-align: left;">
+                        <th style="padding: 0.65rem 0.5rem; width: 45px; color: #64748b; font-weight: 700;">No</th>
+                        <th style="padding: 0.65rem 0.5rem; width: 100px; color: #64748b; font-weight: 700;">NIS</th>
+                        <th style="padding: 0.65rem 0.5rem; color: #64748b; font-weight: 700;">Nama Siswa</th>
+                        <th style="padding: 0.65rem 0.5rem; width: 110px; text-align: center; color: #64748b; font-weight: 700;">Status</th>
+                        <th style="padding: 0.65rem 0.5rem; color: #64748b; font-weight: 700;">Keterangan / Catatan</th>
+                    </tr>
+                </thead>
+                <tbody id="attModalTableBody">
+                    {{-- Diisi secara dinamis via JavaScript --}}
+                </tbody>
+            </table>
+            <div id="attEmptyMessage" style="display: none; padding: 2.5rem; text-align: center; color: #94a3b8; font-size: 0.88rem;">
+                Tidak ada data siswa yang cocok dengan filter atau kata kunci ini.
+            </div>
+        </div>
+
+        {{-- Modal Footer --}}
+        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-top: 1px solid #e2e8f0; background: #f8fafc;">
+            <a href="#" id="attDirectRecapLink" class="btn btn-secondary btn-sm" style="font-weight: 600; text-decoration: none;">
+                Buka Rekap Presensi Lengkap Kelas Ini &rarr;
+            </a>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeAttendanceModal()">
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.btn-filter-status {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.btn-filter-status:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+.btn-filter-status.active {
+    background: var(--active-bg, var(--accent, #4f46e5));
+    border-color: var(--active-bg, var(--accent, #4f46e5));
+    color: #ffffff;
+}
+</style>
 @endsection
 
 @push('scripts')
@@ -574,5 +703,146 @@
             initLateAlertsPagination();
         }
     })();
+</script>
+
+{{-- Script Modal Detail Kehadiran Siswa Hari Ini --}}
+<script>
+    const classAttendancesData = @json($todayClassAttendances);
+    let currentClassIndex = null;
+    let currentStatusFilter = 'all';
+    let currentSearchQuery = '';
+
+    window.openAttendanceModal = function(index, defaultFilter = 'all') {
+        const classData = classAttendancesData[index];
+        if (!classData) return;
+
+        currentClassIndex = index;
+        currentStatusFilter = defaultFilter;
+        currentSearchQuery = '';
+        const searchInput = document.getElementById('attSearchInput');
+        if (searchInput) searchInput.value = '';
+
+        // Update Title & Subtitle
+        document.getElementById('attModalTitle').textContent = 'Detail Kehadiran: Kelas ' + classData.class_name;
+        document.getElementById('attModalSubtitle').innerHTML = 
+            'Mapel: <strong>' + classData.subject_name + '</strong> &bull; ' +
+            'Pengajar: <strong>' + classData.teacher_name + '</strong> &bull; ' +
+            'Total: <strong>' + classData.total + ' Siswa</strong> (' + classData.rate + '% Hadir)';
+
+        // Update Direct Recap Link
+        const directLink = document.getElementById('attDirectRecapLink');
+        if (directLink) {
+            directLink.href = '{{ route("attendances.index") }}?class_id=' + classData.class_id + '&range=today';
+        }
+
+        // Update Counter Badges
+        document.getElementById('countAll').textContent = classData.total;
+        document.getElementById('countHadir').textContent = classData.hadir;
+        document.getElementById('countSakit').textContent = classData.sakit;
+        document.getElementById('countIzin').textContent = classData.izin;
+        document.getElementById('countAlpa').textContent = classData.alpa;
+
+        // Set Active Filter Button
+        document.querySelectorAll('#attFilterTabs .btn-filter-status').forEach(btn => {
+            if (btn.getAttribute('data-filter') === defaultFilter) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        renderModalStudents();
+
+        const modal = document.getElementById('modalClassAttendance');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    };
+
+    window.closeAttendanceModal = function() {
+        const modal = document.getElementById('modalClassAttendance');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    };
+
+    window.filterModalStudents = function(status, btn) {
+        currentStatusFilter = status;
+        document.querySelectorAll('#attFilterTabs .btn-filter-status').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        renderModalStudents();
+    };
+
+    window.searchModalStudents = function(query) {
+        currentSearchQuery = query.toLowerCase().trim();
+        renderModalStudents();
+    };
+
+    function renderModalStudents() {
+        if (currentClassIndex === null) return;
+        const classData = classAttendancesData[currentClassIndex];
+        if (!classData || !classData.students) return;
+
+        const tbody = document.getElementById('attModalTableBody');
+        const emptyMsg = document.getElementById('attEmptyMessage');
+        if (!tbody || !emptyMsg) return;
+
+        tbody.innerHTML = '';
+
+        const filtered = classData.students.filter(std => {
+            const matchesStatus = (currentStatusFilter === 'all' || std.status === currentStatusFilter);
+            const matchesSearch = !currentSearchQuery || 
+                std.name.toLowerCase().includes(currentSearchQuery) || 
+                (std.nis && std.nis.toLowerCase().includes(currentSearchQuery));
+            return matchesStatus && matchesSearch;
+        });
+
+        if (filtered.length === 0) {
+            emptyMsg.style.display = 'block';
+            return;
+        }
+
+        emptyMsg.style.display = 'none';
+
+        filtered.forEach((std, idx) => {
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid #f1f5f9';
+
+            let badgeStyle = 'background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;';
+            if (std.status === 'Sakit') badgeStyle = 'background: #fffbeb; color: #b45309; border: 1px solid #fde68a;';
+            else if (std.status === 'Izin') badgeStyle = 'background: #ecfeff; color: #0e7490; border: 1px solid #a5f3fc;';
+            else if (std.status === 'Alpa') badgeStyle = 'background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;';
+
+            tr.innerHTML = `
+                <td style="padding: 0.65rem 0.5rem; color: #94a3b8;">${idx + 1}</td>
+                <td style="padding: 0.65rem 0.5rem; font-family: monospace; font-size: 0.8rem; color: #64748b;">${std.nis}</td>
+                <td style="padding: 0.65rem 0.5rem;"><strong>${std.name}</strong></td>
+                <td style="padding: 0.65rem 0.5rem; text-align: center;">
+                    <span class="badge" style="font-weight: 700; font-size: 0.78rem; padding: 0.2rem 0.6rem; border-radius: 9999px; ${badgeStyle}">
+                        ${std.status}
+                    </span>
+                </td>
+                <td style="padding: 0.65rem 0.5rem; color: #64748b; font-size: 0.82rem;">${std.note ? std.note : '-'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Tutup modal jika klik di luar box
+    window.addEventListener('click', function(e) {
+        const modal = document.getElementById('modalClassAttendance');
+        if (e.target === modal) {
+            closeAttendanceModal();
+        }
+    });
+
+    // Tutup modal dengan tombol Escape
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAttendanceModal();
+        }
+    });
 </script>
 @endpush

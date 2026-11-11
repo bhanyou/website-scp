@@ -240,29 +240,45 @@ class DashboardController extends Controller
             ->whereDate('date', $today)
             ->get()
             ->groupBy(function ($att) {
-                return $att->schedule?->schoolClass?->name ?? ($att->student?->schoolClass?->name ?? 'Tanpa Kelas');
+                return $att->schedule?->class_id ?? ($att->student?->class_id ?? 0);
             })
-            ->map(function ($items, $className) {
+            ->map(function ($items, $classId) {
+                $first = $items->first();
+                $className = $first?->schedule?->schoolClass?->name ?? ($first?->student?->schoolClass?->name ?? 'Tanpa Kelas');
+                $subjectName = $first?->schedule?->subject?->name ?? '-';
+                $teacherName = $first?->schedule?->teacher?->name ?? '-';
+
                 $hadir = $items->where('status', 'Hadir')->count();
                 $sakit = $items->where('status', 'Sakit')->count();
                 $izin  = $items->where('status', 'Izin')->count();
                 $alpa  = $items->where('status', 'Alpa')->count();
                 $total = $hadir + $sakit + $izin + $alpa;
                 $rate  = $total > 0 ? round(($hadir / $total) * 100, 1) : 0;
-                $first = $items->first();
+
+                $studentsList = $items->sortBy(fn($a) => $a->student?->name ?? '')->values()->map(function ($att) {
+                    return [
+                        'nis' => $att->student?->nis ?? '-',
+                        'name' => $att->student?->name ?? 'Tanpa Nama',
+                        'status' => $att->status,
+                        'note' => $att->note ?? '',
+                    ];
+                })->all();
 
                 return (object) [
+                    'class_id' => (int) $classId,
                     'class_name' => $className,
-                    'subject_name' => $first?->schedule?->subject?->name ?? '-',
-                    'teacher_name' => $first?->schedule?->teacher?->name ?? '-',
+                    'subject_name' => $subjectName,
+                    'teacher_name' => $teacherName,
                     'hadir' => $hadir,
                     'sakit' => $sakit,
                     'izin' => $izin,
                     'alpa' => $alpa,
                     'total' => $total,
                     'rate' => $rate,
+                    'students' => $studentsList,
                 ];
-            });
+            })
+            ->values();
 
         return view('dashboard.waka', compact(
             'activeCycle',
