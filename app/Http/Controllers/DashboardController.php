@@ -213,6 +213,57 @@ class DashboardController extends Controller
             ];
         });
 
+        // Statistik Presensi Siswa Hari Ini
+        $todayAttendancesQuery = Attendance::whereDate('date', $today);
+        $todayHadir = (clone $todayAttendancesQuery)->where('status', 'Hadir')->count();
+        $todaySakit = (clone $todayAttendancesQuery)->where('status', 'Sakit')->count();
+        $todayIzin  = (clone $todayAttendancesQuery)->where('status', 'Izin')->count();
+        $todayAlpa  = (clone $todayAttendancesQuery)->where('status', 'Alpa')->count();
+        $todayTotalAbsen = $todayHadir + $todaySakit + $todayIzin + $todayAlpa;
+        $todayAttendanceRate = $todayTotalAbsen > 0 ? round(($todayHadir / $todayTotalAbsen) * 100, 1) : 0;
+
+        // Akumulasi Presensi Keseluruhan
+        $allTimeHadir = Attendance::where('status', 'Hadir')->count();
+        $allTimeSakit = Attendance::where('status', 'Sakit')->count();
+        $allTimeIzin  = Attendance::where('status', 'Izin')->count();
+        $allTimeAlpa  = Attendance::where('status', 'Alpa')->count();
+        $allTimeTotal = $allTimeHadir + $allTimeSakit + $allTimeIzin + $allTimeAlpa;
+        $allTimeRate  = $allTimeTotal > 0 ? round(($allTimeHadir / $allTimeTotal) * 100, 1) : 0;
+
+        // Rekap Kehadiran per Kelas Hari Ini
+        $todayClassAttendances = Attendance::with([
+            'student.schoolClass',
+            'schedule.subject',
+            'schedule.schoolClass',
+            'schedule.teacher'
+        ])
+            ->whereDate('date', $today)
+            ->get()
+            ->groupBy(function ($att) {
+                return $att->schedule?->schoolClass?->name ?? ($att->student?->schoolClass?->name ?? 'Tanpa Kelas');
+            })
+            ->map(function ($items, $className) {
+                $hadir = $items->where('status', 'Hadir')->count();
+                $sakit = $items->where('status', 'Sakit')->count();
+                $izin  = $items->where('status', 'Izin')->count();
+                $alpa  = $items->where('status', 'Alpa')->count();
+                $total = $hadir + $sakit + $izin + $alpa;
+                $rate  = $total > 0 ? round(($hadir / $total) * 100, 1) : 0;
+                $first = $items->first();
+
+                return (object) [
+                    'class_name' => $className,
+                    'subject_name' => $first?->schedule?->subject?->name ?? '-',
+                    'teacher_name' => $first?->schedule?->teacher?->name ?? '-',
+                    'hadir' => $hadir,
+                    'sakit' => $sakit,
+                    'izin' => $izin,
+                    'alpa' => $alpa,
+                    'total' => $total,
+                    'rate' => $rate,
+                ];
+            });
+
         return view('dashboard.waka', compact(
             'activeCycle',
             'todayName',
@@ -227,7 +278,20 @@ class DashboardController extends Controller
             'todayJournalsCount',
             'journalAlerts',
             'recentJournals',
-            'majorStats'
+            'majorStats',
+            'todayHadir',
+            'todaySakit',
+            'todayIzin',
+            'todayAlpa',
+            'todayTotalAbsen',
+            'todayAttendanceRate',
+            'allTimeHadir',
+            'allTimeSakit',
+            'allTimeIzin',
+            'allTimeAlpa',
+            'allTimeTotal',
+            'allTimeRate',
+            'todayClassAttendances'
         ));
     }
 

@@ -13,8 +13,8 @@
     </div>
 </div>
 
-{{-- 5 Stat Cards --}}
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+{{-- 6 Stat Cards --}}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
     <div class="stat-card">
         <div>
             <div class="stat-value">{{ $totalTeachers }}</div>
@@ -26,6 +26,13 @@
         <div>
             <div class="stat-value">{{ $totalStudents }}</div>
             <div class="stat-label">Siswa Terdaftar</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div>
+            <div class="stat-value" style="color: #10b981;">{{ $todayHadir }}</div>
+            <div class="stat-label">Siswa Hadir Hari Ini</div>
         </div>
     </div>
 
@@ -123,6 +130,113 @@
             <a href="{{ route('attendances.index') }}" class="btn btn-secondary btn-sm">Rekap Presensi</a>
         </div>
     </div>
+</div>
+
+{{-- Monitoring Kehadiran Siswa Hari Ini --}}
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+            <h2 style="font-size: 1.15rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #10b981;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Monitoring Kehadiran Siswa (Hari Ini)</span>
+            </h2>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0.2rem 0 0 0;">
+                Ringkasan kehadiran siswa kelas pada hari <strong>{{ $todayName }}, {{ $today->format('d M Y') }}</strong>
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <a href="{{ route('attendances.index') }}" class="btn btn-secondary btn-sm" style="font-weight: 600;">
+                Lihat Rekap Presensi Lengkap &rarr;
+            </a>
+        </div>
+    </div>
+
+    {{-- Ringkasan 5 Kotak Status Presensi Hari Ini --}}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem;">
+        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 0.85rem 1rem; text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: #059669;">{{ $todayHadir }}</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: #047857; text-transform: uppercase; letter-spacing: 0.04em;">Hadir</div>
+        </div>
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 0.85rem 1rem; text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: #d97706;">{{ $todaySakit }}</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: #b45309; text-transform: uppercase; letter-spacing: 0.04em;">Sakit</div>
+        </div>
+        <div style="background: #ecfeff; border: 1px solid #a5f3fc; border-radius: 12px; padding: 0.85rem 1rem; text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: #0891b2;">{{ $todayIzin }}</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: #0e7490; text-transform: uppercase; letter-spacing: 0.04em;">Izin</div>
+        </div>
+        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 0.85rem 1rem; text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: #dc2626;">{{ $todayAlpa }}</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.04em;">Alpa</div>
+        </div>
+        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 0.85rem 1rem; text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: 800; color: #2563eb;">{{ $todayAttendanceRate }}%</div>
+            <div style="font-size: 0.75rem; font-weight: 700; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.04em;">Tingkat Hadir</div>
+        </div>
+    </div>
+
+    {{-- Detail Presensi per Kelas yang Sudah Mengisi Hari Ini --}}
+    @if($todayClassAttendances->isNotEmpty())
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">No</th>
+                        <th>Rombel / Kelas</th>
+                        <th>Mata Pelajaran</th>
+                        <th>Guru Pengajar</th>
+                        <th style="text-align: center; width: 90px;">Hadir</th>
+                        <th style="text-align: center; width: 80px;">Sakit</th>
+                        <th style="text-align: center; width: 80px;">Izin</th>
+                        <th style="text-align: center; width: 80px;">Alpa</th>
+                        <th style="text-align: center; width: 110px;">% Hadir</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($todayClassAttendances as $classAtt)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td><strong>{{ $classAtt->class_name }}</strong></td>
+                            <td>{{ $classAtt->subject_name }}</td>
+                            <td><span style="font-size: 0.85rem; color: var(--text-secondary);">{{ $classAtt->teacher_name }}</span></td>
+                            <td style="text-align: center;">
+                                <span class="badge" style="background: #ecfdf5; color: #065f46; font-weight: 700; font-size: 0.85rem;">{{ $classAtt->hadir }}</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="badge" style="background: {{ $classAtt->sakit > 0 ? '#fffbeb' : 'transparent' }}; color: {{ $classAtt->sakit > 0 ? '#b45309' : 'var(--text-muted)' }}; font-size: 0.85rem;">
+                                    {{ $classAtt->sakit }}
+                                </span>
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="badge" style="background: {{ $classAtt->izin > 0 ? '#ecfeff' : 'transparent' }}; color: {{ $classAtt->izin > 0 ? '#0e7490' : 'var(--text-muted)' }}; font-size: 0.85rem;">
+                                    {{ $classAtt->izin }}
+                                </span>
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="badge" style="background: {{ $classAtt->alpa > 0 ? '#fef2f2' : 'transparent' }}; color: {{ $classAtt->alpa > 0 ? '#b91c1c' : 'var(--text-muted)' }}; font-size: 0.85rem;">
+                                    {{ $classAtt->alpa }}
+                                </span>
+                            </td>
+                            <td style="text-align: center;">
+                                <span style="font-weight: 800; font-size: 0.88rem; color: {{ $classAtt->rate >= 90 ? '#059669' : ($classAtt->rate >= 75 ? '#d97706' : '#dc2626') }};">
+                                    {{ $classAtt->rate }}%
+                                </span>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <div style="padding: 1.25rem; background: var(--bg-surface-hover); border-radius: var(--radius-sm); text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+            Belum ada guru yang menginput presensi siswa untuk hari ini. Data presensi akan otomatis terupdate di sini setelah guru mengisi jurnal mengajar.
+            <div style="margin-top: 0.5rem; font-size: 0.8rem;">
+                Total akumulasi riwayat presensi tersimpan: <strong>{{ $allTimeHadir }} Hadir</strong> dari <strong>{{ $allTimeTotal }} data</strong> ({{ $allTimeRate }}% kehadiran).
+            </div>
+        </div>
+    @endif
 </div>
 
 {{-- Rekapitulasi Rombel & Siswa per Jurusan --}}
