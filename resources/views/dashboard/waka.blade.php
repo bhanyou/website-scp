@@ -459,8 +459,8 @@
 {{-- ========================================================= --}}
 {{-- MODAL IN-PAGE: DETAIL KEHADIRAN SISWA KELAS HARI INI     --}}
 {{-- ========================================================= --}}
-<div class="modal-overlay" id="modalClassAttendance" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 1rem;">
-    <div class="modal-card" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 820px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden;">
+<div class="modal-overlay" id="modalClassAttendance" onclick="if(event.target === this) closeAttendanceModal()">
+    <div class="modal-card modal-lg" style="max-height: 90vh; display: flex; flex-direction: column;">
         
         {{-- Modal Header --}}
         <div class="modal-header" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
@@ -755,7 +755,7 @@
 
         const modal = document.getElementById('modalClassAttendance');
         if (modal) {
-            modal.style.display = 'flex';
+            modal.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
     };
@@ -763,7 +763,7 @@
     window.closeAttendanceModal = function() {
         const modal = document.getElementById('modalClassAttendance');
         if (modal) {
-            modal.style.display = 'none';
+            modal.classList.remove('active');
             document.body.style.overflow = '';
         }
     };
