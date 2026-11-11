@@ -213,15 +213,6 @@ class DashboardController extends Controller
             ];
         });
 
-        // Statistik Presensi Siswa Hari Ini
-        $todayAttendancesQuery = Attendance::whereDate('date', $today);
-        $todayHadir = (clone $todayAttendancesQuery)->where('status', 'Hadir')->count();
-        $todaySakit = (clone $todayAttendancesQuery)->where('status', 'Sakit')->count();
-        $todayIzin  = (clone $todayAttendancesQuery)->where('status', 'Izin')->count();
-        $todayAlpa  = (clone $todayAttendancesQuery)->where('status', 'Alpa')->count();
-        $todayTotalAbsen = $todayHadir + $todaySakit + $todayIzin + $todayAlpa;
-        $todayAttendanceRate = $todayTotalAbsen > 0 ? round(($todayHadir / $todayTotalAbsen) * 100, 1) : 0;
-
         // Akumulasi Presensi Keseluruhan
         $allTimeHadir = Attendance::where('status', 'Hadir')->count();
         $allTimeSakit = Attendance::where('status', 'Sakit')->count();
@@ -230,45 +221,93 @@ class DashboardController extends Controller
         $allTimeTotal = $allTimeHadir + $allTimeSakit + $allTimeIzin + $allTimeAlpa;
         $allTimeRate  = $allTimeTotal > 0 ? round(($allTimeHadir / $allTimeTotal) * 100, 1) : 0;
 
-        // Rekap Kehadiran per Kelas Hari Ini
-        $todayClassAttendances = Attendance::with([
+        // Rekap Kehadiran per Kelas Hari Ini (Konsolidasi Pilihan B: 1 baris per kelas unik)
+        $todayRawAttendances = Attendance::with([
             'student.schoolClass',
             'schedule.subject',
             'schedule.schoolClass',
             'schedule.teacher'
         ])
             ->whereDate('date', $today)
-            ->get()
+            ->get();
+
+        $todayClassAttendances = $todayRawAttendances
             ->groupBy(function ($att) {
                 return $att->schedule?->class_id ?? ($att->student?->class_id ?? 0);
             })
             ->map(function ($items, $classId) {
                 $first = $items->first();
                 $className = $first?->schedule?->schoolClass?->name ?? ($first?->student?->schoolClass?->name ?? 'Tanpa Kelas');
-                $subjectName = $first?->schedule?->subject?->name ?? '-';
-                $teacherName = $first?->schedule?->teacher?->name ?? '-';
 
-                $hadir = $items->where('status', 'Hadir')->count();
-                $sakit = $items->where('status', 'Sakit')->count();
-                $izin  = $items->where('status', 'Izin')->count();
-                $alpa  = $items->where('status', 'Alpa')->count();
+                // Urutkan jadwal yang berlangsung di kelas ini hari ini
+                $sortedSchedules = $items->pluck('schedule')->filter()->unique('id')->sortByDesc('start_time')->values();
+                $latestSchedule = $sortedSchedules->first();
+                $subjectName = $latestSchedule?->subject?->name ?? ($first?->schedule?->subject?->name ?? '-');
+                $teacherName = $latestSchedule?->teacher?->name ?? ($first?->schedule?->teacher?->name ?? '-');
+
+                // Info semua mata pelajaran yang selesai di kelas ini hari ini
+                $uniqueSubjects = $sortedSchedules->pluck('subject.name')->filter()->unique()->values();
+                $totalSessions = $sortedSchedules->count();
+                $allSubjectsStr = $uniqueSubjects->implode(', ');
+
+                // Konsolidasi unik per siswa pada hari ini
+                $studentsGrouped = $items->groupBy('student_id');
+
+                $studentsList = [];
+                $hadir = 0;
+                $sakit = 0;
+                $izin = 0;
+                $alpa = 0;
+
+                foreach ($studentsGrouped as $studentId => $studentAtts) {
+                    $firstAtt = $studentAtts->first();
+                    $student = $firstAtt?->student;
+
+                    // Tentukan status harian siswa:
+                    // Prioritas: Alpa > Sakit > Izin > Hadir
+                    $status = 'Hadir';
+                    if ($studentAtts->contains('status', 'Alpa')) {
+                        $status = 'Alpa';
+                    } elseif ($studentAtts->contains('status', 'Sakit')) {
+                        $status = 'Sakit';
+                    } elseif ($studentAtts->contains('status', 'Izin')) {
+                        $status = 'Izin';
+                    }
+
+                    // Kumpulkan catatan dari setiap sesi hari ini (jika ada)
+                    $notes = $studentAtts->pluck('note')
+                        ->filter()
+                        ->map(fn($n) => trim($n))
+                        ->filter(fn($n) => $n !== '')
+                        ->unique()
+                        ->implode('; ');
+
+                    if ($status === 'Hadir') $hadir++;
+                    elseif ($status === 'Sakit') $sakit++;
+                    elseif ($status === 'Izin') $izin++;
+                    elseif ($status === 'Alpa') $alpa++;
+
+                    $studentsList[] = [
+                        'nis' => $student?->nis ?? '-',
+                        'name' => $student?->name ?? 'Tanpa Nama',
+                        'status' => $status,
+                        'note' => $notes ?: '',
+                    ];
+                }
+
+                // Urutkan siswa berdasarkan nama
+                usort($studentsList, fn($a, $b) => strcmp($a['name'], $b['name']));
+
                 $total = $hadir + $sakit + $izin + $alpa;
                 $rate  = $total > 0 ? round(($hadir / $total) * 100, 1) : 0;
-
-                $studentsList = $items->sortBy(fn($a) => $a->student?->name ?? '')->values()->map(function ($att) {
-                    return [
-                        'nis' => $att->student?->nis ?? '-',
-                        'name' => $att->student?->name ?? 'Tanpa Nama',
-                        'status' => $att->status,
-                        'note' => $att->note ?? '',
-                    ];
-                })->all();
 
                 return (object) [
                     'class_id' => (int) $classId,
                     'class_name' => $className,
                     'subject_name' => $subjectName,
                     'teacher_name' => $teacherName,
+                    'total_sessions' => $totalSessions,
+                    'all_subjects' => $allSubjectsStr,
                     'hadir' => $hadir,
                     'sakit' => $sakit,
                     'izin' => $izin,
@@ -278,7 +317,16 @@ class DashboardController extends Controller
                     'students' => $studentsList,
                 ];
             })
+            ->sortBy('class_name')
             ->values();
+
+        // Statistik Presensi Siswa Hari Ini (Unik per siswa yang tercatat hari ini)
+        $todayHadir = $todayClassAttendances->sum('hadir');
+        $todaySakit = $todayClassAttendances->sum('sakit');
+        $todayIzin  = $todayClassAttendances->sum('izin');
+        $todayAlpa  = $todayClassAttendances->sum('alpa');
+        $todayTotalAbsen = $todayHadir + $todaySakit + $todayIzin + $todayAlpa;
+        $todayAttendanceRate = $todayTotalAbsen > 0 ? round(($todayHadir / $todayTotalAbsen) * 100, 1) : 0;
 
         return view('dashboard.waka', compact(
             'activeCycle',

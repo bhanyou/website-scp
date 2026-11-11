@@ -143,7 +143,7 @@
                 <span>Monitoring Kehadiran Siswa (Hari Ini)</span>
             </h2>
             <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0.2rem 0 0 0;">
-                Ringkasan kehadiran siswa kelas pada hari <strong>{{ $todayName }}, {{ $today->format('d M Y') }}</strong>
+                Konsolidasi presensi harian per rombel ({{ $todayName }}, {{ $today->format('d M Y') }}). Tiap kelas tampil 1 baris unik & siswa dihitung 1x.
             </p>
         </div>
         <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -185,7 +185,7 @@
                     <tr>
                         <th style="width: 50px;">No</th>
                         <th>Rombel / Kelas</th>
-                        <th>Mata Pelajaran</th>
+                        <th>Mata Pelajaran (Sesi Terkini)</th>
                         <th>Guru Pengajar</th>
                         <th style="text-align: center; width: 85px;">Hadir</th>
                         <th style="text-align: center; width: 75px;">Sakit</th>
@@ -201,8 +201,20 @@
                             <td>{{ $loop->iteration }}</td>
                             <td>
                                 <strong>{{ $classAtt->class_name }}</strong>
+                                @if($classAtt->total_sessions > 1)
+                                    <span class="badge badge-secondary" style="font-size: 0.7rem; margin-left: 0.25rem;" title="{{ $classAtt->all_subjects }}">
+                                        {{ $classAtt->total_sessions }} Mapel
+                                    </span>
+                                @endif
                             </td>
-                            <td>{{ $classAtt->subject_name }}</td>
+                            <td>
+                                <div>{{ $classAtt->subject_name }}</div>
+                                @if($classAtt->total_sessions > 1)
+                                    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;" title="{{ $classAtt->all_subjects }}">
+                                        {{ \Illuminate\Support\Str::limit($classAtt->all_subjects, 35) }}
+                                    </div>
+                                @endif
+                            </td>
                             <td><span style="font-size: 0.85rem; color: var(--text-secondary);">{{ $classAtt->teacher_name }}</span></td>
                             <td style="text-align: center;">
                                 <button type="button" 
@@ -724,10 +736,15 @@
 
         // Update Title & Subtitle
         document.getElementById('attModalTitle').textContent = 'Detail Kehadiran: Kelas ' + classData.class_name;
-        document.getElementById('attModalSubtitle').innerHTML = 
-            'Mapel: <strong>' + classData.subject_name + '</strong> &bull; ' +
+        let subtitleHtml = 'Sesi Terkini: <strong>' + classData.subject_name + '</strong> &bull; ' +
             'Pengajar: <strong>' + classData.teacher_name + '</strong> &bull; ' +
             'Total: <strong>' + classData.total + ' Siswa</strong> (' + classData.rate + '% Hadir)';
+        if (classData.total_sessions > 1 && classData.all_subjects) {
+            subtitleHtml += '<div style="margin-top: 0.25rem; font-size: 0.76rem; color: #64748b;">' +
+                'Telah selesai <strong>' + classData.total_sessions + ' sesi mapel</strong> hari ini: ' + classData.all_subjects +
+                '</div>';
+        }
+        document.getElementById('attModalSubtitle').innerHTML = subtitleHtml;
 
         // Update Direct Recap Link
         const directLink = document.getElementById('attDirectRecapLink');
