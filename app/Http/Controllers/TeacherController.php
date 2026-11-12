@@ -454,7 +454,7 @@ class TeacherController extends Controller
             'mapel' => ['nullable', 'string', 'max:255'],
             'subject_id' => ['nullable', 'exists:subjects,id'],
             'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'regex:/^[0-9]+$/', 'min:8', 'max:15'],
             'address' => ['nullable', 'string'],
             'password' => ['nullable', 'string', 'min:6'],
             'homeroom_class_id' => ['nullable', 'exists:classes,id'],
@@ -465,6 +465,9 @@ class TeacherController extends Controller
             'nip.min' => 'NIP minimal 8 digit angka.',
             'nip.max' => 'NIP maksimal 18 digit angka.',
             'nip.unique' => 'NIP sudah terdaftar untuk guru lain.',
+            'phone.regex' => 'Nomor telepon hanya boleh berisi angka.',
+            'phone.min' => 'Nomor telepon minimal 8 digit angka.',
+            'phone.max' => 'Nomor telepon maksimal 15 digit angka.',
         ]);
 
         $mapelName = null;
@@ -565,7 +568,7 @@ class TeacherController extends Controller
                 'max:255',
                 Rule::unique('users', 'email')->ignore($teacher->user_id),
             ],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'regex:/^[0-9]+$/', 'min:8', 'max:15'],
             'address' => ['nullable', 'string'],
             'password' => ['nullable', 'string', 'min:8'],
             'homeroom_class_id' => ['nullable', 'exists:classes,id'],
@@ -576,6 +579,9 @@ class TeacherController extends Controller
             'nip.min' => 'NIP minimal 8 digit angka.',
             'nip.max' => 'NIP maksimal 18 digit angka.',
             'nip.unique' => 'NIP sudah terdaftar untuk guru lain.',
+            'phone.regex' => 'Nomor telepon hanya boleh berisi angka.',
+            'phone.min' => 'Nomor telepon minimal 8 digit angka.',
+            'phone.max' => 'Nomor telepon maksimal 15 digit angka.',
         ]);
 
         $mapelName = null;

@@ -51,8 +51,17 @@
         </div>
 
         <div class="form-group">
-            <label for="phone">Nomor Telepon</label>
-            <input type="text" id="phone" name="phone" value="{{ old('phone', $teacher->phone) }}">
+            <label for="phone">Nomor Telepon (Opsional)</label>
+            <input type="text" id="phone" name="phone" value="{{ old('phone', $teacher->phone) }}" 
+                placeholder="08xxxxxxxxxx (hanya angka)"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                maxlength="15"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 15)">
+            <small style="color: var(--text-muted); font-size: 0.75rem;">Hanya angka, panjang 8 - 15 digit (contoh: 081234567890).</small>
+            @error('phone')
+                <small class="text-danger" style="display: block; color: var(--danger);">{{ $message }}</small>
+            @enderror
         </div>
 
         <div class="form-group">

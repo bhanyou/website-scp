@@ -228,7 +228,9 @@ class StudentController extends Controller
             'phone' => [
                 'nullable',
                 'string',
-                'max:20',
+                'regex:/^[0-9]+$/',
+                'min:8',
+                'max:15',
             ],
             'address' => [
                 'nullable',
@@ -267,6 +269,9 @@ class StudentController extends Controller
             'nis.max' => 'NIS maksimal 10 digit angka.',
             'nis.unique' => 'NIS sudah terdaftar untuk siswa lain.',
             'name.required' => 'Nama lengkap siswa wajib diisi.',
+            'phone.regex' => 'Nomor telepon hanya boleh berisi angka.',
+            'phone.min' => 'Nomor telepon minimal 8 digit angka.',
+            'phone.max' => 'Nomor telepon maksimal 15 digit angka.',
             'email.email' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah digunakan akun lain.',
             'password.min' => 'Password minimal 6 karakter.',
@@ -438,7 +443,9 @@ class StudentController extends Controller
             'phone' => [
                 'nullable',
                 'string',
-                'max:20',
+                'regex:/^[0-9]+$/',
+                'min:8',
+                'max:15',
             ],
             'address' => [
                 'nullable',
@@ -479,6 +486,9 @@ class StudentController extends Controller
             'nis.max' => 'NIS maksimal 10 digit angka.',
             'nis.unique' => 'NIS sudah digunakan siswa lain.',
             'name.required' => 'Nama siswa wajib diisi.',
+            'phone.regex' => 'Nomor telepon hanya boleh berisi angka.',
+            'phone.min' => 'Nomor telepon minimal 8 digit angka.',
+            'phone.max' => 'Nomor telepon maksimal 15 digit angka.',
             'email.email' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah digunakan akun lain.',
             'password.min' => 'Password minimal 6 karakter.',

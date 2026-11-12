@@ -551,8 +551,14 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="create_teacher_phone">Nomor Telepon / WhatsApp</label>
-                        <input type="text" name="phone" id="create_teacher_phone" placeholder="081234567890">
+                        <label for="create_teacher_phone">Nomor Telepon / WhatsApp (Opsional)</label>
+                        <input type="text" name="phone" id="create_teacher_phone" 
+                            placeholder="08xxxxxxxxxx (hanya angka)"
+                            inputmode="numeric"
+                            pattern="[0-9]*"
+                            maxlength="15"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 15)">
+                        <small style="color: var(--text-muted); font-size: 0.75rem;">Hanya angka, panjang 8 - 15 digit.</small>
                     </div>
 
                     <div class="form-group">
@@ -649,8 +655,14 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="edit_teacher_phone">Nomor Telepon / WhatsApp</label>
-                        <input type="text" name="phone" id="edit_teacher_phone">
+                        <label for="edit_teacher_phone">Nomor Telepon / WhatsApp (Opsional)</label>
+                        <input type="text" name="phone" id="edit_teacher_phone" 
+                            placeholder="08xxxxxxxxxx (hanya angka)"
+                            inputmode="numeric"
+                            pattern="[0-9]*"
+                            maxlength="15"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 15)">
+                        <small style="color: var(--text-muted); font-size: 0.75rem;">Hanya angka, panjang 8 - 15 digit.</small>
                     </div>
 
                     <div class="form-group">
