@@ -73,20 +73,12 @@
 
         @if($journal->photo_path)
             <div class="form-group">
-                <label>Foto Dokumentasi Saat Ini</label>
+                <label>Foto Dokumentasi</label>
                 <div style="margin-top: 0.5rem; margin-bottom: 0.75rem;">
                     <img src="{{ asset('storage/' . $journal->photo_path) }}" alt="Foto Pembelajaran" style="max-height: 180px; border-radius: 8px; border: 1px solid var(--border-color);">
                 </div>
             </div>
         @endif
-
-        <div class="form-group">
-            <label for="photo">Ganti Foto Bukti Pembelajaran (Opsional)</label>
-            <input type="file" id="photo" name="photo" accept=".jpg,.jpeg,.png" class="form-control">
-            <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.25rem;">
-                Format JPG atau PNG, maksimal 2MB. Kosongkan jika tidak ingin mengganti foto.
-            </small>
-        </div>
     </div>
 
     {{-- Presensi Siswa --}}
